@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   wheelchair_msgs
+  roslib
 )
 
 ## System dependencies are found with CMake's conventions
@@ -208,4 +209,4 @@ include_directories(
 # catkin_add_nosetests(test)
 add_executable(context_training src/context_training.cpp)
 target_link_libraries(context_training ${catkin_LIBRARIES})
-add_dependencies(context_training beginner_tutorials_generate_messages_cpp)
+add_dependencies(context_training beginner_tutorials_generate_messages_cpp roslib)

@@ -14,10 +14,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <getopt.h>
-#include <iostream>
-#include <fstream>
+#include <iostream> //io library
+#include <fstream> //for writing and reading files
+#include <ros/package.h> //find ROS packages, needs roslib dependency
 
-#include "ros/ros.h"
+#include "ros/ros.h" //main ROS library
 #include "std_msgs/String.h"
 
 #include <sstream>
@@ -29,7 +30,9 @@ using namespace std;
 
 FILE *filePointer; //pointer for file reader/writer
 
-char objectsLocation[100]; //location of found objects file
+std::string objectsLocation;
+std::string mobilenetFileType ".objects"
+//char objectsLocation[100]; //location of found objects file
 
 //variables and arrays for storing objects from training file
 string softwareVersion = "Version 0.1 - Draft";
@@ -465,6 +468,15 @@ int main(int argc, char **argv)
 
 	printf("Training Context Software\n");
 	printf("%s\n", softwareVersion.c_str());
+
+	std::string roomNameROSParam;
+	n.getParam("/param/context_training/room_name", roomNameROSParam);
+	printf("Room name parameter is: %s\n", roomNameROSParam.c_str());
+
+	//std::string path = ros::package::getPath("roslib");
+	std::string wheelchair_dump_loc = ros::package::getPath("wheelchair_dump");
+	objectsLocation = wheelchair_dump_loc + "/dump/mobilenet/" + roomNameROSParam + mobilenetFileType;
+	printf("%s\n", objectsLocation.c_str());
 
   ros::Rate loop_rate(10);
   int doOnce = 1;
