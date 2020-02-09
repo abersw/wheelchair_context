@@ -31,13 +31,20 @@ using namespace std;
 FILE *filePointer; //pointer for file reader/writer
 
 std::string objectsLocation;
+std::string weightingFile;
 std::string mobilenetFileType = ".objects";
+std::string weightingFileType = ".weights";
 //char objectsLocation[100]; //location of found objects file
 
 //variables and arrays for storing objects from training file
 std::string softwareVersion = "Version 0.1 - Draft";
 std::string objectFileName = "../found-objects.txt";
 //char* objectFileMode = "r"; //replace this later on with fstream
+
+
+
+
+std::string roomName;
 
 /*
 int totalCharacters = 0;
@@ -90,6 +97,26 @@ void printSeparator(int spaceSize) {
 	}
 }
 
+int isFirstTimeTraining(std::string fileName) { //if this doesn't get called, no file is created
+	std::ifstream fileExists(fileName);
+
+	if (fileExists.good() == 1) {
+		//File exists
+		printf("Weighting file exists\n");
+		cout << fileName;
+		return 1;
+	}
+	else {
+		//File doesn't exist
+		printf("Weighting file doesn't exist\n");
+		printf("creating new file\n");
+
+		ofstream NEW_FILE (fileName);
+		NEW_FILE.close();
+		cout << fileName;
+		return 0;
+	}
+}
 
 
 
@@ -111,14 +138,23 @@ int main(int argc, char **argv)
 	printf("%s\n", softwareVersion.c_str());
 
 	std::string roomNameROSParam;
+	
 	n.getParam("/wheelchair_robot/user/room_name", roomNameROSParam);
 	printf("Room name parameter is: %s\n", roomNameROSParam.c_str());
+	roomName = roomNameROSParam; //set to global variable
 
 	//std::string path = ros::package::getPath("roslib");
 	std::string wheelchair_dump_loc = ros::package::getPath("wheelchair_dump");
-	objectsLocation = wheelchair_dump_loc + "/dump/mobilenet/" + roomNameROSParam + mobilenetFileType;
-	printf("%s\n", objectsLocation.c_str());
+	objectsLocation = wheelchair_dump_loc + "/dump/mobilenet/" + roomName + mobilenetFileType;
+	weightingFile = wheelchair_dump_loc + "/dump/context_training/" + roomName + weightingFileType;
+	printf("%s\n", objectsLocation.c_str()); //print location of files
+	printf("%s\n", weightingFile.c_str());
+	printSeparator(1);
 
+	int firstTimeTraining = isFirstTimeTraining(weightingFile); //creates new weighting file
+
+	printSeparator(1);
+/*
 	ifstream MyReadFile(objectsLocation);
 	std::string getlines;
 	while (getline (MyReadFile, getlines)) {
@@ -128,6 +164,10 @@ int main(int argc, char **argv)
   		cout << "\n";
 	}
 	MyReadFile.close();
+*/
+
+
+
 
   ros::Rate loop_rate(10);
   int doOnce = 1;
