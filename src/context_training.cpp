@@ -30,8 +30,8 @@ using namespace std;
 
 FILE *filePointer; //pointer for file reader/writer
 
-std::string objectsLocation;
-std::string weightingFile;
+std::string objectsFileLoc;
+std::string weightingFileLoc;
 std::string mobilenetFileType = ".objects";
 std::string weightingFileType = ".weights";
 //char objectsLocation[100]; //location of found objects file
@@ -45,46 +45,14 @@ std::string objectFileName = "../found-objects.txt";
 
 
 std::string roomName;
-
-/*
-int totalCharacters = 0;
-int countObjectLines;
-char objectList[10000][MAX_STRING_SIZE]; //array for storing object in each element followed by characters
-char objectCharArray[10000]; //array for storing individual characters
-
-int countTrainingLines;
-char trainingList[10000][MAX_STRING_SIZE];
-char trainingCharArray[10000];
-
-struct Training {
-	char objectName[1][MAX_STRING_SIZE];
-	int objectWeighting;
-	int alreadyExists;
+int totalObjects = 0;
+//std::string objectsArray[10000]; //up to 10000 objects and two columns; name and confidence
+struct Objects {
+	std::string objectName;
+	double objectConfidence;
 };
+struct Objects objects[10000];
 
-struct Training objectsStuct[1000];
-struct Training preTrained[1000];
-struct Training trained[1000];
-int MAX_TRAIN_VALUE = 100;
-int MIN_TRAIN_VALUE = 0;
-int MAX_TRAINING_TIMES = 5;
-int sizeOfTrained = 0;
-
-char preTrainedObjects[1000][MAX_STRING_SIZE];
-int preTrainedValues[1000];
-
-char postTrainedObjects[1000][MAX_STRING_SIZE];
-int postTrainedValues[1000];
-int preTrainedLines = 0;
-char saveBuffer[10000][MAX_STRING_SIZE];
-
-//variables and arrays for weighting file
-int countWeightingLines;
-int totalTrainingCharacters;
-
-char roomName[40];
-int timesTrained = 0;
-*/
 
 void printSeparator(int spaceSize) {
 	if (spaceSize == 0) {
@@ -118,6 +86,39 @@ int isFirstTimeTraining(std::string fileName) { //if this doesn't get called, no
 	}
 }
 
+int calculateLines(std::string fileName) {
+	ifstream FILE_COUNTER(fileName);
+	std::string getlines;
+	int returnCounter = 0;
+	while (getline (FILE_COUNTER, getlines)) {
+		returnCounter++;
+  		// Output the text from the file
+  		//cout << getlines;
+  		//cout << "\n";
+	}
+	FILE_COUNTER.close();
+	return returnCounter;
+}
+
+void objectsFileToStruct(std::string fileName) {
+	std::string objectsDelimiter = ":";
+	ifstream FILE_READER(fileName);
+	std::string line;
+	int objectNumber = 0;
+	while (getline(FILE_READER, line)) {
+		int delimiterPos = 0;
+		std::string getObjectName;
+		std::string getObjectConfidence;
+		getObjectName = line.substr(0, line.find(objectsDelimiter)); //string between pos 0 and delimiter
+		//cout << getObjectName; //print object name
+		getObjectConfidence = line.substr(line.find(objectsDelimiter) +1); //string between delimiter and end of line
+		objects[objectNumber].objectName = getObjectName;
+		//cout << ::atof(getObjectConfidence.c_str()); //print object confidence
+		double getObjectConfidence2Double = std::atof(getObjectConfidence.c_str());
+		objects[objectNumber].objectConfidence = getObjectConfidence2Double;
+		objectNumber++;
+	}
+}
 
 
 
@@ -145,15 +146,30 @@ int main(int argc, char **argv)
 
 	//std::string path = ros::package::getPath("roslib");
 	std::string wheelchair_dump_loc = ros::package::getPath("wheelchair_dump");
-	objectsLocation = wheelchair_dump_loc + "/dump/mobilenet/" + roomName + mobilenetFileType;
-	weightingFile = wheelchair_dump_loc + "/dump/context_training/" + roomName + weightingFileType;
-	printf("%s\n", objectsLocation.c_str()); //print location of files
-	printf("%s\n", weightingFile.c_str());
+	objectsFileLoc = wheelchair_dump_loc + "/dump/mobilenet/" + roomName + mobilenetFileType;
+	weightingFileLoc = wheelchair_dump_loc + "/dump/context_training/" + roomName + weightingFileType;
+	printf("%s\n", objectsFileLoc.c_str()); //print location of files
+	printf("%s\n", weightingFileLoc.c_str());
 	printSeparator(1);
 
-	int firstTimeTraining = isFirstTimeTraining(weightingFile); //creates new weighting file
+	int firstTimeTraining = isFirstTimeTraining(weightingFileLoc); //creates new weighting file
 
 	printSeparator(1);
+
+	totalObjects = calculateLines(objectsFileLoc);
+	printf("total objects: %d\n", totalObjects);
+
+	printSeparator(1);
+
+	objectsFileToStruct(objectsFileLoc);
+
+	printSeparator(1);
+	for (int i = 0; i < totalObjects; i++) {
+		cout << objects[i].objectName;
+		cout << ":";
+		cout << objects[i].objectConfidence;
+		cout << "\n";
+	}
 /*
 	ifstream MyReadFile(objectsLocation);
 	std::string getlines;
@@ -197,6 +213,7 @@ int main(int argc, char **argv)
 
 	    ros::spinOnce();
 			printf("spinned once\n");
+			ros::shutdown();
 	    //loop_rate.sleep();
 	    ++count;
 	    doOnce = 0;
