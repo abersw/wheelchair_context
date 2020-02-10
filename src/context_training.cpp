@@ -53,6 +53,16 @@ struct Objects {
 };
 struct Objects objects[10000];
 
+struct Training {
+	std::string objectName;
+	double objectWeighting;
+	int alreadyExists;
+	double uniqueness;
+};
+struct Training preTrained[10000];
+struct Training trained[10000];
+int timesTrained = 0;
+
 
 void printSeparator(int spaceSize) {
 	if (spaceSize == 0) {
@@ -120,6 +130,80 @@ void objectsFileToStruct(std::string fileName) {
 	}
 }
 
+void readTrainingFile(std::string fileName) {
+	printSeparator(1);
+	ifstream FILE_READER(fileName);
+	std::string line;
+	int lineNumber = 0;
+	int objectNumber = 0;
+	while (getline(FILE_READER, line)) {
+		if (lineNumber == 0) {
+			//do nothing room name
+		}
+		else if (lineNumber == 1) {
+			//get times trained
+			std::string getTimesTrained = line;
+			timesTrained = ::atof(line.c_str());
+			timesTrained++;
+			//cout << timesTrained;
+		}
+		else if (lineNumber > 1) {
+			//find delimiter positions
+			std::string delimiter = ":";
+			int delimiterPos[5];
+			int delimiterNumber = 0;
+			int lineLength = line.length();
+			char lineArray[lineLength + 1];
+			strcpy(lineArray, line.c_str()); 
+			for (int charPos = 0; charPos < lineLength; charPos++) {
+				if (lineArray[charPos] == ':') {
+					//printf("%c\n", lineArray[i]);
+					//printf("found delimiter\n");
+					delimiterPos[delimiterNumber] = charPos;
+					delimiterNumber++;
+				}
+			}
+
+
+			//extract substrings between delimiters
+			for (int section = 0; section < delimiterNumber +1; section++) {
+				if (section == 0) {
+					preTrained[lineNumber].objectName = line.substr(0, delimiterPos[0]);
+					cout << "preTrained objectname is: " + preTrained[lineNumber].objectName + "\n";
+				}
+				else if (section == 1) {
+					double weightingToDouble = std::atof(line.substr(delimiterPos[0] + 1, delimiterPos[1]).c_str()); 
+					preTrained[lineNumber].objectWeighting = weightingToDouble;
+					cout << "preTrained objectWeighting is: " << preTrained[lineNumber].objectWeighting << "\n";
+				}
+				else if (section == 2) {
+					double uniquenessToDouble = std::atof(line.substr(delimiterPos[1] + 1).c_str());
+					preTrained[lineNumber].uniqueness = uniquenessToDouble;
+					cout << "preTrained uniqueness is: " << preTrained[lineNumber].uniqueness << "\n";
+				}
+				//getObjectName = line.substr(0, line.find(objectsDelimiter)); //string between pos 0 and delimiter
+				//cout << getObjectName; //print object name
+				//getObjectConfidence = line.substr(line.find(objectsDelimiter) +1); //string between delimiter and end of line
+			}
+
+
+
+			delimiterNumber = 0; //set back to 0 when finished
+			//delimiterPos[objectNumber] = line.find(delimiter);
+			//printf("delim pos: %d\n", delimiterPos[objectNumber]);
+			//preTrained[objectNumber].objectName = 
+
+			objectNumber++;
+		}
+		lineNumber++;
+	}
+	printSeparator(1);
+}
+
+void startTraining() {
+
+}
+
 
 
 
@@ -141,6 +225,17 @@ int main(int argc, char **argv)
 	std::string roomNameROSParam;
 	
 	n.getParam("/wheelchair_robot/user/room_name", roomNameROSParam);
+	if (!n.hasParam("/wheelchair_robot/user/room_name")) { //check program if room name param is not available
+		std_msgs::String msg;
+
+	    std::stringstream ss;
+	    ss << "Couldn't get ROS PARAM room name";
+	    msg.data = ss.str();
+
+	    ROS_INFO("%s", msg.data.c_str());
+		ros::shutdown();
+		exit(0); //stop program if parameter room name is not available!
+	}
 	printf("Room name parameter is: %s\n", roomNameROSParam.c_str());
 	roomName = roomNameROSParam; //set to global variable
 
@@ -181,6 +276,7 @@ int main(int argc, char **argv)
 	}
 	MyReadFile.close();
 */
+	readTrainingFile(weightingFileLoc);
 
 
 
