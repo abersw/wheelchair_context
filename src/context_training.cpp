@@ -7,6 +7,7 @@
 /*
  * Todo:
  * ofstream instead of fopen
+ * use associative arrays for room name, followed by struct of object name, confidence etc.
 */
 
 #include <stdio.h>
@@ -32,6 +33,7 @@ FILE *filePointer; //pointer for file reader/writer
 
 std::string objectsFileLoc;
 std::string weightingFileLoc;
+std::string roomListLoc;
 std::string mobilenetFileType = ".objects";
 std::string weightingFileType = ".weights";
 //char objectsLocation[100]; //location of found objects file
@@ -60,7 +62,9 @@ struct Training {
 	double uniqueness;
 };
 struct Training preTrained[10000];
-struct Training trained[10000];
+struct Training trained[1000][10000];
+//struct Training preTrainedKitchen[10000];
+//struct Training trainedKitchen[10000];
 int timesTrained = 0;
 
 
@@ -75,7 +79,7 @@ void printSeparator(int spaceSize) {
 	}
 }
 
-int isFirstTimeTraining(std::string fileName) { //if this doesn't get called, no file is created
+int createFile(std::string fileName) { //if this doesn't get called, no file is created
 	std::ifstream fileExists(fileName);
 
 	if (fileExists.good() == 1) {
@@ -130,7 +134,7 @@ void objectsFileToStruct(std::string fileName) {
 	}
 }
 
-void readTrainingFile(std::string fileName) {
+void readTrainingFile(std::string fileName, int roomIdParam) {
 	printSeparator(1);
 	ifstream FILE_READER(fileName);
 	std::string line;
@@ -169,30 +173,20 @@ void readTrainingFile(std::string fileName) {
 			for (int section = 0; section < delimiterNumber +1; section++) {
 				if (section == 0) {
 					preTrained[lineNumber].objectName = line.substr(0, delimiterPos[0]);
-					cout << "preTrained objectname is: " + preTrained[lineNumber].objectName + "\n";
+					//cout << "preTrained objectname is: " + preTrained[lineNumber]->objectName + "\n";
 				}
 				else if (section == 1) {
 					double weightingToDouble = std::atof(line.substr(delimiterPos[0] + 1, delimiterPos[1]).c_str()); 
 					preTrained[lineNumber].objectWeighting = weightingToDouble;
-					cout << "preTrained objectWeighting is: " << preTrained[lineNumber].objectWeighting << "\n";
+					//cout << "preTrained objectWeighting is: " << preTrained[lineNumber]->objectWeighting << "\n";
 				}
 				else if (section == 2) {
 					double uniquenessToDouble = std::atof(line.substr(delimiterPos[1] + 1).c_str());
 					preTrained[lineNumber].uniqueness = uniquenessToDouble;
-					cout << "preTrained uniqueness is: " << preTrained[lineNumber].uniqueness << "\n";
+					//cout << "preTrained uniqueness is: " << preTrained[lineNumber]->uniqueness << "\n";
 				}
-				//getObjectName = line.substr(0, line.find(objectsDelimiter)); //string between pos 0 and delimiter
-				//cout << getObjectName; //print object name
-				//getObjectConfidence = line.substr(line.find(objectsDelimiter) +1); //string between delimiter and end of line
 			}
-
-
-
 			delimiterNumber = 0; //set back to 0 when finished
-			//delimiterPos[objectNumber] = line.find(delimiter);
-			//printf("delim pos: %d\n", delimiterPos[objectNumber]);
-			//preTrained[objectNumber].objectName = 
-
 			objectNumber++;
 		}
 		lineNumber++;
@@ -243,11 +237,15 @@ int main(int argc, char **argv)
 	std::string wheelchair_dump_loc = ros::package::getPath("wheelchair_dump");
 	objectsFileLoc = wheelchair_dump_loc + "/dump/mobilenet/" + roomName + mobilenetFileType;
 	weightingFileLoc = wheelchair_dump_loc + "/dump/context_training/" + roomName + weightingFileType;
+	roomListLoc = wheelchair_dump_loc + "/dump/context_training/room.list";
 	printf("%s\n", objectsFileLoc.c_str()); //print location of files
 	printf("%s\n", weightingFileLoc.c_str());
 	printSeparator(1);
 
-	int firstTimeTraining = isFirstTimeTraining(weightingFileLoc); //creates new weighting file
+	//get array of room names from file
+	createFile(roomListLoc); //create room list
+
+	int firstTimeTraining = createFile(weightingFileLoc); //creates new weighting file
 
 	printSeparator(1);
 
@@ -276,9 +274,11 @@ int main(int argc, char **argv)
 	}
 	MyReadFile.close();
 */
-	readTrainingFile(weightingFileLoc);
 
-
+	//struct Training preTrainedKitchen[10000];
+	readTrainingFile(weightingFileLoc, 0);
+	printSeparator(1);
+	//cout << preTrainedKitchen[0].objectName << ":" << preTrainedKitchen[0].objectWeighting << ":" << preTrainedKitchen[0].uniqueness << "\n";
 
 
   ros::Rate loop_rate(10);
