@@ -48,6 +48,7 @@ std::string objectFileName = "../found-objects.txt";
 
 std::string roomNameROSParam;
 int totalObjects = 0;
+int totalRooms = 0;
 //std::string objectsArray[10000]; //up to 10000 objects and two columns; name and confidence
 struct Objects {
 	std::string objectName;
@@ -68,7 +69,7 @@ struct Training {
 };
 struct Training preTrained[10000];
 struct Training trained[1000][10000];
-struct Rooms rooms[10000];
+struct Rooms room[10000];
 //struct Training preTrainedKitchen[10000];
 //struct Training trainedKitchen[10000];
 int timesTrained = 0;
@@ -96,12 +97,13 @@ void doesWheelchairDumpPkgExist() {
 }
 
 int createFile(std::string fileName) { //if this doesn't get called, no file is created
+	printf("DEBUG: createFile()\n");
 	std::ifstream fileExists(fileName);
 
 	if (fileExists.good() == 1) {
 		//File exists
 		printf("Weighting file exists\n");
-		cout << fileName;
+		//cout << fileName;
 		return 1;
 	}
 	else {
@@ -111,12 +113,13 @@ int createFile(std::string fileName) { //if this doesn't get called, no file is 
 
 		ofstream NEW_FILE (fileName);
 		NEW_FILE.close();
-		cout << fileName;
+		//cout << fileName;
 		return 0;
 	}
 }
 
 int calculateLines(std::string fileName) {
+	printf("DEBUG: calculateLines()\n");
 	ifstream FILE_COUNTER(fileName);
 	std::string getlines;
 	int returnCounter = 0;
@@ -130,7 +133,9 @@ int calculateLines(std::string fileName) {
 	return returnCounter;
 }
 
+//get files from mobilenet dump location and save to struct
 void objectsFileToStruct(std::string fileName) {
+	printf("DEBUG: objectsFileToStruct()\n");
 	std::string objectsDelimiter = ":";
 	ifstream FILE_READER(fileName);
 	std::string line;
@@ -150,8 +155,30 @@ void objectsFileToStruct(std::string fileName) {
 	}
 }
 
+//get list of rooms and save to struct
+void roomListToStruct(std::string fileName) {
+	printf("DEBUG: roomListToStruct()\n");
+	std::string roomsDelimiter = ":";
+	ifstream FILE_READER(fileName);
+	std::string line;
+	int roomNumber = 0;
+	while (getline(FILE_READER, line)) {
+		int delimiterPos = 0;
+		std::string getRoomName;
+		int getRoomId;
+		getRoomName = line.substr(0, line.find(roomsDelimiter)); //string between 0 and delimiter
+		room[roomNumber].roomName = getRoomName;
+		cout << getRoomName;
+		getRoomId = std::stoi(line.substr(line.find(roomsDelimiter) +1));
+		room[roomNumber].id = getRoomId;
+		cout << getRoomId << "\n";
+		roomNumber++;
+	}
+}
+
 void readTrainingFile(std::string fileName, int roomIdParam) {
 	printSeparator(1);
+	printf("DEBUG: readTrainingFile()\n");
 	ifstream FILE_READER(fileName);
 	std::string line;
 	int lineNumber = 0;
@@ -211,7 +238,7 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 }
 
 void startTraining() {
-
+	printf("DEBUG: startTraining()\n");
 }
 
 
@@ -229,7 +256,7 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
   ros::Publisher chatter_pub = n.advertise<std_msgs::String>("context_training_topic", 1000);
 
-  	printSeparator(1);
+  	printSeparator(0);
 	printf("Training Context Software\n");
 	printf("%s\n", softwareVersion.c_str());
 
@@ -258,19 +285,31 @@ int main(int argc, char **argv)
 	roomListLoc = wheelchair_dump_loc + "/dump/context_training/room.list";
 	printf("%s\n", objectsFileLoc.c_str()); //print location of files
 	printf("%s\n", weightingFileLoc.c_str());
+	printf("%s\n", roomListLoc.c_str());
 	printSeparator(1);
 
+
+	/////////////////////////////////////////////////////////////////
 	//get array of room names from file
 	int roomListExists = createFile(roomListLoc); //create room list
 	//add list of rooms to struct array
-	if (roomListExists == 1) {
-		//file exists
-		//read file
+	roomListToStruct(roomListLoc);
+	
+	totalRooms = calculateLines(roomListLoc);
+	printf("DEBUG: roomStruct\n");
+	for (int i = 0; i < totalRooms; i++) {
+		cout << room[i].roomName;
+		cout << ":";
+		cout << room[i].id;
+		cout << "\n";
 	}
-	else {
-		//file doesn't exist
-	}
-	int firstTimeTraining = createFile(weightingFileLoc); //creates new weighting file
+	printSeparator(1);
+	/////////////////////////////////////////////////////////////////
+
+
+
+
+	createFile(weightingFileLoc); //creates new weighting file
 
 
 
@@ -282,19 +321,21 @@ int main(int argc, char **argv)
 	printSeparator(1);
 
 	totalObjects = calculateLines(objectsFileLoc);
-	printf("total objects: %d\n", totalObjects);
+	//printf("total objects: %d\n", totalObjects);
 
 	printSeparator(1);
 
 	objectsFileToStruct(objectsFileLoc);
 
 	printSeparator(1);
+	printf("DEBUG: objectsStruct\n");
 	for (int i = 0; i < totalObjects; i++) {
 		cout << objects[i].objectName;
 		cout << ":";
 		cout << objects[i].objectConfidence;
 		cout << "\n";
 	}
+	
 /*
 	ifstream MyReadFile(objectsLocation);
 	std::string getlines;
