@@ -252,9 +252,10 @@ void startTraining() {
  */
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "context_training");
-  ros::NodeHandle n;
-  ros::Publisher chatter_pub = n.advertise<std_msgs::String>("context_training_topic", 1000);
+	//set up ROS node, get all parameters etc
+  	ros::init(argc, argv, "context_training");
+  	ros::NodeHandle n;
+  	ros::Publisher chatter_pub = n.advertise<std_msgs::String>("context_training_topic", 1000);
 
   	printSeparator(0);
 	printf("Training Context Software\n");
