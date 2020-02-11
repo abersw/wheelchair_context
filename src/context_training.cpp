@@ -8,6 +8,7 @@
  * Todo:
  * ofstream instead of fopen
  * use associative arrays for room name, followed by struct of object name, confidence etc.
+ * add rospack error for packages not found!!!
 */
 
 #include <stdio.h>
@@ -45,8 +46,7 @@ std::string objectFileName = "../found-objects.txt";
 
 
 
-
-std::string roomName;
+std::string roomNameROSParam;
 int totalObjects = 0;
 //std::string objectsArray[10000]; //up to 10000 objects and two columns; name and confidence
 struct Objects {
@@ -54,6 +54,11 @@ struct Objects {
 	double objectConfidence;
 };
 struct Objects objects[10000];
+
+struct Rooms {
+	int id;
+	std::string roomName;
+};
 
 struct Training {
 	std::string objectName;
@@ -63,6 +68,7 @@ struct Training {
 };
 struct Training preTrained[10000];
 struct Training trained[1000][10000];
+struct Rooms rooms[10000];
 //struct Training preTrainedKitchen[10000];
 //struct Training trainedKitchen[10000];
 int timesTrained = 0;
@@ -76,6 +82,16 @@ void printSeparator(int spaceSize) {
 		printf("\n");
 		printf("--------------------------------------------\n");
 		printf("\n");
+	}
+}
+
+void doesWheelchairDumpPkgExist() {
+	if (ros::package::getPath("wheelchair_dump") == "") {
+		cout << "FATAL:  Couldn't find package 'wheelchair_dump' \n";
+		cout << "FATAL:  Closing training_context node. \n";
+		printSeparator(1);
+		ros::shutdown();
+		exit(0);
 	}
 }
 
@@ -213,6 +229,7 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
   ros::Publisher chatter_pub = n.advertise<std_msgs::String>("context_training_topic", 1000);
 
+  	printSeparator(1);
 	printf("Training Context Software\n");
 	printf("%s\n", softwareVersion.c_str());
 
@@ -231,21 +248,36 @@ int main(int argc, char **argv)
 		exit(0); //stop program if parameter room name is not available!
 	}
 	printf("Room name parameter is: %s\n", roomNameROSParam.c_str());
-	roomName = roomNameROSParam; //set to global variable
 
-	//std::string path = ros::package::getPath("roslib");
+	doesWheelchairDumpPkgExist();
+
+
 	std::string wheelchair_dump_loc = ros::package::getPath("wheelchair_dump");
-	objectsFileLoc = wheelchair_dump_loc + "/dump/mobilenet/" + roomName + mobilenetFileType;
-	weightingFileLoc = wheelchair_dump_loc + "/dump/context_training/" + roomName + weightingFileType;
+	objectsFileLoc = wheelchair_dump_loc + "/dump/mobilenet/" + roomNameROSParam + mobilenetFileType;
+	weightingFileLoc = wheelchair_dump_loc + "/dump/context_training/" + roomNameROSParam + weightingFileType;
 	roomListLoc = wheelchair_dump_loc + "/dump/context_training/room.list";
 	printf("%s\n", objectsFileLoc.c_str()); //print location of files
 	printf("%s\n", weightingFileLoc.c_str());
 	printSeparator(1);
 
 	//get array of room names from file
-	createFile(roomListLoc); //create room list
-
+	int roomListExists = createFile(roomListLoc); //create room list
+	//add list of rooms to struct array
+	if (roomListExists == 1) {
+		//file exists
+		//read file
+	}
+	else {
+		//file doesn't exist
+	}
 	int firstTimeTraining = createFile(weightingFileLoc); //creates new weighting file
+
+
+
+
+
+
+
 
 	printSeparator(1);
 
