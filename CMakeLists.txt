@@ -207,6 +207,7 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+add_compile_options(-std=c++11)
 add_executable(context_training src/context_training.cpp)
 target_link_libraries(context_training ${catkin_LIBRARIES})
 add_dependencies(context_training beginner_tutorials_generate_messages_cpp roslib)
