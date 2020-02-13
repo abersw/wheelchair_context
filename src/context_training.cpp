@@ -7,8 +7,15 @@
 /*
  * Todo:
  * ofstream instead of fopen
- * use associative arrays for room name, followed by struct of object name, confidence etc.
+ * use associative arrays for room name, followed by struct of object name, confidence etc. -> not going to work - get list of rooms
  * add rospack error for packages not found!!!
+
+
+
+
+ * Parts finished
+ * import mobilenet detected objects to struct
+ * import individual room name files - probably not useful,
 */
 
 #include <stdio.h>
@@ -304,6 +311,24 @@ int main(int argc, char **argv)
 		cout << room[i].id;
 		cout << "\n";
 	}
+
+	//if room name doesn't exist in the struct, write back to the file, then add a weights file
+	int foundRoomMatch = 0;
+	for (int i = 0; i < totalRooms; i++) {
+		if (room[i].roomName == roomNameROSParam) {
+			//found a room match
+			foundRoomMatch = 1;
+		}
+	}
+	if (foundRoomMatch == 0) {
+		//after loop, if a match hasn't been found - add room to file.
+		ofstream WRITE_FILE(roomListLoc);
+		for (int line = 0; line < totalRooms; line++) {
+			WRITE_FILE << room[line].roomName << ":" << room[line].id << "\n";
+		}
+		WRITE_FILE << roomNameROSParam << ":" << totalRooms + 1 << "\n";
+	}
+
 	printSeparator(1);
 	/////////////////////////////////////////////////////////////////
 
