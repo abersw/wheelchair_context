@@ -307,13 +307,13 @@ int main(int argc, char **argv)
 	roomListToStruct(roomListLoc);
 	
 	totalRooms = calculateLines(roomListLoc);
-	printf("DEBUG: roomStruct\n");
+	/*printf("DEBUG: roomStruct\n");
 	for (int i = 0; i < totalRooms; i++) {
 		cout << room[i].roomName;
 		cout << ":";
 		cout << room[i].id;
 		cout << "\n";
-	}
+	}*/
 
 	//if room name doesn't exist in the struct, write back to the file, then add a weights file
 	int foundRoomMatch = 0;
@@ -332,8 +332,15 @@ int main(int argc, char **argv)
 		WRITE_FILE << roomNameROSParam << ":" << totalRooms + 1 << "\n";
 		WRITE_FILE.close();
 	}
-
+	totalRooms = calculateLines(roomListLoc);
 	roomListToStruct(roomListLoc);
+	printf("DEBUG: roomStruct\n");
+	for (int i = 0; i < totalRooms; i++) {
+		cout << room[i].roomName;
+		cout << ":";
+		cout << room[i].id;
+		cout << "\n";
+	}
 
 	printSeparator(1);
 	/////////////////////////////////////////////////////////////////
