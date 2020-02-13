@@ -185,6 +185,49 @@ void roomListToStruct(std::string fileName) {
 	FILE_READER.close();
 }
 
+void restructRoomList() {
+	//get array of room names from file
+	int roomListExists = createFile(roomListLoc); //create room list
+	//add list of rooms to struct array
+	roomListToStruct(roomListLoc);
+	
+	totalRooms = calculateLines(roomListLoc);
+	/*printf("DEBUG: roomStruct\n");
+	for (int i = 0; i < totalRooms; i++) {
+		cout << room[i].roomName;
+		cout << ":";
+		cout << room[i].id;
+		cout << "\n";
+	}*/
+
+	//if room name doesn't exist in the struct, write back to the file, then add a weights file
+	int foundRoomMatch = 0;
+	for (int i = 0; i < totalRooms; i++) {
+		if (room[i].roomName == roomNameROSParam) {
+			//found a room match
+			foundRoomMatch = 1;
+		}
+	}
+	if (foundRoomMatch == 0) {
+		//after loop, if a match hasn't been found - add room to file.
+		ofstream WRITE_FILE(roomListLoc);
+		for (int line = 0; line < totalRooms; line++) {
+			WRITE_FILE << room[line].roomName << ":" << room[line].id << "\n";
+		}
+		WRITE_FILE << roomNameROSParam << ":" << totalRooms + 1 << "\n";
+		WRITE_FILE.close();
+	}
+	totalRooms = calculateLines(roomListLoc);
+	roomListToStruct(roomListLoc);
+	printf("DEBUG: roomStruct\n");
+	for (int i = 0; i < totalRooms; i++) {
+		cout << room[i].roomName;
+		cout << ":";
+		cout << room[i].id;
+		cout << "\n";
+	}
+}
+
 void readTrainingFile(std::string fileName, int roomIdParam) {
 	printSeparator(1);
 	printf("DEBUG: readTrainingFile()\n");
@@ -270,8 +313,6 @@ int main(int argc, char **argv)
   	printSeparator(0);
 	printf("Training Context Software\n");
 	printf("%s\n", softwareVersion.c_str());
-
-	std::string roomNameROSParam;
 	
 	n.getParam("/wheelchair_robot/user/room_name", roomNameROSParam);
 	if (!n.hasParam("/wheelchair_robot/user/room_name")) { //check program if room name param is not available
@@ -301,46 +342,8 @@ int main(int argc, char **argv)
 
 
 	/////////////////////////////////////////////////////////////////
-	//get array of room names from file
-	int roomListExists = createFile(roomListLoc); //create room list
-	//add list of rooms to struct array
-	roomListToStruct(roomListLoc);
 	
-	totalRooms = calculateLines(roomListLoc);
-	/*printf("DEBUG: roomStruct\n");
-	for (int i = 0; i < totalRooms; i++) {
-		cout << room[i].roomName;
-		cout << ":";
-		cout << room[i].id;
-		cout << "\n";
-	}*/
-
-	//if room name doesn't exist in the struct, write back to the file, then add a weights file
-	int foundRoomMatch = 0;
-	for (int i = 0; i < totalRooms; i++) {
-		if (room[i].roomName == roomNameROSParam) {
-			//found a room match
-			foundRoomMatch = 1;
-		}
-	}
-	if (foundRoomMatch == 0) {
-		//after loop, if a match hasn't been found - add room to file.
-		ofstream WRITE_FILE(roomListLoc);
-		for (int line = 0; line < totalRooms; line++) {
-			WRITE_FILE << room[line].roomName << ":" << room[line].id << "\n";
-		}
-		WRITE_FILE << roomNameROSParam << ":" << totalRooms + 1 << "\n";
-		WRITE_FILE.close();
-	}
-	totalRooms = calculateLines(roomListLoc);
-	roomListToStruct(roomListLoc);
-	printf("DEBUG: roomStruct\n");
-	for (int i = 0; i < totalRooms; i++) {
-		cout << room[i].roomName;
-		cout << ":";
-		cout << room[i].id;
-		cout << "\n";
-	}
+	restructRoomList();
 
 	printSeparator(1);
 	/////////////////////////////////////////////////////////////////
