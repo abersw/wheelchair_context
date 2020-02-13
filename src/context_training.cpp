@@ -160,6 +160,7 @@ void objectsFileToStruct(std::string fileName) {
 		objects[objectNumber].objectConfidence = getObjectConfidence2Double;
 		objectNumber++;
 	}
+	FILE_READER.close();
 }
 
 //get list of rooms and save to struct
@@ -181,6 +182,7 @@ void roomListToStruct(std::string fileName) {
 		cout << getRoomId << "\n";
 		roomNumber++;
 	}
+	FILE_READER.close();
 }
 
 void readTrainingFile(std::string fileName, int roomIdParam) {
@@ -242,6 +244,7 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 		lineNumber++;
 	}
 	printSeparator(1);
+	FILE_READER.close();
 }
 
 void startTraining() {
@@ -327,7 +330,10 @@ int main(int argc, char **argv)
 			WRITE_FILE << room[line].roomName << ":" << room[line].id << "\n";
 		}
 		WRITE_FILE << roomNameROSParam << ":" << totalRooms + 1 << "\n";
+		WRITE_FILE.close();
 	}
+
+	roomListToStruct(roomListLoc);
 
 	printSeparator(1);
 	/////////////////////////////////////////////////////////////////
