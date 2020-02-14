@@ -8,14 +8,16 @@
  * Todo:
  * ofstream instead of fopen
  * use associative arrays for room name, followed by struct of object name, confidence etc. -> not going to work - get list of rooms
- * add rospack error for packages not found!!!
+ * struct Training preTrained[1000][10000]; first element is room id, second is list of objects
+
 
 
 
 
  * Parts finished
  * import mobilenet detected objects to struct
- * import individual room name files - probably not useful,
+ * import room names and added new files back to file and struct
+ * import weighting files - object name, confidence and uniqueness
 */
 
 #include <stdio.h>
@@ -47,9 +49,7 @@ std::string weightingFileType = ".weights";
 //char objectsLocation[100]; //location of found objects file
 
 //variables and arrays for storing objects from training file
-std::string softwareVersion = "Version 0.1 - Draft";
-std::string objectFileName = "../found-objects.txt";
-//char* objectFileMode = "r"; //replace this later on with fstream
+std::string softwareVersion = "Version 0.2 - Draft";
 
 
 
@@ -74,7 +74,7 @@ struct Training {
 	int alreadyExists;
 	double uniqueness;
 };
-struct Training preTrained[10000];
+struct Training preTrained[1000][10000];
 struct Training trained[1000][10000];
 struct Rooms room[10000];
 //struct Training preTrainedKitchen[10000];
@@ -186,6 +186,7 @@ void roomListToStruct(std::string fileName) {
 }
 
 void restructRoomList() {
+	cout << "DEBUG: restruct rooms list \n";
 	//get array of room names from file
 	int roomListExists = createFile(roomListLoc); //create room list
 	//add list of rooms to struct array
@@ -267,18 +268,18 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 			//extract substrings between delimiters
 			for (int section = 0; section < delimiterNumber +1; section++) {
 				if (section == 0) {
-					preTrained[lineNumber].objectName = line.substr(0, delimiterPos[0]);
-					//cout << "preTrained objectname is: " + preTrained[lineNumber]->objectName + "\n";
+					preTrained[roomIdParam][lineNumber].objectName = line.substr(0, delimiterPos[0]);
+					cout << "preTrained objectname is: " + preTrained[roomIdParam][lineNumber].objectName + "\n";
 				}
 				else if (section == 1) {
 					double weightingToDouble = std::atof(line.substr(delimiterPos[0] + 1, delimiterPos[1]).c_str()); 
-					preTrained[lineNumber].objectWeighting = weightingToDouble;
-					//cout << "preTrained objectWeighting is: " << preTrained[lineNumber]->objectWeighting << "\n";
+					preTrained[roomIdParam][lineNumber].objectWeighting = weightingToDouble;
+					cout << "preTrained objectWeighting is: " << preTrained[roomIdParam][lineNumber].objectWeighting << "\n";
 				}
 				else if (section == 2) {
 					double uniquenessToDouble = std::atof(line.substr(delimiterPos[1] + 1).c_str());
-					preTrained[lineNumber].uniqueness = uniquenessToDouble;
-					//cout << "preTrained uniqueness is: " << preTrained[lineNumber]->uniqueness << "\n";
+					preTrained[roomIdParam][lineNumber].uniqueness = uniquenessToDouble;
+					cout << "preTrained uniqueness is: " << preTrained[roomIdParam][lineNumber].uniqueness << "\n";
 				}
 			}
 			delimiterNumber = 0; //set back to 0 when finished
@@ -333,7 +334,8 @@ int main(int argc, char **argv)
 
 	std::string wheelchair_dump_loc = ros::package::getPath("wheelchair_dump");
 	objectsFileLoc = wheelchair_dump_loc + "/dump/mobilenet/" + roomNameROSParam + mobilenetFileType;
-	weightingFileLoc = wheelchair_dump_loc + "/dump/context_training/" + roomNameROSParam + weightingFileType;
+	//weightingFileLoc = wheelchair_dump_loc + "/dump/context_training/" + roomNameROSParam + weightingFileType;
+	weightingFileLoc = wheelchair_dump_loc + "/dump/context_training/";
 	roomListLoc = wheelchair_dump_loc + "/dump/context_training/room.list";
 	printf("%s\n", objectsFileLoc.c_str()); //print location of files
 	printf("%s\n", weightingFileLoc.c_str());
@@ -390,11 +392,22 @@ int main(int argc, char **argv)
 	MyReadFile.close();
 */
 
+
+
+
+	/////////////////////////////////////////////////////////////////	
+
 	//struct Training preTrainedKitchen[10000];
-	readTrainingFile(weightingFileLoc, 0);
+	//populate 2d array of [room][objects] -> pass this to readtrainingfile as parameter
+	for (int i = 0; i < totalRooms; i++) {
+		//get roomname from corresponding position in for loop, add file extention and pass to function
+		std::string generateRoomWeightFile = weightingFileLoc + room[i].roomName + weightingFileType;
+		readTrainingFile(generateRoomWeightFile, i); //2nd param is room id
+	}
 	printSeparator(1);
 	//cout << preTrainedKitchen[0].objectName << ":" << preTrainedKitchen[0].objectWeighting << ":" << preTrainedKitchen[0].uniqueness << "\n";
 
+	/////////////////////////////////////////////////////////////////
 
   ros::Rate loop_rate(10);
   int doOnce = 1;
