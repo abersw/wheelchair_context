@@ -215,8 +215,10 @@ void restructRoomList() {
 		for (int line = 0; line < totalRooms; line++) {
 			WRITE_FILE << room[line].roomName << ":" << room[line].id << "\n";
 		}
-		WRITE_FILE << roomNameROSParam << ":" << totalRooms + 1 << "\n";
+		WRITE_FILE << roomNameROSParam << ":" << totalRooms; //no need for return on last line of file
 		WRITE_FILE.close();
+		std::string createNewWeightingFile = weightingFileLoc + roomNameROSParam + weightingFileType;
+		createFile(createNewWeightingFile);
 	}
 	totalRooms = calculateLines(roomListLoc);
 	roomListToStruct(roomListLoc);
@@ -230,18 +232,31 @@ void restructRoomList() {
 }
 
 void readTrainingFile(std::string fileName, int roomIdParam) {
-	printSeparator(1);
+	printSeparator(0);
 	printf("DEBUG: readTrainingFile()\n");
-	ifstream FILE_READER(fileName);
+	ofstream FILE_WRITER; //declare write file
+	ifstream FILE_READER; //declare read file
+	FILE_READER.open(fileName);
+	if (FILE_READER.peek() == std::ifstream::traits_type::eof()) { //peek to see if file is empty
+		cout << "weighting file is empty, starting to populate data. \n";
+		FILE_READER.close();//closed for peeking
+		FILE_WRITER.open(fileName); //open write file
+		FILE_WRITER << roomNameROSParam << "\n";
+		FILE_WRITER << 0; //first time training
+		FILE_WRITER.close(); //close write file
+		FILE_READER.open(fileName); //reopen file after peek
+	}
 	std::string line;
 	int lineNumber = 0;
 	int objectNumber = 0;
 	while (getline(FILE_READER, line)) {
 		if (lineNumber == 0) {
 			//do nothing room name
+			cout << "reading Room Name: " << line << "\n";
 		}
 		else if (lineNumber == 1) {
 			//get times trained
+			cout << "reading Times Trained: " << line << "\n";
 			std::string getTimesTrained = line;
 			timesTrained = ::atof(line.c_str());
 			timesTrained++;
@@ -287,12 +302,13 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 		}
 		lineNumber++;
 	}
-	printSeparator(1);
 	FILE_READER.close();
+	printSeparator(0);
 }
 
 void startTraining() {
 	printf("DEBUG: startTraining()\n");
+	//this is currently the work in progress function
 }
 
 
@@ -353,7 +369,7 @@ int main(int argc, char **argv)
 
 
 
-	createFile(weightingFileLoc); //creates new weighting file
+	//createFile(weightingFileLoc); //creates new weighting file - not needed any more <- moved to restruct
 
 
 
@@ -437,6 +453,7 @@ int main(int argc, char **argv)
 
 	    ros::spinOnce();
 			printf("spinned once\n");
+			cout << "Finished Training \n";
 			ros::shutdown();
 	    //loop_rate.sleep();
 	    ++count;
