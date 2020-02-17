@@ -54,8 +54,7 @@ std::string softwareVersion = "Version 0.2 - Draft";
 
 
 std::string roomNameROSParam;
-int totalObjectsFromMnet = 0;
-int totalObjectsFromWeights = 0;
+int totalObjects = 0;
 int totalRooms = 0;
 //std::string objectsArray[10000]; //up to 10000 objects and two columns; name and confidence
 struct Objects {
@@ -68,7 +67,6 @@ struct Rooms {
 	int id;
 	std::string roomName;
 	int timesTrained;
-	int totalObjects;
 };
 
 struct Training {
@@ -77,10 +75,9 @@ struct Training {
 	int alreadyExists;
 	double uniqueness;
 };
-struct Training preTrained[1000][10000]; //roomId followed by objects list
-struct Training currentlyTraining[1000][10000]; //calculating training storage
-struct Training trained[1000][10000]; //struct for writing back to files
-struct Rooms room[10000]; //list of rooms
+struct Training preTrained[1000][10000];
+struct Training trained[1000][10000];
+struct Rooms room[10000];
 //struct Training preTrainedKitchen[10000];
 //struct Training trainedKitchen[10000];
 //int timesTrained = 0;
@@ -165,7 +162,6 @@ void objectsFileToStruct(std::string fileName) {
 		objectNumber++;
 	}
 	FILE_READER.close();
-	totalObjectsFromMnet = objectNumber;
 }
 
 //get list of rooms and save to struct
@@ -288,18 +284,18 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 			//extract substrings between delimiters
 			for (int section = 0; section < delimiterNumber +1; section++) {
 				if (section == 0) {
-					preTrained[roomIdParam][objectNumber].objectName = line.substr(0, delimiterPos[0]);
-					cout << "preTrained objectname is: " + preTrained[roomIdParam][objectNumber].objectName + "\n";
+					preTrained[roomIdParam][lineNumber].objectName = line.substr(0, delimiterPos[0]);
+					cout << "preTrained objectname is: " + preTrained[roomIdParam][lineNumber].objectName + "\n";
 				}
 				else if (section == 1) {
 					double weightingToDouble = std::atof(line.substr(delimiterPos[0] + 1, delimiterPos[1]).c_str()); 
-					preTrained[roomIdParam][objectNumber].objectWeighting = weightingToDouble;
-					cout << "preTrained objectWeighting is: " << preTrained[roomIdParam][objectNumber].objectWeighting << "\n";
+					preTrained[roomIdParam][lineNumber].objectWeighting = weightingToDouble;
+					cout << "preTrained objectWeighting is: " << preTrained[roomIdParam][lineNumber].objectWeighting << "\n";
 				}
 				else if (section == 2) {
 					double uniquenessToDouble = std::atof(line.substr(delimiterPos[1] + 1).c_str());
-					preTrained[roomIdParam][objectNumber].uniqueness = uniquenessToDouble;
-					cout << "preTrained uniqueness is: " << preTrained[roomIdParam][objectNumber].uniqueness << "\n";
+					preTrained[roomIdParam][lineNumber].uniqueness = uniquenessToDouble;
+					cout << "preTrained uniqueness is: " << preTrained[roomIdParam][lineNumber].uniqueness << "\n";
 				}
 			}
 			delimiterNumber = 0; //set back to 0 when finished
@@ -308,48 +304,15 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 		lineNumber++;
 	}
 	FILE_READER.close();
-	totalObjectsFromWeights = objectNumber;
 	printSeparator(0);
 }
 
 void startTraining() {
 	printf("DEBUG: startTraining()\n");
 	//this is currently the work in progress function
-	for (int isRoom = 0; isRoom < totalRooms; isRoom++) { 
-		//get room id
-		cout << "total rooms is " << totalRooms << "\n";
-		cout << "roomID is: " << room[isRoom].id << room[isRoom].roomName << "\n";
-		cout << "total objects from weights " << totalObjectsFromWeights << "\n";
-		for (int isWeightingObject = 0; isWeightingObject < totalObjectsFromWeights; isWeightingObject++) { 
-			//iterate through pretrained struct from weighting file
-			cout << "weighting object is " << preTrained[0][0].objectName << "\n";
-			/*for (int isMnetObject = 0; isMnetObject < totalObjectsFromMnet; isMnetObject++) {
-				//iterate through each object found by Mobilenet
-				//look for matching pairs
-				if (preTrained[isRoom][isWeightingObject].objectName == objects[isMnetObject].objectName) {
-					//cout << "Found matching object names \n";
-					//add objects to 
-					//set flag to existing
-					preTrained[isRoom][isWeightingObject].alreadyExists = 1; //set object matches to already exists
-					cout << "set " << preTrained[isRoom][isWeightingObject].objectName << " and " << objects[isMnetObject].objectName << " as match \n";
-				}
-			}*/
-		}
-	}
-
-	/*for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
-		for (int isWeightingObject = 0; isWeightingObject < totalObjectsFromWeights; isWeightingObject++) {
-			for (int isMnetObject = 0; isMnetObject < totalObjectsFromMnet; isMnetObject++) {	
-				//do stuff
-				//currentlyTraining[isRoom][isWeightingObject].roomName = preTrained.
-			}
-		}
-	}*/
 }
 
-void structToWeightingFile() {
 
-}
 
 
 
@@ -418,8 +381,8 @@ int main(int argc, char **argv)
 
 	printSeparator(1);
 
-	totalObjectsFromMnet = calculateLines(objectsFileLoc);
-	//printf("total objects: %d\n", totalObjectsFromMnet);
+	totalObjects = calculateLines(objectsFileLoc);
+	//printf("total objects: %d\n", totalObjects);
 
 	printSeparator(1);
 
@@ -427,7 +390,7 @@ int main(int argc, char **argv)
 
 	printSeparator(1);
 	printf("DEBUG: objectsStruct\n");
-	for (int i = 0; i < totalObjectsFromMnet; i++) {
+	for (int i = 0; i < totalObjects; i++) {
 		cout << objects[i].objectName;
 		cout << ":";
 		cout << objects[i].objectConfidence;
@@ -460,14 +423,8 @@ int main(int argc, char **argv)
 	}
 	printSeparator(1);
 	//cout << preTrainedKitchen[0].objectName << ":" << preTrainedKitchen[0].objectWeighting << ":" << preTrainedKitchen[0].uniqueness << "\n";
-	for (int i = 0; i < 100; i++) {
-		for (int j = 0; j < 100; j++) {
-			cout << "pretrained debug " << preTrained[i][j].objectName << "\n";
-		}
-	}
 
 	/////////////////////////////////////////////////////////////////
-	//startTraining();
 
   ros::Rate loop_rate(10);
   int doOnce = 1;
