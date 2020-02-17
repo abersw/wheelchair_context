@@ -322,8 +322,8 @@ void startTraining() {
 		cout << "total objects from weights " << totalObjectsFromWeights << "\n";
 		for (int isWeightingObject = 0; isWeightingObject < totalObjectsFromWeights; isWeightingObject++) { 
 			//iterate through pretrained struct from weighting file
-			cout << "weighting object is " << preTrained[0][0].objectName << "\n";
-			/*for (int isMnetObject = 0; isMnetObject < totalObjectsFromMnet; isMnetObject++) {
+			//cout << "weighting object is " << preTrained[isRoom][isWeightingObject].objectName << "\n";
+			for (int isMnetObject = 0; isMnetObject < totalObjectsFromMnet; isMnetObject++) {
 				//iterate through each object found by Mobilenet
 				//look for matching pairs
 				if (preTrained[isRoom][isWeightingObject].objectName == objects[isMnetObject].objectName) {
@@ -333,7 +333,7 @@ void startTraining() {
 					preTrained[isRoom][isWeightingObject].alreadyExists = 1; //set object matches to already exists
 					cout << "set " << preTrained[isRoom][isWeightingObject].objectName << " and " << objects[isMnetObject].objectName << " as match \n";
 				}
-			}*/
+			}
 		}
 	}
 
@@ -460,14 +460,14 @@ int main(int argc, char **argv)
 	}
 	printSeparator(1);
 	//cout << preTrainedKitchen[0].objectName << ":" << preTrainedKitchen[0].objectWeighting << ":" << preTrainedKitchen[0].uniqueness << "\n";
-	for (int i = 0; i < 100; i++) {
+	/*for (int i = 0; i < 100; i++) {
 		for (int j = 0; j < 100; j++) {
 			cout << "pretrained debug " << preTrained[i][j].objectName << "\n";
 		}
-	}
+	}*/
 
 	/////////////////////////////////////////////////////////////////
-	//startTraining();
+	startTraining();
 
   ros::Rate loop_rate(10);
   int doOnce = 1;
