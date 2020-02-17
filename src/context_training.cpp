@@ -54,7 +54,8 @@ std::string softwareVersion = "Version 0.2 - Draft";
 
 
 std::string roomNameROSParam;
-int totalObjects = 0;
+int totalObjectsFromMnet = 0;
+int totalObjectsFromWeights = 0;
 int totalRooms = 0;
 //std::string objectsArray[10000]; //up to 10000 objects and two columns; name and confidence
 struct Objects {
@@ -67,6 +68,7 @@ struct Rooms {
 	int id;
 	std::string roomName;
 	int timesTrained;
+	int totalObjects;
 };
 
 struct Training {
@@ -75,9 +77,10 @@ struct Training {
 	int alreadyExists;
 	double uniqueness;
 };
-struct Training preTrained[1000][10000];
-struct Training trained[1000][10000];
-struct Rooms room[10000];
+struct Training preTrained[1000][10000]; //roomId followed by objects list
+struct Training currentlyTraining[1000][10000]; //calculating training storage
+struct Training trained[1000][10000]; //struct for writing back to files
+struct Rooms room[10000]; //list of rooms
 //struct Training preTrainedKitchen[10000];
 //struct Training trainedKitchen[10000];
 //int timesTrained = 0;
@@ -162,6 +165,7 @@ void objectsFileToStruct(std::string fileName) {
 		objectNumber++;
 	}
 	FILE_READER.close();
+	totalObjectsFromMnet = objectNumber;
 }
 
 //get list of rooms and save to struct
@@ -304,15 +308,44 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 		lineNumber++;
 	}
 	FILE_READER.close();
+	totalObjectsFromWeights = objectNumber;
 	printSeparator(0);
 }
 
 void startTraining() {
 	printf("DEBUG: startTraining()\n");
 	//this is currently the work in progress function
+	for (int isRoom = 0; isRoom < totalRooms; isRoom++) { 
+		//get room id
+		cout << "roomID is: " << room[isRoom].roomName << "\n";
+		for (int isWeightingObject = 0; isWeightingObject < totalObjectsFromWeights; isWeightingObject++) { 
+			//iterate through pretrained struct from weighting file
+			for (int isMnetObject = 0; isMnetObject < totalObjectsFromMnet; isMnetObject++) {
+				//iterate through each object found by Mobilenet
+				//look for matching pairs
+				if (preTrained[isRoom][isWeightingObject].objectName == objects.objectName) {
+					cout << "Found matching object names \n";
+					//add objects to 
+					//set flag to existing
+					preTrained[isRoom][isWeightingObject].alreadyExists = 1; //set object matches to already exists
+				}
+			}
+		}
+	}
+
+	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
+		for (int isWeightingObject = 0; isWeightingObject < totalObjectsFromWeights; isWeightingObject++) {
+			for (int isMnetObject = 0; isMnetObject < totalObjectsFromMnet; isMnetObject++) {	
+				//do stuff
+				//currentlyTraining[isRoom][isWeightingObject].roomName = preTrained.
+			}
+		}
+	}
 }
 
+void structToWeightingFile() {
 
+}
 
 
 
@@ -381,8 +414,8 @@ int main(int argc, char **argv)
 
 	printSeparator(1);
 
-	totalObjects = calculateLines(objectsFileLoc);
-	//printf("total objects: %d\n", totalObjects);
+	totalObjectsFromMnet = calculateLines(objectsFileLoc);
+	//printf("total objects: %d\n", totalObjectsFromMnet);
 
 	printSeparator(1);
 
@@ -390,7 +423,7 @@ int main(int argc, char **argv)
 
 	printSeparator(1);
 	printf("DEBUG: objectsStruct\n");
-	for (int i = 0; i < totalObjects; i++) {
+	for (int i = 0; i < totalObjectsFromMnet; i++) {
 		cout << objects[i].objectName;
 		cout << ":";
 		cout << objects[i].objectConfidence;
@@ -425,6 +458,7 @@ int main(int argc, char **argv)
 	//cout << preTrainedKitchen[0].objectName << ":" << preTrainedKitchen[0].objectWeighting << ":" << preTrainedKitchen[0].uniqueness << "\n";
 
 	/////////////////////////////////////////////////////////////////
+	startTraining();
 
   ros::Rate loop_rate(10);
   int doOnce = 1;
