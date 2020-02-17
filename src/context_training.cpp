@@ -66,6 +66,7 @@ struct Objects objects[10000];
 struct Rooms {
 	int id;
 	std::string roomName;
+	int timesTrained;
 };
 
 struct Training {
@@ -79,7 +80,7 @@ struct Training trained[1000][10000];
 struct Rooms room[10000];
 //struct Training preTrainedKitchen[10000];
 //struct Training trainedKitchen[10000];
-int timesTrained = 0;
+//int timesTrained = 0;
 
 
 void printSeparator(int spaceSize) {
@@ -257,10 +258,10 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 		else if (lineNumber == 1) {
 			//get times trained
 			cout << "reading Times Trained: " << line << "\n";
-			std::string getTimesTrained = line;
-			timesTrained = ::atof(line.c_str());
-			timesTrained++;
-			//cout << timesTrained;
+			std::string getTimesTrainedString = line;
+			getTimesTrained = ::atof(line.c_str());
+			getTimesTrained++;
+			room[roomIdParam].timesTrained = getTimesTrained;
 		}
 		else if (lineNumber > 1) {
 			//find delimiter positions
