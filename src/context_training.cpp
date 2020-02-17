@@ -257,11 +257,11 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 		}
 		else if (lineNumber == 1) {
 			//get times trained
-			cout << "reading Times Trained: " << line << "\n";
 			std::string getTimesTrainedString = line;
-			getTimesTrained = ::atof(line.c_str());
+			int getTimesTrained = ::atoi(line.c_str());
 			getTimesTrained++;
 			room[roomIdParam].timesTrained = getTimesTrained;
+			cout << "reading Times Trained: " << room[roomIdParam].timesTrained << "\n";
 		}
 		else if (lineNumber > 1) {
 			//find delimiter positions
