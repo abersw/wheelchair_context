@@ -315,6 +315,8 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 void startTraining() {
 	printf("DEBUG: startTraining()\n");
 	//this is currently the work in progress function
+
+	//the following nested statement sets already exists flag when it finds matches in pretrained weights file and mnet objects file
 	for (int isRoom = 0; isRoom < totalRooms; isRoom++) { 
 		//get room id
 		cout << "total rooms is " << totalRooms << "\n";
@@ -331,9 +333,19 @@ void startTraining() {
 					//add objects to 
 					//set flag to existing
 					preTrained[isRoom][isWeightingObject].alreadyExists = 1; //set object matches to already exists
+					//print out the matching pairs
 					cout << "set " << preTrained[isRoom][isWeightingObject].objectName << " and " << objects[isMnetObject].objectName << " as match \n";
 				}
 			}
+		}
+	}
+
+	//the following function adds the pretrained data and merges objects struct (excluding matching objects)
+	for (int isRoom = 0; isRoom < totalRooms; isRoom++) { 
+		//loop through every room
+		for (int isWeightingObject = 0; isWeightingObject < totalObjectsFromWeights; isWeightingObject++) {
+			//loop through pretrained objects
+			
 		}
 	}
 
