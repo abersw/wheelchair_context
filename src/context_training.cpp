@@ -200,7 +200,7 @@ void restructRoomList() {
 	int roomListExists = createFile(roomListLoc); //create room list
 	//add list of rooms to struct array
 	roomListToStruct(roomListLoc);
-	
+
 	totalRooms = calculateLines(roomListLoc);
 	/*printf("DEBUG: roomStruct\n");
 	for (int i = 0; i < totalRooms; i++) {
@@ -278,7 +278,7 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 			int delimiterNumber = 0;
 			int lineLength = line.length();
 			char lineArray[lineLength + 1];
-			strcpy(lineArray, line.c_str()); 
+			strcpy(lineArray, line.c_str());
 			for (int charPos = 0; charPos < lineLength; charPos++) {
 				if (lineArray[charPos] == ':') {
 					//printf("%c\n", lineArray[i]);
@@ -296,7 +296,7 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 					cout << "preTrained objectname is: " + preTrained[roomIdParam][objectNumber].objectName + "\n";
 				}
 				else if (section == 1) {
-					double weightingToDouble = std::atof(line.substr(delimiterPos[0] + 1, delimiterPos[1]).c_str()); 
+					double weightingToDouble = std::atof(line.substr(delimiterPos[0] + 1, delimiterPos[1]).c_str());
 					preTrained[roomIdParam][objectNumber].objectWeighting = weightingToDouble;
 					cout << "preTrained objectWeighting is: " << preTrained[roomIdParam][objectNumber].objectWeighting << "\n";
 				}
@@ -321,20 +321,20 @@ void startTraining() {
 	//this is currently the work in progress function
 
 	//the following nested statement sets already exists flag when it finds matches in pretrained weights file and mnet objects file
-	for (int isRoom = 0; isRoom < totalRooms; isRoom++) { 
+	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
 		//get room id
 		cout << "total rooms is " << totalRooms << "\n";
 		cout << "roomID is: " << room[isRoom].id << room[isRoom].roomName << "\n";
 		cout << "total objects from weights " << totalObjectsFromWeights << "\n";
-		for (int isWeightingObject = 0; isWeightingObject < totalObjectsFromWeights; isWeightingObject++) { 
+		for (int isMnetObject = 0; isMnetObject < totalObjectsFromMnet; isMnetObject++) { //detected objects will be present, weightings may not be
 			//iterate through pretrained struct from weighting file
 			//cout << "weighting object is " << preTrained[isRoom][isWeightingObject].objectName << "\n";
-			for (int isMnetObject = 0; isMnetObject < totalObjectsFromMnet; isMnetObject++) {
+			for (int isWeightingObject = 0; isWeightingObject < totalObjectsFromWeights; isWeightingObject++) {
 				//iterate through each object found by Mobilenet
 				//look for matching pairs
 				if (preTrained[isRoom][isWeightingObject].objectName == objects[isMnetObject].objectName) {
 					//cout << "Found matching object names \n";
-					//add objects to 
+					//add objects to
 					//set flag to existing
 					preTrained[isRoom][isWeightingObject].alreadyExists = 1; //set object matches to already exists
 					//print out the matching pairs
@@ -345,17 +345,17 @@ void startTraining() {
 	}
 
 	//the following function adds the pretrained data and merges objects struct (excluding matching objects)
-	for (int isRoom = 0; isRoom < totalRooms; isRoom++) { 
+	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
 		//loop through every room
 		for (int isWeightingObject = 0; isWeightingObject < totalObjectsFromWeights; isWeightingObject++) {
 			//loop through pretrained objects
-			
+
 		}
 	}
 
 	/*for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
 		for (int isWeightingObject = 0; isWeightingObject < totalObjectsFromWeights; isWeightingObject++) {
-			for (int isMnetObject = 0; isMnetObject < totalObjectsFromMnet; isMnetObject++) {	
+			for (int isMnetObject = 0; isMnetObject < totalObjectsFromMnet; isMnetObject++) {
 				//do stuff
 				//currentlyTraining[isRoom][isWeightingObject].roomName = preTrained.
 			}
@@ -384,7 +384,7 @@ int main(int argc, char **argv)
   	printSeparator(0);
 	printf("Training Context Software\n");
 	printf("%s\n", softwareVersion.c_str());
-	
+
 	n.getParam("/wheelchair_robot/user/room_name", roomNameROSParam);
 	if (!n.hasParam("/wheelchair_robot/user/room_name")) { //check program if room name param is not available
 		std_msgs::String msg;
@@ -414,7 +414,7 @@ int main(int argc, char **argv)
 
 
 	/////////////////////////////////////////////////////////////////
-	
+
 	restructRoomList();
 
 	printSeparator(1);
@@ -449,7 +449,7 @@ int main(int argc, char **argv)
 		cout << objects[i].objectConfidence;
 		cout << "\n";
 	}
-	
+
 /*
 	ifstream MyReadFile(objectsLocation);
 	std::string getlines;
@@ -465,7 +465,7 @@ int main(int argc, char **argv)
 
 
 
-	/////////////////////////////////////////////////////////////////	
+	/////////////////////////////////////////////////////////////////
 
 	//struct Training preTrainedKitchen[10000];
 	//populate 2d array of [room][objects] -> pass this to readtrainingfile as parameter
