@@ -62,6 +62,7 @@ int totalRooms = 0;
 struct Objects {
 	std::string objectName;
 	double objectConfidence;
+	int isNew;
 };
 struct Objects objects[10000];
 
@@ -332,16 +333,28 @@ void startTraining() {
 			for (int isWeightingObject = 0; isWeightingObject < totalObjectsFromWeights; isWeightingObject++) {
 				//iterate through each object found by Mobilenet
 				//look for matching pairs
-				if (preTrained[isRoom][isWeightingObject].objectName == objects[isMnetObject].objectName) {
+				if ((objects[isMnetObject].objectName == preTrained[isRoom][isWeightingObject].objectName) && (preTrained[isRoom][isWeightingObject].alreadyExists != 1)) { //look for matching objects in weighting file and check they haven't already been flagged as existing
 					//cout << "Found matching object names \n";
 					//add objects to
 					//set flag to existing
 					preTrained[isRoom][isWeightingObject].alreadyExists = 1; //set object matches to already exists
+					objects[isMnetObject].isNew = 0;
 					//print out the matching pairs
 					cout << "set " << preTrained[isRoom][isWeightingObject].objectName << " and " << objects[isMnetObject].objectName << " as match \n";
 				}
+				else if ((objects[isMnetObject].objectName == preTrained[isRoom][isWeightingObject].objectName) && (preTrained[isRoom][isWeightingObject].alreadyExists == 1)) { 
+					//don't do anything if it has already been matched
+				}
+				else {
+					objects[isMnetObject].isNew
+				}
 			}
 		}
+	}
+
+	//try two
+	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
+		for ()
 	}
 
 	//the following function adds the pretrained data and merges objects struct (excluding matching objects)
