@@ -57,13 +57,15 @@ std::string roomNameROSParam;
 int totalObjectsFromMnet = 0;
 int totalObjectsFromWeights = 0;
 int totalRooms = 0;
-//std::string objectsArray[10000]; //up to 10000 objects and two columns; name and confidence
+
+//contains list of objects found by mobilenet
 struct Objects {
 	std::string objectName;
 	double objectConfidence;
 };
 struct Objects objects[10000];
 
+//contains list of rooms
 struct Rooms {
 	int id;
 	std::string roomName;
@@ -71,13 +73,15 @@ struct Rooms {
 	int totalObjects;
 };
 
+//contains blueprint for training objects
 struct Training {
 	std::string objectName;
 	double objectWeighting;
 	int alreadyExists;
 	double uniqueness;
 };
-struct Training preTrained[1000][10000]; //roomId followed by objects list
+//roomId followed by objects list
+struct Training preTrained[1000][10000]; //saves items from file to struct
 struct Training currentlyTraining[1000][10000]; //calculating training storage
 struct Training trained[1000][10000]; //struct for writing back to files
 struct Rooms room[10000]; //list of rooms
@@ -180,11 +184,11 @@ void roomListToStruct(std::string fileName) {
 		std::string getRoomName;
 		int getRoomId;
 		getRoomName = line.substr(0, line.find(roomsDelimiter)); //string between 0 and delimiter
-		room[roomNumber].roomName = getRoomName;
-		cout << getRoomName;
-		getRoomId = std::stoi(line.substr(line.find(roomsDelimiter) +1));
-		room[roomNumber].id = getRoomId;
-		cout << getRoomId << "\n";
+		room[roomNumber].roomName = getRoomName; //set room name
+		cout << getRoomName; //print room name
+		getRoomId = std::stoi(line.substr(line.find(roomsDelimiter) +1)); //get room id
+		room[roomNumber].id = getRoomId; //set room id
+		cout << getRoomId << "\n"; //print room id
 		roomNumber++;
 	}
 	FILE_READER.close();
