@@ -55,14 +55,17 @@ std::string softwareVersion = "Version 0.2 - Draft";
 
 std::string roomNameROSParam;
 int totalObjectsFromMnet = 0;
-int totalObjectsFromWeights = 0;
+//int totalObjectsFromWeights = 0;
 int totalRooms = 0;
+
+int MAX_WEIGHTING = 100;
+int MAX_TRAINING_TIMES = 5;
 
 //contains list of objects found by mobilenet
 struct Objects {
 	std::string objectName;
 	double objectConfidence;
-	int isNew;
+	int alreadyExists;
 };
 struct Objects objects[10000];
 
@@ -294,6 +297,7 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 			for (int section = 0; section < delimiterNumber +1; section++) {
 				if (section == 0) {
 					preTrained[roomIdParam][objectNumber].objectName = line.substr(0, delimiterPos[0]);
+					cout << "object number is " << objectNumber << "\n";
 					cout << "preTrained objectname is: " + preTrained[roomIdParam][objectNumber].objectName + "\n";
 				}
 				else if (section == 1) {
@@ -308,19 +312,90 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 				}
 			}
 			delimiterNumber = 0; //set back to 0 when finished
-			objectNumber++;
+
+			objectNumber+=1;
+			//totalObjectsFromWeights = objectNumber;
+			room[roomIdParam].totalObjects = objectNumber;
+			cout << "total objects are " << room[roomIdParam].totalObjects << "\n";
+
 		}
 		lineNumber++;
 	}
 	FILE_READER.close();
-	totalObjectsFromWeights = objectNumber;
+	
 	printSeparator(0);
 }
 
-void startTraining() {
+void startTraining(std::string roomNameStringParam) { //training only runs one room
 	printf("DEBUG: startTraining()\n");
 	//this is currently the work in progress function
+	int currentTrainingPos = 0;
+	int correspondingRoomId = 0;
 
+	//run through for loop until room name parameter matches
+	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
+		if (room[isRoom].roomName == roomNameStringParam) {
+			cout << "found corresponding room name " << room[isRoom].roomName << "\n";
+			correspondingRoomId = isRoom;
+		}
+		else {
+			//do nothing, carry on looping
+		}
+	}
+	std::string tmpon;
+	std::string tmpwt;
+	//iterate through objects list and find matches in weighting list
+	for (int isMnetObject = 0; isMnetObject < totalObjectsFromMnet; isMnetObject++) {
+		tmpon = objects[isMnetObject].objectName;
+		for (int isWeightingObject = 0; isWeightingObject < room[correspondingRoomId].totalObjects; isWeightingObject++) {
+			tmpwt = preTrained[correspondingRoomId][isWeightingObject].objectName;
+			cout << tmpon << " and " << tmpwt << "\n";
+		
+			if ((preTrained[correspondingRoomId][isWeightingObject].alreadyExists == 1) || (objects[isMnetObject].alreadyExists == 1)) {
+				//if it's already been set to 1 - then don't change back to 0 when not detected
+				cout << "already matched \n";
+			}
+			else if ((preTrained[correspondingRoomId][isWeightingObject].alreadyExists == 0) && (objects[isMnetObject].alreadyExists == 0)) {
+				if (objects[isMnetObject].objectName == preTrained[correspondingRoomId][isWeightingObject].objectName) {
+					//found first match
+					cout << "found match \n";
+					preTrained[correspondingRoomId][isWeightingObject].alreadyExists = 1;
+					objects[isMnetObject].alreadyExists = 1;
+				}
+				else {
+					//didn't find match
+					cout << "didn't find match: " << preTrained[correspondingRoomId][isWeightingObject].objectName << " : " << objects[isMnetObject].objectName << "\n";
+
+					preTrained[correspondingRoomId][isWeightingObject].alreadyExists = 0;
+					objects[isMnetObject].alreadyExists = 0;
+				}
+			}
+		}
+	}
+
+
+
+
+	printSeparator(1);
+	cout << "DEBUG existing weights \n";
+	cout << "total objects from weights " << room[0].totalObjects << "\n";
+	for (int i = 0; i < room[0].totalObjects; i++) {
+	cout << preTrained[0][i].objectName << " : " << preTrained[0][i].alreadyExists << "\n";
+	}
+	printSeparator(1);
+	cout << "DEBUG existing objects \n";
+	cout << "total objects from mnet " << totalObjectsFromMnet << "\n";
+
+	for (int i = 0; i < totalObjectsFromMnet; i++) {
+		cout << objects[i].objectName << " : " << objects[i].alreadyExists << "\n";
+	}
+
+	//for object in mnet not matched, add to current training - is present add to probability
+
+	//
+
+
+/*
 	//the following nested statement sets already exists flag when it finds matches in pretrained weights file and mnet objects file
 	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
 		//get room id
@@ -333,7 +408,8 @@ void startTraining() {
 			for (int isWeightingObject = 0; isWeightingObject < totalObjectsFromWeights; isWeightingObject++) {
 				//iterate through each object found by Mobilenet
 				//look for matching pairs
-				if ((objects[isMnetObject].objectName == preTrained[isRoom][isWeightingObject].objectName) && (preTrained[isRoom][isWeightingObject].alreadyExists != 1)) { //look for matching objects in weighting file and check they haven't already been flagged as existing
+				if ((objects[isMnetObject].objectName == preTrained[isRoom][isWeightingObject].objectName) && 
+					(preTrained[isRoom][isWeightingObject].alreadyExists != 1)) { //look for matching objects in weighting file and check they haven't already been flagged as existing
 					//cout << "Found matching object names \n";
 					//add objects to
 					//set flag to existing
@@ -342,7 +418,8 @@ void startTraining() {
 					//print out the matching pairs
 					cout << "set " << preTrained[isRoom][isWeightingObject].objectName << " and " << objects[isMnetObject].objectName << " as match \n";
 				}
-				else if ((objects[isMnetObject].objectName == preTrained[isRoom][isWeightingObject].objectName) && (preTrained[isRoom][isWeightingObject].alreadyExists == 1)) { 
+				else if ((objects[isMnetObject].objectName == preTrained[isRoom][isWeightingObject].objectName) && 
+					(preTrained[isRoom][isWeightingObject].alreadyExists == 1)) { 
 					//don't do anything if it has already been matched
 				}
 				else {
@@ -351,20 +428,21 @@ void startTraining() {
 			}
 		}
 	}
+	*/
 
 	//try two
-	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
+	/*for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
 		for ()
-	}
+	}*/
 
 	//the following function adds the pretrained data and merges objects struct (excluding matching objects)
-	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
+	/*for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
 		//loop through every room
 		for (int isWeightingObject = 0; isWeightingObject < totalObjectsFromWeights; isWeightingObject++) {
 			//loop through pretrained objects
 
 		}
-	}
+	}*/
 
 	/*for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
 		for (int isWeightingObject = 0; isWeightingObject < totalObjectsFromWeights; isWeightingObject++) {
@@ -496,7 +574,7 @@ int main(int argc, char **argv)
 	}*/
 
 	/////////////////////////////////////////////////////////////////
-	startTraining();
+	startTraining(roomNameROSParam);
 
   ros::Rate loop_rate(10);
   int doOnce = 1;
