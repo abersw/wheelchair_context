@@ -375,12 +375,12 @@ void startTraining(std::string roomNameStringParam) { //training only runs one r
 
 
 
-
+	//print debug info
 	printSeparator(1);
 	cout << "DEBUG existing weights \n";
 	cout << "total objects from weights " << room[0].totalObjects << "\n";
 	for (int i = 0; i < room[0].totalObjects; i++) {
-	cout << preTrained[0][i].objectName << " : " << preTrained[0][i].alreadyExists << "\n";
+		cout << preTrained[0][i].objectName << " : " << preTrained[0][i].alreadyExists << "\n";
 	}
 	printSeparator(1);
 	cout << "DEBUG existing objects \n";
@@ -388,6 +388,14 @@ void startTraining(std::string roomNameStringParam) { //training only runs one r
 
 	for (int i = 0; i < totalObjectsFromMnet; i++) {
 		cout << objects[i].objectName << " : " << objects[i].alreadyExists << "\n";
+	}
+
+
+	//move items into currentTraining (pre calculated, but organised)
+	for (int isWeightingObject = 0; isWeightingObject < room[correspondingRoomId].totalObjects; isWeightingObject++) {
+		if (preTrained[correspondingRoomId][isWeightingObject].alreadyExists == 1) {
+			
+		}
 	}
 
 	//for object in mnet not matched, add to current training - is present add to probability
