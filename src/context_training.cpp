@@ -6,18 +6,15 @@
 
 /*
  * Todo:
- * ofstream instead of fopen
- * use associative arrays for room name, followed by struct of object name, confidence etc. -> not going to work - get list of rooms
- * struct Training preTrained[1000][10000]; first element is room id, second is list of objects
-
-
-
 
 
  * Parts finished
  * import mobilenet detected objects to struct
  * import room names and added new files back to file and struct
  * import weighting files - object name, confidence and uniqueness
+ * find new objects and items no longer present
+ * calculate weighting of objects
+ * write results back to training file
 */
 
 #include <stdio.h>
