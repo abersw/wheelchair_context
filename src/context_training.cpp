@@ -447,11 +447,31 @@ void startTraining(std::string roomNameStringParam) { //training only runs one r
 			//do nothing because it has already been added
 		}
 		else if (objects[isMnetObject].alreadyExists == 0) {
-			//add to training list
+			trained[correspondingRoomId][currentTrainingPos].objectName = objects[isMnetObject].objectName; //get and set object name
+			int isCurrentWeighting = 0; //get current weighting value of 0
+			int newWeightingValue = isCurrentWeighting + weightingValueCalc;
+			cout << isCurrentWeighting << " OB: is current weighting \n";
+			cout << weightingValueCalc << " OB: is divider\n";
+			cout << newWeightingValue << " OB: is new weighting value\n";
+			if (newWeightingValue > MAX_WEIGHTING) {
+				trained[correspondingRoomId][currentTrainingPos].objectWeighting = MAX_WEIGHTING; //set to max weighting if higher
+				cout << trained[correspondingRoomId][currentTrainingPos].objectWeighting << " OB: is set weighting\n";
+			}
+			else {
+				trained[correspondingRoomId][currentTrainingPos].objectWeighting = newWeightingValue; //set to new weighting value
+				cout << trained[correspondingRoomId][currentTrainingPos].objectWeighting << " OB: is set weighting\n";
+			}
+			trained[correspondingRoomId][currentTrainingPos].uniqueness = 0; //set uniqueness as 0
+			currentTrainingPos++; //only iterate for new objects
 		}
-		currentTrainingPos++;
 	}
+	int totalTrained = currentTrainingPos;
 	printSeparator(0);
+
+
+	for (int i = 0; i < totalTrained; i++) {
+		cout << trained[correspondingRoomId][i].objectName << trained[correspondingRoomId][i].objectWeighting << trained[correspondingRoomId][i].uniqueness << "\n";
+	}
 
 	//for object in mnet not matched, add to current training - is present add to probability
 
