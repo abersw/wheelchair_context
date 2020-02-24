@@ -475,69 +475,6 @@ void startTraining(std::string roomNameStringParam) { //training only runs one r
 		trained[correspondingRoomId][i].objectWeighting <<  ":" <<
 		trained[correspondingRoomId][i].uniqueness << "\n";
 	}
-
-	//for object in mnet not matched, add to current training - is present add to probability
-
-	//
-
-
-/*
-	//the following nested statement sets already exists flag when it finds matches in pretrained weights file and mnet objects file
-	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
-		//get room id
-		cout << "total rooms is " << totalRooms << "\n";
-		cout << "roomID is: " << room[isRoom].id << room[isRoom].roomName << "\n";
-		cout << "total objects from weights " << totalObjectsFromWeights << "\n";
-		for (int isMnetObject = 0; isMnetObject < totalObjectsFromMnet; isMnetObject++) { //detected objects will be present, weightings may not be
-			//iterate through pretrained struct from weighting file
-			//cout << "weighting object is " << preTrained[isRoom][isWeightingObject].objectName << "\n";
-			for (int isWeightingObject = 0; isWeightingObject < totalObjectsFromWeights; isWeightingObject++) {
-				//iterate through each object found by Mobilenet
-				//look for matching pairs
-				if ((objects[isMnetObject].objectName == preTrained[isRoom][isWeightingObject].objectName) && 
-					(preTrained[isRoom][isWeightingObject].alreadyExists != 1)) { //look for matching objects in weighting file and check they haven't already been flagged as existing
-					//cout << "Found matching object names \n";
-					//add objects to
-					//set flag to existing
-					preTrained[isRoom][isWeightingObject].alreadyExists = 1; //set object matches to already exists
-					objects[isMnetObject].isNew = 0;
-					//print out the matching pairs
-					cout << "set " << preTrained[isRoom][isWeightingObject].objectName << " and " << objects[isMnetObject].objectName << " as match \n";
-				}
-				else if ((objects[isMnetObject].objectName == preTrained[isRoom][isWeightingObject].objectName) && 
-					(preTrained[isRoom][isWeightingObject].alreadyExists == 1)) { 
-					//don't do anything if it has already been matched
-				}
-				else {
-					objects[isMnetObject].isNew
-				}
-			}
-		}
-	}
-	*/
-
-	//try two
-	/*for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
-		for ()
-	}*/
-
-	//the following function adds the pretrained data and merges objects struct (excluding matching objects)
-	/*for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
-		//loop through every room
-		for (int isWeightingObject = 0; isWeightingObject < totalObjectsFromWeights; isWeightingObject++) {
-			//loop through pretrained objects
-
-		}
-	}*/
-
-	/*for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
-		for (int isWeightingObject = 0; isWeightingObject < totalObjectsFromWeights; isWeightingObject++) {
-			for (int isMnetObject = 0; isMnetObject < totalObjectsFromMnet; isMnetObject++) {
-				//do stuff
-				//currentlyTraining[isRoom][isWeightingObject].roomName = preTrained.
-			}
-		}
-	}*/
 }
 
 void structToWeightingFile() {
@@ -661,6 +598,7 @@ int main(int argc, char **argv)
 
 	/////////////////////////////////////////////////////////////////
 	startTraining(roomNameROSParam);
+	structToWeightingFile();
 
   ros::Rate loop_rate(10);
   int doOnce = 1;
