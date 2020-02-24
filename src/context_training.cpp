@@ -55,6 +55,7 @@ std::string softwareVersion = "Version 0.2 - Draft";
 
 std::string roomNameROSParam;
 int totalObjectsFromMnet = 0;
+int correspondingRoomId = 0;
 //int totalObjectsFromWeights = 0;
 int totalRooms = 0;
 
@@ -331,7 +332,7 @@ void startTraining(std::string roomNameStringParam) { //training only runs one r
 	printf("DEBUG: startTraining()\n");
 	//this is currently the work in progress function
 	
-	int correspondingRoomId = 0;
+	
 
 	//run through for loop until room name parameter matches
 	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
@@ -470,7 +471,9 @@ void startTraining(std::string roomNameStringParam) { //training only runs one r
 
 
 	for (int i = 0; i < totalTrained; i++) {
-		cout << trained[correspondingRoomId][i].objectName << trained[correspondingRoomId][i].objectWeighting << trained[correspondingRoomId][i].uniqueness << "\n";
+		cout << trained[correspondingRoomId][i].objectName << ":" <<
+		trained[correspondingRoomId][i].objectWeighting <<  ":" <<
+		trained[correspondingRoomId][i].uniqueness << "\n";
 	}
 
 	//for object in mnet not matched, add to current training - is present add to probability
