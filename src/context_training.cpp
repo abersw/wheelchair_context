@@ -38,28 +38,27 @@ using namespace std;
 
 FILE *filePointer; //pointer for file reader/writer
 
-std::string objectsFileLoc;
-std::string weightingFileLoc;
-std::string roomListLoc;
-std::string mobilenetFileType = ".objects";
-std::string weightingFileType = ".weights";
-//char objectsLocation[100]; //location of found objects file
+std::string objectsFileLoc; //variable for storing objects file location
+std::string weightingFileLoc; //variable for storing the first section of weighting file location
+std::string roomListLoc; //variable for storing room list location
+std::string mobilenetFileType = ".objects"; //file extention for mobilenet type
+std::string weightingFileType = ".weights"; //file extention for training type
 
 //variables and arrays for storing objects from training file
 std::string softwareVersion = "Version 0.2 - Draft";
 
 
 
-std::string roomNameROSParam;
-int totalObjectsFromMnet = 0;
-int correspondingRoomId = 0;
+std::string roomNameROSParam; //variable for storing room name from ROS parameter server
+int totalObjectsFromMnet = 0; //variable for number of objects in mnet file
+int correspondingRoomId = 0; //current id for room is room struct array
 //int totalObjectsFromWeights = 0;
-int totalRooms = 0;
-int totalTrained = 0;
+int totalRooms = 0; //total number of rooms in room struct array
+int totalTrained = 0; //total number of objects in trained struct
 
-int MIN_WEIGHTING = 0;
-int MAX_WEIGHTING = 100;
-int MAX_TRAINING_TIMES = 5;
+int MIN_WEIGHTING = 0; //minimum trained value
+int MAX_WEIGHTING = 100; //maximum trained value
+int MAX_TRAINING_TIMES = 5; //maximum training times
 
 //contains list of objects found by mobilenet
 struct Objects {
@@ -86,14 +85,10 @@ struct Training {
 };
 //roomId followed by objects list
 struct Training preTrained[1000][10000]; //saves items from file to struct
-struct Training currentlyTraining[1000][10000]; //calculating training storage
 struct Training trained[1000][10000]; //struct for writing back to files
 struct Rooms room[10000]; //list of rooms
-//struct Training preTrainedKitchen[10000];
-//struct Training trainedKitchen[10000];
-//int timesTrained = 0;
 
-
+//function for printing space sizes
 void printSeparator(int spaceSize) {
 	if (spaceSize == 0) {
 		printf("--------------------------------------------\n");
@@ -105,6 +100,7 @@ void printSeparator(int spaceSize) {
 	}
 }
 
+//does the wheelchair dump package exist in the workspace?
 void doesWheelchairDumpPkgExist() {
 	if (ros::package::getPath("wheelchair_dump") == "") {
 		cout << "FATAL:  Couldn't find package 'wheelchair_dump' \n";
@@ -115,6 +111,7 @@ void doesWheelchairDumpPkgExist() {
 	}
 }
 
+//create a file
 int createFile(std::string fileName) { //if this doesn't get called, no file is created
 	printf("DEBUG: createFile()\n");
 	std::ifstream fileExists(fileName);
@@ -137,6 +134,7 @@ int createFile(std::string fileName) { //if this doesn't get called, no file is 
 	}
 }
 
+//calculate lines from files
 int calculateLines(std::string fileName) {
 	printf("DEBUG: calculateLines()\n");
 	ifstream FILE_COUNTER(fileName);
@@ -161,19 +159,19 @@ void objectsFileToStruct(std::string fileName) {
 	int objectNumber = 0;
 	while (getline(FILE_READER, line)) {
 		int delimiterPos = 0;
-		std::string getObjectName;
-		std::string getObjectConfidence;
+		std::string getObjectName; //temporary storage for object name
+		std::string getObjectConfidence; //temporary storage for object confidence
 		getObjectName = line.substr(0, line.find(objectsDelimiter)); //string between pos 0 and delimiter
 		//cout << getObjectName; //print object name
 		getObjectConfidence = line.substr(line.find(objectsDelimiter) +1); //string between delimiter and end of line
 		objects[objectNumber].objectName = getObjectName;
 		//cout << ::atof(getObjectConfidence.c_str()); //print object confidence
-		double getObjectConfidence2Double = std::atof(getObjectConfidence.c_str());
-		objects[objectNumber].objectConfidence = getObjectConfidence2Double;
-		objectNumber++;
+		double getObjectConfidence2Double = std::atof(getObjectConfidence.c_str()); //cast confidence string to double
+		objects[objectNumber].objectConfidence = getObjectConfidence2Double; //set object confidence
+		objectNumber++; //iterate to next object
 	}
 	FILE_READER.close();
-	totalObjectsFromMnet = objectNumber;
+	totalObjectsFromMnet = objectNumber; //set total number of objects in mobilenet
 }
 
 //get list of rooms and save to struct
@@ -185,15 +183,15 @@ void roomListToStruct(std::string fileName) {
 	int roomNumber = 0;
 	while (getline(FILE_READER, line)) {
 		int delimiterPos = 0;
-		std::string getRoomName;
-		int getRoomId;
+		std::string getRoomName; //temporary room name
+		int getRoomId; //temporary room id
 		getRoomName = line.substr(0, line.find(roomsDelimiter)); //string between 0 and delimiter
 		room[roomNumber].roomName = getRoomName; //set room name
 		cout << getRoomName; //print room name
 		getRoomId = std::stoi(line.substr(line.find(roomsDelimiter) +1)); //get room id
 		room[roomNumber].id = getRoomId; //set room id
 		cout << getRoomId << "\n"; //print room id
-		roomNumber++;
+		roomNumber++; //iterate to next room
 	}
 	FILE_READER.close();
 }
@@ -217,24 +215,25 @@ void restructRoomList() {
 	//if room name doesn't exist in the struct, write back to the file, then add a weights file
 	int foundRoomMatch = 0;
 	for (int i = 0; i < totalRooms; i++) {
-		if (room[i].roomName == roomNameROSParam) {
+		if (room[i].roomName == roomNameROSParam) { //if array in room struct is equal to ros parameter room name
 			//found a room match
-			foundRoomMatch = 1;
+			foundRoomMatch = 1; //set matched room name to 1
 		}
 	}
-	if (foundRoomMatch == 0) {
+	if (foundRoomMatch == 0) { //if match hasn't been found
 		//after loop, if a match hasn't been found - add room to file.
-		ofstream WRITE_FILE(roomListLoc);
+		ofstream WRITE_FILE(roomListLoc); //create room list file
 		for (int line = 0; line < totalRooms; line++) {
-			WRITE_FILE << room[line].roomName << ":" << room[line].id << "\n";
+			WRITE_FILE << room[line].roomName << ":" << room[line].id << "\n"; //add rooms to room list
 		}
 		WRITE_FILE << roomNameROSParam << ":" << totalRooms; //no need for return on last line of file
 		WRITE_FILE.close();
-		std::string createNewWeightingFile = weightingFileLoc + roomNameROSParam + weightingFileType;
-		createFile(createNewWeightingFile);
+		std::string createNewWeightingFile = weightingFileLoc + roomNameROSParam + weightingFileType; //append destination of new weights file
+		createFile(createNewWeightingFile); //create new weighting file
 	}
-	totalRooms = calculateLines(roomListLoc);
-	roomListToStruct(roomListLoc);
+	totalRooms = calculateLines(roomListLoc); //set total number of rooms
+	roomListToStruct(roomListLoc); //set room list to struct
+
 	printf("DEBUG: roomStruct\n");
 	for (int i = 0; i < totalRooms; i++) {
 		cout << room[i].roomName;
@@ -263,51 +262,51 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 	int lineNumber = 0;
 	int objectNumber = 0;
 	while (getline(FILE_READER, line)) {
-		if (lineNumber == 0) {
+		if (lineNumber == 0) { //if line number is 0 - i.e. room name
 			//do nothing room name
 			cout << "reading Room Name: " << line << "\n";
 		}
-		else if (lineNumber == 1) {
+		else if (lineNumber == 1) { //if line number is 1 - i.e. training times
 			//get times trained
 			std::string getTimesTrainedString = line;
-			int getTimesTrained = ::atoi(line.c_str());
+			int getTimesTrained = ::atoi(line.c_str()); //cast times trained string to int
 			getTimesTrained++;
-			room[roomIdParam].timesTrained = getTimesTrained;
+			room[roomIdParam].timesTrained = getTimesTrained; //set times trained to correponding room
 			cout << "reading Times Trained: " << room[roomIdParam].timesTrained << "\n";
 		}
-		else if (lineNumber > 1) {
+		else if (lineNumber > 1) { //rest of the lines are trained objects
 			//find delimiter positions
-			std::string delimiter = ":";
-			int delimiterPos[5];
-			int delimiterNumber = 0;
-			int lineLength = line.length();
-			char lineArray[lineLength + 1];
-			strcpy(lineArray, line.c_str());
+			std::string delimiter = ":"; //look for colon 
+			int delimiterPos[5]; //set array of delimiter positions
+			int delimiterNumber = 0; //current delimiter
+			int lineLength = line.length(); //get length of line
+			char lineArray[lineLength + 1]; //create array of chars
+			strcpy(lineArray, line.c_str()); //set string to chars
 			for (int charPos = 0; charPos < lineLength; charPos++) {
-				if (lineArray[charPos] == ':') {
+				if (lineArray[charPos] == ':') { //if char is colon
 					//printf("%c\n", lineArray[i]);
 					//printf("found delimiter\n");
-					delimiterPos[delimiterNumber] = charPos;
-					delimiterNumber++;
+					delimiterPos[delimiterNumber] = charPos; //add position of delimiter to array
+					delimiterNumber++; //iterate to next delimiter
 				}
 			}
 
 
 			//extract substrings between delimiters
-			for (int section = 0; section < delimiterNumber +1; section++) {
+			for (int section = 0; section < delimiterNumber +1; section++) { //go through line at each delimiter position
 				if (section == 0) {
-					preTrained[roomIdParam][objectNumber].objectName = line.substr(0, delimiterPos[0]);
-					cout << "object number is " << objectNumber << "\n";
+					preTrained[roomIdParam][objectNumber].objectName = line.substr(0, delimiterPos[0]); //set first substring to pretrained struct
+					cout << "object number is " << objectNumber << "\n"; 
 					cout << "preTrained objectname is: " + preTrained[roomIdParam][objectNumber].objectName + "\n";
 				}
 				else if (section == 1) {
-					double weightingToDouble = std::atof(line.substr(delimiterPos[0] + 1, delimiterPos[1]).c_str());
-					preTrained[roomIdParam][objectNumber].objectWeighting = weightingToDouble;
+					double weightingToDouble = std::atof(line.substr(delimiterPos[0] + 1, delimiterPos[1]).c_str()); //cast to 
+					preTrained[roomIdParam][objectNumber].objectWeighting = weightingToDouble; //set second substring to pretrained struct and cast to double
 					cout << "preTrained objectWeighting is: " << preTrained[roomIdParam][objectNumber].objectWeighting << "\n";
 				}
 				else if (section == 2) {
-					double uniquenessToDouble = std::atof(line.substr(delimiterPos[1] + 1).c_str());
-					preTrained[roomIdParam][objectNumber].uniqueness = uniquenessToDouble;
+					double uniquenessToDouble = std::atof(line.substr(delimiterPos[1] + 1).c_str()); //cast uniqueness from string to double
+					preTrained[roomIdParam][objectNumber].uniqueness = uniquenessToDouble; //set third substring to pretrained struct and cast to double
 					cout << "preTrained uniqueness is: " << preTrained[roomIdParam][objectNumber].uniqueness << "\n";
 				}
 			}
