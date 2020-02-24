@@ -58,6 +58,7 @@ int totalObjectsFromMnet = 0;
 //int totalObjectsFromWeights = 0;
 int totalRooms = 0;
 
+int MIN_WEIGHTING = 0;
 int MAX_WEIGHTING = 100;
 int MAX_TRAINING_TIMES = 5;
 
@@ -329,7 +330,7 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 void startTraining(std::string roomNameStringParam) { //training only runs one room
 	printf("DEBUG: startTraining()\n");
 	//this is currently the work in progress function
-	int currentTrainingPos = 0;
+	
 	int correspondingRoomId = 0;
 
 	//run through for loop until room name parameter matches
@@ -376,13 +377,13 @@ void startTraining(std::string roomNameStringParam) { //training only runs one r
 
 
 	//print debug info
-	printSeparator(1);
+	printSeparator(0);
 	cout << "DEBUG existing weights \n";
 	cout << "total objects from weights " << room[0].totalObjects << "\n";
 	for (int i = 0; i < room[0].totalObjects; i++) {
 		cout << preTrained[0][i].objectName << " : " << preTrained[0][i].alreadyExists << "\n";
 	}
-	printSeparator(1);
+	printSeparator(0);
 	cout << "DEBUG existing objects \n";
 	cout << "total objects from mnet " << totalObjectsFromMnet << "\n";
 
@@ -390,13 +391,67 @@ void startTraining(std::string roomNameStringParam) { //training only runs one r
 		cout << objects[i].objectName << " : " << objects[i].alreadyExists << "\n";
 	}
 
-
+	printSeparator(0);
+	int currentTrainingPos = 0;
+	int weightingValueCalc = 0; //variable stores divider for object weighting
 	//move items into currentTraining (pre calculated, but organised)
-	for (int isWeightingObject = 0; isWeightingObject < room[correspondingRoomId].totalObjects; isWeightingObject++) {
-		if (preTrained[correspondingRoomId][isWeightingObject].alreadyExists == 1) {
-			
-		}
+	if (room[correspondingRoomId].timesTrained <= MAX_TRAINING_TIMES) {
+		double weightingDividerValue = room[correspondingRoomId].timesTrained;
+		weightingValueCalc = MAX_WEIGHTING / weightingDividerValue;
 	}
+	else if (room[correspondingRoomId].timesTrained > MAX_TRAINING_TIMES) {
+		double weightingDividerValue = MAX_TRAINING_TIMES;
+		weightingValueCalc = MAX_WEIGHTING / weightingDividerValue;
+	}
+
+	for (int isWeightingObject = 0; isWeightingObject < room[correspondingRoomId].totalObjects; isWeightingObject++) {
+		if (preTrained[correspondingRoomId][isWeightingObject].alreadyExists == 1) { //if one exists - add to weighting
+			trained[correspondingRoomId][currentTrainingPos].objectName = preTrained[correspondingRoomId][isWeightingObject].objectName; //get and set object name
+			int isCurrentWeighting = preTrained[correspondingRoomId][isWeightingObject].objectWeighting; //get current weighting value
+			int newWeightingValue = isCurrentWeighting + weightingValueCalc;
+			cout << isCurrentWeighting << " is current weighting \n";
+			cout << weightingValueCalc << " is divider\n";
+			cout << newWeightingValue << " is new weighting value\n";
+			if (newWeightingValue > MAX_WEIGHTING) {
+				trained[correspondingRoomId][currentTrainingPos].objectWeighting = MAX_WEIGHTING; //set to max weighting if higher
+				cout << trained[correspondingRoomId][currentTrainingPos].objectWeighting << " is set weighting\n";
+			}
+			else {
+				trained[correspondingRoomId][currentTrainingPos].objectWeighting = newWeightingValue; //set to new weighting value
+				cout << trained[correspondingRoomId][currentTrainingPos].objectWeighting << " is set weighting\n";
+			}
+			trained[correspondingRoomId][currentTrainingPos].uniqueness = preTrained[correspondingRoomId][isWeightingObject].uniqueness; //get and set uniqueness
+		}
+		else if (preTrained[correspondingRoomId][isWeightingObject].alreadyExists == 0) {//if it doesn't exist - subtract weighting
+			trained[correspondingRoomId][currentTrainingPos].objectName = preTrained[correspondingRoomId][isWeightingObject].objectName; //get and set object name
+			int isCurrentWeighting = preTrained[correspondingRoomId][isWeightingObject].objectWeighting; //get current weighting value
+			int newWeightingValue = isCurrentWeighting - weightingValueCalc;
+			cout << isCurrentWeighting << " is current weighting \n";
+			cout << weightingValueCalc << " is divider\n";
+			cout << newWeightingValue << " is new weighting value\n";
+			if (newWeightingValue < MIN_WEIGHTING) {
+				trained[correspondingRoomId][currentTrainingPos].objectWeighting = MIN_WEIGHTING; //set to min weighting if lower
+				cout << trained[correspondingRoomId][currentTrainingPos].objectWeighting << " is set weighting\n";
+			}
+			else {
+				trained[correspondingRoomId][currentTrainingPos].objectWeighting = newWeightingValue; //set to new weighting value
+				cout << trained[correspondingRoomId][currentTrainingPos].objectWeighting << " is set weighting\n";
+			}
+			trained[correspondingRoomId][currentTrainingPos].uniqueness = preTrained[correspondingRoomId][isWeightingObject].uniqueness; //get and set uniqueness
+		}
+		currentTrainingPos++;
+	}
+
+	for (int isMnetObject = 0; isMnetObject < totalObjectsFromMnet; isMnetObject++) {
+		if (objects[isMnetObject].alreadyExists == 1) {
+			//do nothing because it has already been added
+		}
+		else if (objects[isMnetObject].alreadyExists == 0) {
+			//add to training list
+		}
+		currentTrainingPos++;
+	}
+	printSeparator(0);
 
 	//for object in mnet not matched, add to current training - is present add to probability
 
