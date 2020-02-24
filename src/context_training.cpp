@@ -58,6 +58,7 @@ int totalObjectsFromMnet = 0;
 int correspondingRoomId = 0;
 //int totalObjectsFromWeights = 0;
 int totalRooms = 0;
+int totalTrained = 0;
 
 int MIN_WEIGHTING = 0;
 int MAX_WEIGHTING = 100;
@@ -466,7 +467,7 @@ void startTraining(std::string roomNameStringParam) { //training only runs one r
 			currentTrainingPos++; //only iterate for new objects
 		}
 	}
-	int totalTrained = currentTrainingPos;
+	totalTrained = currentTrainingPos;
 	printSeparator(0);
 
 
@@ -477,8 +478,19 @@ void startTraining(std::string roomNameStringParam) { //training only runs one r
 	}
 }
 
-void structToWeightingFile() {
-
+void structToWeightingFile(std::string roomNameStringParam) {
+	std::string fileName = weightingFileLoc + roomNameStringParam + weightingFileType;
+	cout << fileName << "\n";
+	ofstream FILE_WRITER;
+	FILE_WRITER.open(fileName);
+	FILE_WRITER << room[correspondingRoomId].roomName << "\n";
+	FILE_WRITER << room[correspondingRoomId].timesTrained << "\n";
+	for (int isLine = 0; isLine < totalTrained; isLine++) {
+		FILE_WRITER <<  trained[correspondingRoomId][isLine].objectName << ":" << 
+						trained[correspondingRoomId][isLine].objectWeighting << ":" << 
+						trained[correspondingRoomId][isLine].uniqueness << "\n";
+	}
+	FILE_WRITER.close();
 }
 
 
@@ -598,7 +610,7 @@ int main(int argc, char **argv)
 
 	/////////////////////////////////////////////////////////////////
 	startTraining(roomNameROSParam);
-	structToWeightingFile();
+	structToWeightingFile(roomNameROSParam);
 
   ros::Rate loop_rate(10);
   int doOnce = 1;
