@@ -300,7 +300,7 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 					cout << "preTrained objectname is: " + preTrained[roomIdParam][objectNumber].objectName + "\n";
 				}
 				else if (section == 1) {
-					double weightingToDouble = std::atof(line.substr(delimiterPos[0] + 1, delimiterPos[1]).c_str()); //cast to 
+					double weightingToDouble = std::atof(line.substr(delimiterPos[0] + 1, delimiterPos[1]).c_str()); //cast weighting from string to double
 					preTrained[roomIdParam][objectNumber].objectWeighting = weightingToDouble; //set second substring to pretrained struct and cast to double
 					cout << "preTrained objectWeighting is: " << preTrained[roomIdParam][objectNumber].objectWeighting << "\n";
 				}
@@ -314,7 +314,7 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 
 			objectNumber+=1;
 			//totalObjectsFromWeights = objectNumber;
-			room[roomIdParam].totalObjects = objectNumber;
+			room[roomIdParam].totalObjects = objectNumber; //set number of objects for room struct
 			cout << "total objects are " << room[roomIdParam].totalObjects << "\n";
 
 		}
@@ -333,39 +333,39 @@ void startTraining(std::string roomNameStringParam) { //training only runs one r
 
 	//run through for loop until room name parameter matches
 	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
-		if (room[isRoom].roomName == roomNameStringParam) {
+		if (room[isRoom].roomName == roomNameStringParam) { //if room from para is the same as room in struct
 			cout << "found corresponding room name " << room[isRoom].roomName << "\n";
-			correspondingRoomId = isRoom;
+			correspondingRoomId = isRoom; //get id and set to global variable
 		}
 		else {
 			//do nothing, carry on looping
 		}
 	}
-	std::string tmpon;
-	std::string tmpwt;
+	std::string tmpMnetObject; //variable for debugging and printing
+	std::string tmpPreTrainedObject; //variable for debugging and printing
 	//iterate through objects list and find matches in weighting list
 	for (int isMnetObject = 0; isMnetObject < totalObjectsFromMnet; isMnetObject++) {
-		tmpon = objects[isMnetObject].objectName;
+		tmpMnetObject = objects[isMnetObject].objectName; //set object name from mnet to variable
 		for (int isWeightingObject = 0; isWeightingObject < room[correspondingRoomId].totalObjects; isWeightingObject++) {
-			tmpwt = preTrained[correspondingRoomId][isWeightingObject].objectName;
-			cout << tmpon << " and " << tmpwt << "\n";
+			tmpPreTrainedObject = preTrained[correspondingRoomId][isWeightingObject].objectName; //set object name from pretrained to variable
+			cout << tmpMnetObject << " and " << tmpPreTrainedObject << "\n"; //print debugging from pretrained struct and mnet struct
 		
-			if ((preTrained[correspondingRoomId][isWeightingObject].alreadyExists == 1) || (objects[isMnetObject].alreadyExists == 1)) {
+			if ((preTrained[correspondingRoomId][isWeightingObject].alreadyExists == 1) || (objects[isMnetObject].alreadyExists == 1)) { //if already exists in pretrained and objects
 				//if it's already been set to 1 - then don't change back to 0 when not detected
 				cout << "already matched \n";
 			}
-			else if ((preTrained[correspondingRoomId][isWeightingObject].alreadyExists == 0) && (objects[isMnetObject].alreadyExists == 0)) {
-				if (objects[isMnetObject].objectName == preTrained[correspondingRoomId][isWeightingObject].objectName) {
+			else if ((preTrained[correspondingRoomId][isWeightingObject].alreadyExists == 0) && (objects[isMnetObject].alreadyExists == 0)) { //if none exists in both structs
+				if (objects[isMnetObject].objectName == preTrained[correspondingRoomId][isWeightingObject].objectName) { //and if objects are equal to both
 					//found first match
 					cout << "found match \n";
-					preTrained[correspondingRoomId][isWeightingObject].alreadyExists = 1;
+					preTrained[correspondingRoomId][isWeightingObject].alreadyExists = 1; //set to exists
 					objects[isMnetObject].alreadyExists = 1;
 				}
 				else {
 					//didn't find match
 					cout << "didn't find match: " << preTrained[correspondingRoomId][isWeightingObject].objectName << " : " << objects[isMnetObject].objectName << "\n";
 
-					preTrained[correspondingRoomId][isWeightingObject].alreadyExists = 0;
+					preTrained[correspondingRoomId][isWeightingObject].alreadyExists = 0;  //set exists to 0
 					objects[isMnetObject].alreadyExists = 0;
 				}
 			}
@@ -393,20 +393,20 @@ void startTraining(std::string roomNameStringParam) { //training only runs one r
 	int currentTrainingPos = 0;
 	int weightingValueCalc = 0; //variable stores divider for object weighting
 	//move items into currentTraining (pre calculated, but organised)
-	if (room[correspondingRoomId].timesTrained <= MAX_TRAINING_TIMES) {
-		double weightingDividerValue = room[correspondingRoomId].timesTrained;
-		weightingValueCalc = MAX_WEIGHTING / weightingDividerValue;
+	if (room[correspondingRoomId].timesTrained <= MAX_TRAINING_TIMES) { //if times trained is less than maximum training sessions
+		double weightingDividerValue = room[correspondingRoomId].timesTrained; //get times trained
+		weightingValueCalc = MAX_WEIGHTING / weightingDividerValue; //divide maximum training weight by times trained
 	}
-	else if (room[correspondingRoomId].timesTrained > MAX_TRAINING_TIMES) {
-		double weightingDividerValue = MAX_TRAINING_TIMES;
-		weightingValueCalc = MAX_WEIGHTING / weightingDividerValue;
+	else if (room[correspondingRoomId].timesTrained > MAX_TRAINING_TIMES) { //if times trained is greater than maximum training sessions
+		double weightingDividerValue = MAX_TRAINING_TIMES; //set weighting to maximum trained sessions
+		weightingValueCalc = MAX_WEIGHTING / weightingDividerValue; //divide maximum training weight by max times trained
 	}
 
 	for (int isWeightingObject = 0; isWeightingObject < room[correspondingRoomId].totalObjects; isWeightingObject++) {
 		if (preTrained[correspondingRoomId][isWeightingObject].alreadyExists == 1) { //if one exists - add to weighting
 			trained[correspondingRoomId][currentTrainingPos].objectName = preTrained[correspondingRoomId][isWeightingObject].objectName; //get and set object name
 			int isCurrentWeighting = preTrained[correspondingRoomId][isWeightingObject].objectWeighting; //get current weighting value
-			int newWeightingValue = isCurrentWeighting + weightingValueCalc;
+			int newWeightingValue = isCurrentWeighting + weightingValueCalc; //add weighting value to current weight
 			cout << isCurrentWeighting << " is current weighting \n";
 			cout << weightingValueCalc << " is divider\n";
 			cout << newWeightingValue << " is new weighting value\n";
@@ -423,7 +423,7 @@ void startTraining(std::string roomNameStringParam) { //training only runs one r
 		else if (preTrained[correspondingRoomId][isWeightingObject].alreadyExists == 0) {//if it doesn't exist - subtract weighting
 			trained[correspondingRoomId][currentTrainingPos].objectName = preTrained[correspondingRoomId][isWeightingObject].objectName; //get and set object name
 			int isCurrentWeighting = preTrained[correspondingRoomId][isWeightingObject].objectWeighting; //get current weighting value
-			int newWeightingValue = isCurrentWeighting - weightingValueCalc;
+			int newWeightingValue = isCurrentWeighting - weightingValueCalc; //subtract weighting value from current weight
 			cout << isCurrentWeighting << " is current weighting \n";
 			cout << weightingValueCalc << " is divider\n";
 			cout << newWeightingValue << " is new weighting value\n";
@@ -437,17 +437,17 @@ void startTraining(std::string roomNameStringParam) { //training only runs one r
 			}
 			trained[correspondingRoomId][currentTrainingPos].uniqueness = preTrained[correspondingRoomId][isWeightingObject].uniqueness; //get and set uniqueness
 		}
-		currentTrainingPos++;
+		currentTrainingPos++; //iterate to next object position in training struct
 	}
 
 	for (int isMnetObject = 0; isMnetObject < totalObjectsFromMnet; isMnetObject++) {
-		if (objects[isMnetObject].alreadyExists == 1) {
+		if (objects[isMnetObject].alreadyExists == 1) { //if mnet object exists already
 			//do nothing because it has already been added
 		}
-		else if (objects[isMnetObject].alreadyExists == 0) {
+		else if (objects[isMnetObject].alreadyExists == 0) { //if it's a new object
 			trained[correspondingRoomId][currentTrainingPos].objectName = objects[isMnetObject].objectName; //get and set object name
 			int isCurrentWeighting = 0; //get current weighting value of 0
-			int newWeightingValue = isCurrentWeighting + weightingValueCalc;
+			int newWeightingValue = isCurrentWeighting + weightingValueCalc; //add weighting value
 			cout << isCurrentWeighting << " OB: is current weighting \n";
 			cout << weightingValueCalc << " OB: is divider\n";
 			cout << newWeightingValue << " OB: is new weighting value\n";
@@ -463,7 +463,7 @@ void startTraining(std::string roomNameStringParam) { //training only runs one r
 			currentTrainingPos++; //only iterate for new objects
 		}
 	}
-	totalTrained = currentTrainingPos;
+	totalTrained = currentTrainingPos; //total objects in trained struct
 	printSeparator(0);
 
 
@@ -475,7 +475,7 @@ void startTraining(std::string roomNameStringParam) { //training only runs one r
 }
 
 void structToWeightingFile(std::string roomNameStringParam) {
-	std::string fileName = weightingFileLoc + roomNameStringParam + weightingFileType;
+	std::string fileName = weightingFileLoc + roomNameStringParam + weightingFileType; //generate filename from room name
 	cout << fileName << "\n";
 	ofstream FILE_WRITER;
 	FILE_WRITER.open(fileName);
