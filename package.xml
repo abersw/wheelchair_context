@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>context_training</name>
+  <name>wheelchair_context</name>
   <version>0.0.0</version>
   <description>The context_training package</description>
 

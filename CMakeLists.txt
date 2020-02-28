@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(context_training)
+project(wheelchair_context)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -210,4 +210,4 @@ include_directories(
 add_compile_options(-std=c++11)
 add_executable(context_training src/context_training.cpp)
 target_link_libraries(context_training ${catkin_LIBRARIES})
-add_dependencies(context_training beginner_tutorials_generate_messages_cpp roslib)
+# add_dependencies(context_training roslib)
