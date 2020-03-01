@@ -2,7 +2,9 @@
 <package format="2">
   <name>wheelchair_context</name>
   <version>0.0.0</version>
-  <description>The context_training package</description>
+  <description>
+	"(Pre)Mirthful Maidenhair - v0.1"
+  </description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->

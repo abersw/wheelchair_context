@@ -210,4 +210,7 @@ include_directories(
 add_compile_options(-std=c++11)
 add_executable(context_training src/context_training.cpp)
 target_link_libraries(context_training ${catkin_LIBRARIES})
+
+add_executable(calculate_context src/calculate_context.cpp)
+target_link_libraries(calculate_context ${catkin_LIBRARIES})
 # add_dependencies(context_training roslib)
