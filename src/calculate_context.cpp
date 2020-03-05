@@ -23,7 +23,10 @@ std::string weightingFileType = ".weights"; //file extention for training types
 
 //read room list
 //struct all objects from weighting files
-//add them all up
+//update uniqueness of items
+//weight found items against structed items
+//output resulting room
+//save uniqueness back to files
 
 void roomToStruct(std::string fileName) {
 
