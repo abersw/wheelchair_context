@@ -489,7 +489,7 @@ void structToWeightingFile(std::string roomNameStringParam) {
 	FILE_WRITER.close();
 }
 
-void calculateUniqueness() {
+void calculateuniqueness() {
 	
 }
 

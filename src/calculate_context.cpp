@@ -194,6 +194,23 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 	printSeparator(0);
 }
 
+void calculateuniqueness(int roomNumber) {
+	//notes for calculating uniqueness
+	//uniqueness is percentage
+	//if you have two rooms and it is located in 1, it's a unique item
+	//occurances divided by total rooms
+	// 1 / 2 = 0.5 * 100 = 50 - 50% common
+	// 2 / 3 = 0.6667 * 100 = 66.66  |  100 - 66.6 = 33.34
+	//what about rooms which haven't been trained as extensively? What affect does that have on uniqueness?
+
+	//start with for loop of rooms
+	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
+		for (int isObject = 0; isObject < room[isRoom].totalObjects; isObject++) {
+
+		}
+	}
+}
+
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "calculate_context");
   	ros::NodeHandle n;
@@ -212,10 +229,17 @@ int main(int argc, char **argv) {
 	cout << totalRooms << "\n";
 	roomToStruct(roomListLoc);
 
+	//read training files
 	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
 		std::string generateFileName = weightingFileLoc + room[isRoom].roomName + weightingFileType;
 		readTrainingFile(generateFileName, isRoom);
 	}
+
+	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
+		std::string generateFileName = weightingFileLoc + room[isRoom].roomName + weightingFileType;
+		calculateuniqueness(isRoom);
+	}
+
 
 	return 0;
 }
