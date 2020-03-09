@@ -31,10 +31,17 @@ struct Training {
 	int alreadyExists;
 	double uniqueness;
 };
+
+struct ObjectDictionary {
+	std::string objectName;
+	int instances;
+	int uniqueness;
+};
 //roomId followed by objects list
 struct Training preTrained[1000][10000]; //saves items from file to struct
 struct Training trained[1000][10000]; //struct for writing back to files
 struct Rooms room[10000]; //list of rooms
+struct ObjectDictionary objectDictionary[10000];
 
 int totalRooms = 0;
 
@@ -206,7 +213,10 @@ void calculateuniqueness(int roomNumber) {
 	//start with for loop of rooms
 	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
 		for (int isObject = 0; isObject < room[isRoom].totalObjects; isObject++) {
-
+			std::string getObjectName = preTrained[isRoom][isObject].objectName;
+			cout << "read objectname: " << getObjectName;
+			preTrained[isRoom][isObject].alreadyExists += 1;
+			cout << "found " << preTrained[isRoom][isObject].alreadyExists << " times" << "\n";
 		}
 	}
 }
