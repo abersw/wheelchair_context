@@ -41,7 +41,7 @@ struct ObjectDictionary {
 struct Training preTrained[1000][10000]; //saves items from file to struct
 struct Training trained[1000][10000]; //struct for writing back to files
 struct Rooms room[10000]; //list of rooms
-struct ObjectDictionary objectDictionary[10000];
+struct ObjectDictionary objectDictionary[10000]; //objecs list to find uniqueness
 
 int totalRooms = 0;
 
