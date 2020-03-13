@@ -201,7 +201,7 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 	printSeparator(0);
 }
 
-void calculateuniqueness(int roomNumber) {
+void calculateUniqueness() {
 	//notes for calculating uniqueness
 	//uniqueness is percentage
 	//if you have two rooms and it is located in 1, it's a unique item
@@ -211,12 +211,18 @@ void calculateuniqueness(int roomNumber) {
 	//what about rooms which haven't been trained as extensively? What affect does that have on uniqueness?
 
 	//start with for loop of rooms
+	int totalDictionary = 0;
 	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
 		for (int isObject = 0; isObject < room[isRoom].totalObjects; isObject++) {
 			std::string getObjectName = preTrained[isRoom][isObject].objectName;
-			cout << "read objectname: " << getObjectName;
-			preTrained[isRoom][isObject].alreadyExists += 1;
-			cout << "found " << preTrained[isRoom][isObject].alreadyExists << " times" << "\n";
+			cout << "read objectname: " << getObjectName << "\n";
+			for (int i = 0; i <= totalDictionary; i++) {
+				cout << "fuck me, this worked! " << i << "\n";
+			}
+
+			//preTrained[isRoom][isObject].alreadyExists += 1;
+			//cout << "found " << preTrained[isRoom][isObject].alreadyExists << " times" << "\n";
+			//objectDictionary[objectLister].objectName = preTrained[isRoom][isObject].objectName;
 		}
 	}
 }
@@ -245,10 +251,11 @@ int main(int argc, char **argv) {
 		readTrainingFile(generateFileName, isRoom);
 	}
 
-	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
+	/*for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
 		std::string generateFileName = weightingFileLoc + room[isRoom].roomName + weightingFileType;
 		calculateuniqueness(isRoom);
-	}
+	}*/
+	calculateUniqueness();
 
 
 	return 0;
