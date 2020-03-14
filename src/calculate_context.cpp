@@ -212,18 +212,42 @@ void calculateUniqueness() {
 
 	//start with for loop of rooms
 	int totalDictionary = 0;
+	int foundFlag = 0;
 	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
 		for (int isObject = 0; isObject < room[isRoom].totalObjects; isObject++) {
 			std::string getObjectName = preTrained[isRoom][isObject].objectName;
-			cout << "read objectname: " << getObjectName << "\n";
+			//cout << "read objectname: " << getObjectName << "\n";
+			//totalDictionary = *(&objectDictionary + 1) - objectDictionary;
+			cout << "td: " << totalDictionary << "\n";
 			for (int i = 0; i <= totalDictionary; i++) {
-				cout << "fuck me, this worked! " << i << "\n";
+				//cout << "fuck me, this worked! " << i << "\n";
+				//cout << "before array " << getObjectName << ":" << objectDictionary[i].objectName << ":" << objectDictionary[i].instances <<"\n" ;
+				if ((objectDictionary[i].objectName == getObjectName) && (objectDictionary[i].instances > 0)) {
+					cout << "found another one\n";
+					foundFlag = 1;
+				}
+				else {
+					//add to array
+					objectDictionary[totalDictionary].objectName = getObjectName;
+					objectDictionary[totalDictionary].instances = 1;
+					cout << "added to array " << getObjectName << ":" << objectDictionary[i].objectName << ":" << objectDictionary[i].instances <<"\n" ;
+					foundFlag = 0;
+				}
+			}
+			if (foundFlag == 1) {
+				//do nothing
+			}
+			else {
+				totalDictionary += 1;
 			}
 
 			//preTrained[isRoom][isObject].alreadyExists += 1;
 			//cout << "found " << preTrained[isRoom][isObject].alreadyExists << " times" << "\n";
 			//objectDictionary[objectLister].objectName = preTrained[isRoom][isObject].objectName;
 		}
+	}
+	for (int i = 0; i < totalDictionary; i++) {
+		cout << objectDictionary[i].objectName << ":" << objectDictionary[i].instances << "\n";
 	}
 }
 
