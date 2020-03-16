@@ -217,34 +217,34 @@ void calculateUniqueness() {
 	int foundObject = 0;
 	int foundObjectPos = 0;
 	int tmpInstanceCounter = 0;
-	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
-		for (int isObject = 0; isObject < room[isRoom].totalObjects; isObject++) {
-			std::string getObjectName = preTrained[isRoom][isObject].objectName;
-			for (int isPreObject = 0; isPreObject <= totalPreObjects; isPreObject++) {
-				cout << "running through number " << isPreObject << "\n";
-				std::string getPreObjectName = preObjectDictionary[isPreObject].objectName;
-				cout << "pre object is " << getPreObjectName << "\n";
-				if (getObjectName == getPreObjectName) {
+	for (int isRoom = 0; isRoom < totalRooms; isRoom++) { //iterate through each room
+		for (int isObject = 0; isObject < room[isRoom].totalObjects; isObject++) { //iterate through each object from the room
+			std::string getObjectName = preTrained[isRoom][isObject].objectName; //assign object name from room to variable
+			for (int isPreObject = 0; isPreObject <= totalPreObjects; isPreObject++) { //iterate through temporary variable
+				cout << "running through number " << isPreObject << "\n"; //debug line print iteration
+				std::string getPreObjectName = preObjectDictionary[isPreObject].objectName; //assign object name from list
+				cout << "pre object is " << getPreObjectName << "\n"; //debug line print object from list
+				if (getObjectName == getPreObjectName) { //if object from room is the same as the list
 					//tmpInstanceCounter++;
-					foundObject = 1;
-					foundObjectPos = isPreObject;
+					foundObject = 1; //found object
+					foundObjectPos = isPreObject; //
 				}
 				else {
 					//found objects stay at 0
 				}
 
-			}
-			if (foundObject == 1) {
+			}//finish list loop
+			if (foundObject == 1) { //if it found a match
 				//preObjectDictionary[foundObjectPos].objectName = getObjectName;
-				preObjectDictionary[foundObjectPos].instances += 1;
-				foundObject = 0;
+				preObjectDictionary[foundObjectPos].instances += 1; //add 1 to instances found
+				foundObject = 0; //set back to 0 for new iteration
 			}
 			else {
 				//object not found, so add to array???
-				preObjectDictionary[objectNumber].objectName = getObjectName;
-				preObjectDictionary[objectNumber].instances += 1;
-				objectNumber++;
-				totalPreObjects++;
+				preObjectDictionary[objectNumber].objectName = getObjectName; //create object in list
+				preObjectDictionary[objectNumber].instances += 1; //add instance to object
+				objectNumber++; //add 1 for next object
+				totalPreObjects++; //increase size of objects to iterate
 			}
 
 
@@ -258,6 +258,8 @@ void calculateUniqueness() {
 		cout << preObjectDictionary[i].objectName << ":" << preObjectDictionary[i].instances << "\n";
 		//cout << preObjectDictionary[i] << "\n";
 	}
+	//start working on adding instances back to preTrainedObjects array 
+	//then calculate how unique they are, at the moment 1 
 }
 
 int main(int argc, char **argv) {
