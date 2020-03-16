@@ -42,6 +42,7 @@ struct Training preTrained[1000][10000]; //saves items from file to struct
 struct Training trained[1000][10000]; //struct for writing back to files
 struct Rooms room[10000]; //list of rooms
 struct ObjectDictionary objectDictionary[10000]; //objecs list to find uniqueness
+struct ObjectDictionary preObjectDictionary[10000];
 
 int totalRooms = 0;
 
@@ -211,43 +212,51 @@ void calculateUniqueness() {
 	//what about rooms which haven't been trained as extensively? What affect does that have on uniqueness?
 
 	//start with for loop of rooms
-	int totalDictionary = 0;
-	int foundFlag = 0;
+	int objectNumber = 0;
+	int totalPreObjects = 0;
+	int foundObject = 0;
+	int foundObjectPos = 0;
+	int tmpInstanceCounter = 0;
 	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
 		for (int isObject = 0; isObject < room[isRoom].totalObjects; isObject++) {
 			std::string getObjectName = preTrained[isRoom][isObject].objectName;
-			//cout << "read objectname: " << getObjectName << "\n";
-			//totalDictionary = *(&objectDictionary + 1) - objectDictionary;
-			cout << "td: " << totalDictionary << "\n";
-			for (int i = 0; i <= totalDictionary; i++) {
-				//cout << "fuck me, this worked! " << i << "\n";
-				//cout << "before array " << getObjectName << ":" << objectDictionary[i].objectName << ":" << objectDictionary[i].instances <<"\n" ;
-				if ((objectDictionary[i].objectName == getObjectName) && (objectDictionary[i].instances > 0)) {
-					cout << "found another one\n";
-					foundFlag = 1;
+			for (int isPreObject = 0; isPreObject <= totalPreObjects; isPreObject++) {
+				cout << "running through number " << isPreObject << "\n";
+				std::string getPreObjectName = preObjectDictionary[isPreObject].objectName;
+				cout << "pre object is " << getPreObjectName << "\n";
+				if (getObjectName == getPreObjectName) {
+					//tmpInstanceCounter++;
+					foundObject = 1;
+					foundObjectPos = isPreObject;
 				}
 				else {
-					//add to array
-					objectDictionary[totalDictionary].objectName = getObjectName;
-					objectDictionary[totalDictionary].instances = 1;
-					cout << "added to array " << getObjectName << ":" << objectDictionary[i].objectName << ":" << objectDictionary[i].instances <<"\n" ;
-					foundFlag = 0;
+					//found objects stay at 0
 				}
+
 			}
-			if (foundFlag == 1) {
-				//do nothing
+			if (foundObject == 1) {
+				//preObjectDictionary[foundObjectPos].objectName = getObjectName;
+				preObjectDictionary[foundObjectPos].instances += 1;
+				foundObject = 0;
 			}
 			else {
-				totalDictionary += 1;
+				//object not found, so add to array???
+				preObjectDictionary[objectNumber].objectName = getObjectName;
+				preObjectDictionary[objectNumber].instances += 1;
+				objectNumber++;
+				totalPreObjects++;
 			}
 
-			//preTrained[isRoom][isObject].alreadyExists += 1;
-			//cout << "found " << preTrained[isRoom][isObject].alreadyExists << " times" << "\n";
-			//objectDictionary[objectLister].objectName = preTrained[isRoom][isObject].objectName;
+
+			//go through whole list of objects
+			//if u find a new one - add to array, detector activates when finished
+			//if its the same add exists ++ (hopefully no new array)
 		}
 	}
-	for (int i = 0; i < totalDictionary; i++) {
-		cout << objectDictionary[i].objectName << ":" << objectDictionary[i].instances << "\n";
+	printSeparator(1);
+	for (int i = 0; i < objectNumber; i++) {
+		cout << preObjectDictionary[i].objectName << ":" << preObjectDictionary[i].instances << "\n";
+		//cout << preObjectDictionary[i] << "\n";
 	}
 }
 
