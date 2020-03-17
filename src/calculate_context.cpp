@@ -260,14 +260,15 @@ void calculateUniqueness() {
 	}
 	//start working on adding instances back to preTrainedObjects array 
 	//then calculate how unique they are, at the moment 1 
-	for (int isPreObject = 0; isPreObject < totalPreObjects; isPreObject++) {
-		std::string getPreObjectName = preObjectDictionary[isPreObject].objectName;
-		for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
+	//put back uniqueness into preTrained struct
+	for (int isPreObject = 0; isPreObject < totalPreObjects; isPreObject++) { //go through preobjct list
+		std::string getPreObjectName = preObjectDictionary[isPreObject].objectName; //get object name from preobject list
+		for (int isRoom = 0; isRoom < totalRooms; isRoom++) { //iterate through room
 			//cout << "db " << isRoom << "\n";
-			for (int isObject = 0; isObject < room[isRoom].totalObjects; isObject++) {
-				std::string getObjectName = preTrained[isRoom][isObject].objectName;
-				if (getPreObjectName == getObjectName) {
-					int getInstances = preObjectDictionary[isPreObject].instances;
+			for (int isObject = 0; isObject < room[isRoom].totalObjects; isObject++) { //iterate through objects in each room
+				std::string getObjectName = preTrained[isRoom][isObject].objectName; //get object name from preTrained struct
+				if (getPreObjectName == getObjectName) { // if preobject list and pretrained struct is the same
+					int getInstances = preObjectDictionary[isPreObject].instances; //
 					//preTrained[isRoom][isObject].instances = getInstances;
 					int calcUniqueness = 100 / getInstances;
 					preTrained[isRoom][isObject].uniqueness = calcUniqueness;
@@ -276,11 +277,11 @@ void calculateUniqueness() {
 		}
 	}
 
-		for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
-			for (int isObject = 0; isObject < room[isRoom].totalObjects; isObject++) {
-				cout << "finished: " << preTrained[isRoom][isObject].objectName << ":" << preTrained[isRoom][isObject].uniqueness << "\n";
-			}
+	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
+		for (int isObject = 0; isObject < room[isRoom].totalObjects; isObject++) {
+			cout << "finished: " << preTrained[isRoom][isObject].objectName << ":" << preTrained[isRoom][isObject].uniqueness << "\n";
 		}
+	}
 	
 }
 
