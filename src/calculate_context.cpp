@@ -13,8 +13,17 @@
 #include <sstream>
 using namespace std;
 
+int DEBUG_PRINT = 1;
+
 //variables and arrays for storing objects from training file
 std::string softwareVersion = "Version 0.2 - Draft";
+
+//contains list of objects found by mobilenet
+struct Objects {
+	std::string objectName;
+	double objectConfidence;
+	int alreadyExists;
+};
 
 //contains list of rooms
 struct Rooms {
@@ -22,6 +31,7 @@ struct Rooms {
 	std::string roomName;
 	int timesTrained;
 	int totalObjects;
+	int score;
 };
 
 //contains blueprint for training objects
@@ -41,10 +51,12 @@ struct ObjectDictionary {
 struct Training preTrained[1000][10000]; //saves items from file to struct
 struct Training trained[1000][10000]; //struct for writing back to files
 struct Rooms room[10000]; //list of rooms
+struct Objects objects[10000];
 struct ObjectDictionary objectDictionary[10000]; //objecs list to find uniqueness
 struct ObjectDictionary preObjectDictionary[10000];
 
 int totalRooms = 0;
+int totalObjectsFromMnet = 0;
 
 //std::string roomNameROSParam; //won't need it
 
@@ -75,7 +87,9 @@ void printSeparator(int spaceSize) {
 
 //calculate lines from files
 int calculateLines(std::string fileName) {
-	printf("DEBUG: calculateLines()\n");
+	if (DEBUG_PRINT) {
+		cout << "DEBUG: calculateLines()\n";
+	}
 	ifstream FILE_COUNTER(fileName);
 	std::string getlines;
 	int returnCounter = 0;
@@ -111,18 +125,48 @@ void roomToStruct(std::string fileName) {
 		int getRoomId; //temporary room id
 		getRoomName = line.substr(0, line.find(roomsDelimiter)); //string between 0 and delimiter
 		room[roomNumber].roomName = getRoomName; //set room name
-		cout << getRoomName; //print room name
 		getRoomId = std::stoi(line.substr(line.find(roomsDelimiter) +1)); //get room id
 		room[roomNumber].id = getRoomId; //set room id
-		cout << getRoomId << "\n"; //print room id
+		if (DEBUG_PRINT) {
+			cout << getRoomName; //print room name
+			cout << getRoomId << "\n"; //print room id
+		}
 		roomNumber++; //iterate to next room
 	}
 	FILE_READER.close();
 }
 
+//get files from mobilenet dump location and save to struct
+void objectsFileToStruct(std::string fileName) {
+	if (DEBUG_PRINT) {
+		printf("DEBUG: objectsFileToStruct()\n");
+	}
+	std::string objectsDelimiter = ":";
+	ifstream FILE_READER(fileName);
+	std::string line;
+	int objectNumber = 0;
+	while (getline(FILE_READER, line)) {
+		int delimiterPos = 0;
+		std::string getObjectName; //temporary storage for object name
+		std::string getObjectConfidence; //temporary storage for object confidence
+		getObjectName = line.substr(0, line.find(objectsDelimiter)); //string between pos 0 and delimiter
+		//cout << getObjectName; //print object name
+		getObjectConfidence = line.substr(line.find(objectsDelimiter) +1); //string between delimiter and end of line
+		objects[objectNumber].objectName = getObjectName;
+		//cout << ::atof(getObjectConfidence.c_str()); //print object confidence
+		double getObjectConfidence2Double = std::atof(getObjectConfidence.c_str()); //cast confidence string to double
+		objects[objectNumber].objectConfidence = getObjectConfidence2Double; //set object confidence
+		objectNumber++; //iterate to next object
+	}
+	FILE_READER.close();
+	totalObjectsFromMnet = objectNumber; //set total number of objects in mobilenet
+}
+
 void readTrainingFile(std::string fileName, int roomIdParam) {
-	printSeparator(0);
-	printf("DEBUG: readTrainingFile()\n");
+	if (DEBUG_PRINT) {
+		printSeparator(0);
+		cout << "DEBUG: readTrainingFile()\n";
+	}
 	ofstream FILE_WRITER; //declare write file
 	ifstream FILE_READER; //declare read file
 	FILE_READER.open(fileName);
@@ -141,7 +185,9 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 	while (getline(FILE_READER, line)) {
 		if (lineNumber == 0) { //if line number is 0 - i.e. room name
 			//do nothing room name
-			cout << "reading Room Name: " << line << "\n";
+			if (DEBUG_PRINT) {
+				cout << "reading Room Name: " << line << "\n";
+			}
 		}
 		else if (lineNumber == 1) { //if line number is 1 - i.e. training times
 			//get times trained
@@ -149,7 +195,9 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 			int getTimesTrained = ::atoi(line.c_str()); //cast times trained string to int
 			//getTimesTrained++; //not iterating for training
 			room[roomIdParam].timesTrained = getTimesTrained; //set times trained to correponding room
-			cout << "reading Times Trained: " << room[roomIdParam].timesTrained << "\n";
+			if (DEBUG_PRINT) {
+				cout << "reading Times Trained: " << room[roomIdParam].timesTrained << "\n";
+			}
 		}
 		else if (lineNumber > 1) { //rest of the lines are trained objects
 			//find delimiter positions
@@ -173,18 +221,24 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 			for (int section = 0; section < delimiterNumber +1; section++) { //go through line at each delimiter position
 				if (section == 0) {
 					preTrained[roomIdParam][objectNumber].objectName = line.substr(0, delimiterPos[0]); //set first substring to pretrained struct
-					cout << "object number is " << objectNumber << "\n"; 
-					cout << "preTrained objectname is: " + preTrained[roomIdParam][objectNumber].objectName + "\n";
+					if (DEBUG_PRINT) {
+						cout << "object number is " << objectNumber << "\n"; 
+						cout << "preTrained objectname is: " + preTrained[roomIdParam][objectNumber].objectName + "\n";
+					}
 				}
 				else if (section == 1) {
 					double weightingToDouble = std::atof(line.substr(delimiterPos[0] + 1, delimiterPos[1]).c_str()); //cast weighting from string to double
 					preTrained[roomIdParam][objectNumber].objectWeighting = weightingToDouble; //set second substring to pretrained struct and cast to double
-					cout << "preTrained objectWeighting is: " << preTrained[roomIdParam][objectNumber].objectWeighting << "\n";
+					if (DEBUG_PRINT) {
+						cout << "preTrained objectWeighting is: " << preTrained[roomIdParam][objectNumber].objectWeighting << "\n";
+					}
 				}
 				else if (section == 2) {
 					double uniquenessToDouble = std::atof(line.substr(delimiterPos[1] + 1).c_str()); //cast uniqueness from string to double
 					preTrained[roomIdParam][objectNumber].uniqueness = uniquenessToDouble; //set third substring to pretrained struct and cast to double
-					cout << "preTrained uniqueness is: " << preTrained[roomIdParam][objectNumber].uniqueness << "\n";
+					if (DEBUG_PRINT) {
+						cout << "preTrained uniqueness is: " << preTrained[roomIdParam][objectNumber].uniqueness << "\n";
+					}
 				}
 			}
 			delimiterNumber = 0; //set back to 0 when finished
@@ -192,14 +246,18 @@ void readTrainingFile(std::string fileName, int roomIdParam) {
 			objectNumber+=1;
 			//totalObjectsFromWeights = objectNumber;
 			room[roomIdParam].totalObjects = objectNumber; //set number of objects for room struct
-			cout << "total objects are " << room[roomIdParam].totalObjects << "\n";
-
+			if (DEBUG_PRINT) {
+				if (DEBUG_PRINT) {
+					cout << "total objects are " << room[roomIdParam].totalObjects << "\n";
+				}
+			}
 		}
 		lineNumber++;
 	}
 	FILE_READER.close();
-	
-	printSeparator(0);
+	if (DEBUG_PRINT) {
+		printSeparator(0);
+	}
 }
 
 void calculateUniqueness() {
@@ -221,9 +279,13 @@ void calculateUniqueness() {
 		for (int isObject = 0; isObject < room[isRoom].totalObjects; isObject++) { //iterate through each object from the room
 			std::string getObjectName = preTrained[isRoom][isObject].objectName; //assign object name from room to variable
 			for (int isPreObject = 0; isPreObject <= totalPreObjects; isPreObject++) { //iterate through temporary variable
-				cout << "running through number " << isPreObject << "\n"; //debug line print iteration
+				if (DEBUG_PRINT) {
+					cout << "running through number " << isPreObject << "\n"; //debug line print iteration
+				}
 				std::string getPreObjectName = preObjectDictionary[isPreObject].objectName; //assign object name from list
-				cout << "pre object is " << getPreObjectName << "\n"; //debug line print object from list
+				if (DEBUG_PRINT) {
+					cout << "pre object is " << getPreObjectName << "\n"; //debug line print object from list
+				}
 				if (getObjectName == getPreObjectName) { //if object from room is the same as the list
 					//tmpInstanceCounter++;
 					foundObject = 1; //found object
@@ -253,10 +315,12 @@ void calculateUniqueness() {
 			//if its the same add exists ++ (hopefully no new array)
 		}
 	}
-	printSeparator(1);
-	for (int i = 0; i < objectNumber; i++) {
-		cout << preObjectDictionary[i].objectName << ":" << preObjectDictionary[i].instances << "\n";
-		//cout << preObjectDictionary[i] << "\n";
+	if (DEBUG_PRINT) {
+		printSeparator(1);
+		for (int i = 0; i < objectNumber; i++) {
+			cout << preObjectDictionary[i].objectName << ":" << preObjectDictionary[i].instances << "\n";
+			//cout << preObjectDictionary[i] << "\n";
+		}
 	}
 	//start working on adding instances back to preTrainedObjects array 
 	//then calculate how unique they are, at the moment 1 
@@ -277,12 +341,51 @@ void calculateUniqueness() {
 		}
 	}
 
-	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
-		for (int isObject = 0; isObject < room[isRoom].totalObjects; isObject++) {
-			cout << "finished: " << preTrained[isRoom][isObject].objectName << ":" << preTrained[isRoom][isObject].uniqueness << "\n";
+	if (DEBUG_PRINT) {
+		for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
+			for (int isObject = 0; isObject < room[isRoom].totalObjects; isObject++) {
+				cout << "finished: " << preTrained[isRoom][isObject].objectName << ":" << preTrained[isRoom][isObject].uniqueness << "\n";
+			}
 		}
 	}
-	
+}
+
+std::string calculateContext() {
+	std::string returnContext = "";
+	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
+		if (DEBUG_PRINT) {
+			cout << isRoom << "\n";
+		}
+		for (int isDetectedObject = 0; isDetectedObject < totalObjectsFromMnet; isDetectedObject++) {
+			std::string getDetectedObjectName = objects[isDetectedObject].objectName;
+			for (int isPreObject = 0; isPreObject < room[isRoom].totalObjects; isPreObject++) {
+				std::string getTrainedObjectName = preTrained[isRoom][isPreObject].objectName;
+				if (getDetectedObjectName == getTrainedObjectName) {
+					int getObjectWeighting = preTrained[isRoom][isPreObject].objectWeighting;
+					int getObjectUniqueness = preTrained[isRoom][isPreObject].uniqueness;
+					int generateScore = getObjectWeighting * getObjectUniqueness;
+					room[isRoom].score += generateScore;
+					if (DEBUG_PRINT) {
+						cout << generateScore << "\n";
+						cout << "score for " << room[isRoom].roomName << " is " << room[isRoom].score << "\n";
+					}
+				}
+			}
+		}
+	}
+	int currentMaxScore = room[0].score;
+	int currentRoomPos = 0;
+	for (int isNext = 1; isNext < totalRooms; isNext++) {
+		if (room[isNext].score > currentMaxScore) {
+			currentMaxScore = room[isNext].score;
+			currentRoomPos = isNext;
+		}
+	}
+	if (DEBUG_PRINT) {
+		cout << "rooms is " << room[currentRoomPos].roomName << " with highest score " << currentMaxScore << "\n";
+	}
+	returnContext = room[currentRoomPos].roomName;
+	return returnContext;
 }
 
 int main(int argc, char **argv) {
@@ -295,13 +398,19 @@ int main(int argc, char **argv) {
 
   	printSeparator(0);
 	std::string wheelchair_dump_loc = ros::package::getPath("wheelchair_dump");
-	//objectsFileLoc = wheelchair_dump_loc + "/dump/mobilenet/" + roomNameROSParam + mobilenetFileType;
+	objectsFileLoc = wheelchair_dump_loc + "/dump/mobilenet/found" + mobilenetFileType;
 	//weightingFileLoc = wheelchair_dump_loc + "/dump/context_training/" + roomNameROSParam + weightingFileType;
 	weightingFileLoc = wheelchair_dump_loc + "/dump/context_training/";
 	roomListLoc = wheelchair_dump_loc + "/dump/context_training/room.list";
 	totalRooms = calculateLines(roomListLoc); //get number of rooms
-	cout << totalRooms << "\n";
+	if (DEBUG_PRINT) {
+		cout << totalRooms << "\n";
+	}
 	roomToStruct(roomListLoc);
+	objectsFileToStruct(objectsFileLoc);
+	/*for (int i = 0; i < totalObjectsFromMnet; i++) {
+		cout << "object is " << objects[i].objectName << ":" << objects[i].objectConfidence << "\n";
+	}*/
 
 	//read training files
 	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
@@ -314,6 +423,8 @@ int main(int argc, char **argv) {
 		calculateuniqueness(isRoom);
 	}*/
 	calculateUniqueness();
+	std::string roomResult = calculateContext();
+	cout << "room result is " << roomResult << "\n";
 
 
 	return 0;
