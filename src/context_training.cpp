@@ -6,16 +6,24 @@
 
 /*
  * Todo:
- * ofstream instead of fopen
+
+
+ * Parts finished
+ * import mobilenet detected objects to struct
+ * import room names and added new files back to file and struct
+ * import weighting files - object name, confidence and uniqueness
+ * find new objects and items no longer present
+ * calculate weighting of objects
+ * write results back to training file
 */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <getopt.h>
-#include <iostream> //io library
-#include <fstream> //for writing and reading files
+//#include <unistd.h>
+//#include <getopt.h>
+//#include <iostream> //io library
+#include <fstream> //for writing and reading files in c++
 #include <ros/package.h> //find ROS packages, needs roslib dependency
 
 #include "ros/ros.h" //main ROS library
@@ -30,54 +38,57 @@ using namespace std;
 
 FILE *filePointer; //pointer for file reader/writer
 
-std::string objectsLocation;
-std::string mobilenetFileType ".objects"
-//char objectsLocation[100]; //location of found objects file
+std::string objectsFileLoc; //variable for storing objects file location
+std::string weightingFileLoc; //variable for storing the first section of weighting file location
+std::string roomListLoc; //variable for storing room list location
+std::string mobilenetFileType = ".objects"; //file extention for mobilenet type
+std::string weightingFileType = ".weights"; //file extention for training type
 
 //variables and arrays for storing objects from training file
-string softwareVersion = "Version 0.1 - Draft";
-string objectFileName = "../found-objects.txt";
-char* objectFileMode = "r";
+std::string softwareVersion = "Version 0.2 - Draft";
 
 
-int totalCharacters = 0;
-int countObjectLines;
-char objectList[10000][MAX_STRING_SIZE]; //array for storing object in each element followed by characters
-char objectCharArray[10000]; //array for storing individual characters
 
-int countTrainingLines;
-char trainingList[10000][MAX_STRING_SIZE];
-char trainingCharArray[10000];
+std::string roomNameROSParam; //variable for storing room name from ROS parameter server
+int totalObjectsFromMnet = 0; //variable for number of objects in mnet file
+int correspondingRoomId = 0; //current id for room is room struct array
+//int totalObjectsFromWeights = 0;
+int totalRooms = 0; //total number of rooms in room struct array
+int totalTrained = 0; //total number of objects in trained struct
 
-struct Training {
-	char objectName[1][MAX_STRING_SIZE];
-	int objectWeighting;
+int MIN_WEIGHTING = 0; //minimum trained value
+int MAX_WEIGHTING = 100; //maximum trained value
+int MAX_TRAINING_TIMES = 5; //maximum training times
+
+//contains list of objects found by mobilenet
+struct Objects {
+	std::string objectName;
+	double objectConfidence;
 	int alreadyExists;
 };
+struct Objects objects[10000];
 
-struct Training objectsStuct[1000];
-struct Training preTrained[1000];
-struct Training trained[1000];
-int MAX_TRAIN_VALUE = 100;
-int MIN_TRAIN_VALUE = 0;
-int MAX_TRAINING_TIMES = 5;
-int sizeOfTrained = 0;
+//contains list of rooms
+struct Rooms {
+	int id;
+	std::string roomName;
+	int timesTrained;
+	int totalObjects;
+};
 
-char preTrainedObjects[1000][MAX_STRING_SIZE];
-int preTrainedValues[1000];
+//contains blueprint for training objects
+struct Training {
+	std::string objectName;
+	double objectWeighting;
+	int alreadyExists;
+	double uniqueness;
+};
+//roomId followed by objects list
+struct Training preTrained[1000][10000]; //saves items from file to struct
+struct Training trained[1000][10000]; //struct for writing back to files
+struct Rooms room[10000]; //list of rooms
 
-char postTrainedObjects[1000][MAX_STRING_SIZE];
-int postTrainedValues[1000];
-int preTrainedLines = 0;
-char saveBuffer[10000][MAX_STRING_SIZE];
-
-//variables and arrays for weighting file
-int countWeightingLines;
-int totalTrainingCharacters;
-
-char roomName[40];
-int timesTrained = 0;
-
+//function for printing space sizes
 void printSeparator(int spaceSize) {
 	if (spaceSize == 0) {
 		printf("--------------------------------------------\n");
@@ -89,103 +100,26 @@ void printSeparator(int spaceSize) {
 	}
 }
 
-long calculateLines(FILE *filePointer, char fileName[], char fileMode[]) {
-    long countLines = 0;
-    filePointer = fopen(fileName, fileMode);
-
-    for (char c = getc((FILE*)filePointer); c != EOF; c = getc((FILE*)filePointer)) {
-        if (c == '\n') { // Increment count if this character is newline
-            countLines++;
-        }
-    }
-    //printf("Number of lines: %ld\n", countLines);
-    fclose((FILE*)filePointer);
-    return countLines;
-}
-
-void objectFileToArray(FILE *filePointer, char fileName[], char fileMode[]) {
-	int itemNumber = 0;
-	int charNumber = 0;
-	filePointer = fopen(fileName, fileMode); //open file
-	for (int item = 0; item < countObjectLines; item++) {
-		for (char currentChar = getc((FILE*)filePointer); currentChar != '\n'; currentChar = getc((FILE*)filePointer)) {
-			//printf("%c", currentChar);
-			objectCharArray[charNumber] = currentChar;
-			charNumber++;
-		}
-		objectCharArray[charNumber] = '\n';
-		charNumber++; //move along one character for next object (word)
-	}
-	fclose((FILE*)filePointer);
-	totalCharacters = charNumber;
-}
-
-void trainingFileToArray(FILE *filePointer, char fileName[], char fileMode[]) {
-	int itemNumber = 0;
-	int charNumber = 0;
-	filePointer = fopen(fileName, fileMode); //open file
-	for (int item = 0; item < countWeightingLines; item++) {
-		for (char currentChar = getc((FILE*)filePointer); currentChar != '\n'; currentChar = getc((FILE*)filePointer)) {
-			//printf("%c", currentChar);
-			trainingCharArray[charNumber] = currentChar;
-			charNumber++;
-		}
-		trainingCharArray[charNumber] = '\n';
-		charNumber++; //move along one character for next object (word)
-	}
-	fclose((FILE*)filePointer);
-	totalTrainingCharacters = charNumber;
-}
-
-void objectArrayToString() { //convert char array to multidimensional array
-	int wordCount = 0;
-	int characterCount = 0;
-	for (int i = 0; i <= totalCharacters; i++) {
-		if (objectCharArray[i] != '\n') {
-			objectList[wordCount][characterCount] = objectCharArray[i];
-			characterCount++;
-		}
-		else {
-			wordCount++;
-			characterCount = 0;
-		}
+//does the wheelchair dump package exist in the workspace?
+void doesWheelchairDumpPkgExist() {
+	if (ros::package::getPath("wheelchair_dump") == "") {
+		cout << "FATAL:  Couldn't find package 'wheelchair_dump' \n";
+		cout << "FATAL:  Closing training_context node. \n";
+		printSeparator(1);
+		ros::shutdown();
+		exit(0);
 	}
 }
 
+//create a file
+int createFile(std::string fileName) { //if this doesn't get called, no file is created
+	printf("DEBUG: createFile()\n");
+	std::ifstream fileExists(fileName);
 
-void trainingArrayToString() {
-	int wordCount = 0; //start at 2 to avoid writing over header
-	int characterCount = 0;
-
-	for (int i = 0; i <= totalTrainingCharacters; i++) {
-		if (trainingCharArray[i] != '\n') {
-			trainingList[wordCount][characterCount] = trainingCharArray[i];
-			characterCount++;
-		}
-		else {
-			wordCount++;
-			characterCount = 0;
-		}
-	}
-}
-
-int trainingFileExists(char * fileName) {
-	if (access(fileName, F_OK) != -1) {
-		//File exists
-		printf("training file exists\n");
-		return 1;
-	}
-	else {
-		//File doesn't exist
-		printf("ERROR: training file doesn't exist\n");
-		exit(0); //stop program if training file doesn't exist
-	}
-}
-
-int isFirstTimeTraining(char * roomName, char * fileName) { //if this doesn't get called, no file is created
-	if (access(fileName, F_OK) != -1) {
+	if (fileExists.good() == 1) {
 		//File exists
 		printf("Weighting file exists\n");
+		//cout << fileName;
 		return 1;
 	}
 	else {
@@ -193,265 +127,371 @@ int isFirstTimeTraining(char * roomName, char * fileName) { //if this doesn't ge
 		printf("Weighting file doesn't exist\n");
 		printf("creating new file\n");
 
-		FILE *newFile = fopen(fileName, "w");
-		fprintf(newFile, "%s\n", roomName); //add room name to header
-		fprintf(newFile, "%d\n", 0); //add number of training sessions to header
-		fclose(newFile);
+		ofstream NEW_FILE (fileName);
+		NEW_FILE.close();
+		//cout << fileName;
 		return 0;
-		//exit(0); //stop program
 	}
 }
 
-
-void trainingListToStruct() {
-	strcat(roomName, trainingList[0]); //convert char array to correct variable
-	timesTrained = atoi(trainingList[1]); //convert char array to int variable
-	int structId = 0;
-	printf("roomName is %s\n", roomName);
-	printf("times trained is %d\n", timesTrained);
-	char buffer1[1][40];
-	char buffer2[1][40];
-	int iteratePreTrainedPos = 0;
-
-	for (int i = 2; i <countWeightingLines; i++) { //line number starting infront of the header
-		int lineLength = strlen(trainingList[i]); //calculate string length of line
-		int foundFlag = 0;
-		int counter = 0;
-		int newDelimiterPos = 0;
-		int oldDelimiterPos = 0;
-		memset(&buffer1, 0, sizeof(buffer1));
-		memset(&buffer2, 0, sizeof(buffer2));
-		for (int j = 0; j < lineLength; j++) { //character number
-			//printf("stct: %c\n", trainingList[i][j]); //print off each character from trainingList
-			if ((foundFlag == 0) && (trainingList[i][j] != ':')) { //not found first delimiter
-				buffer1[0][counter] = trainingList[i][j];
-				counter++;
-			}
-			else if ((foundFlag == 0) && (trainingList[i][j] == ':')) { //found first delimiter
-				printf("found delimiter on line %d position %d\n", i, j); //identify location of delimiter
-				newDelimiterPos = j;
-				foundFlag = 1;
-				counter = 0;
-
-			}
-			else if ((foundFlag == 1) && (trainingList[i][j] != ':')) {
-				buffer2[0][counter] = trainingList[i][j];
-				counter++;
-			}
-		}
-
-		//printf("found end of line\n");
-		//printf("predelimiter is %s\n", buffer1[0]);
-		int valueStringToInt = atoi(buffer2[0]);
-		//printf("postdelimiter is %d\n", valueStringToInt);
-
-		//strcat(preTrainedObjects[iteratePreTrainedPos], buffer1[0]);
-		strcat(preTrained[iteratePreTrainedPos].objectName[0], buffer1[0]);
-		printf("struct objectName is %s\n", preTrained[iteratePreTrainedPos].objectName[0]);
-		preTrained[iteratePreTrainedPos].objectWeighting = valueStringToInt;
-		printf("struct objectWeighting is %d\n", preTrained[iteratePreTrainedPos].objectWeighting);
-		iteratePreTrainedPos++;
-		//preTrainedObjects[iteratePreTrainedPos] = buffer1[0];
-
-		//strcat(preTrained.objectName)
-		//printf("eof\n");
+//calculate lines from files
+int calculateLines(std::string fileName) {
+	printf("DEBUG: calculateLines()\n");
+	ifstream FILE_COUNTER(fileName);
+	std::string getlines;
+	int returnCounter = 0;
+	while (getline (FILE_COUNTER, getlines)) {
+		returnCounter++;
+  		// Output the text from the file
+  		//cout << getlines;
+  		//cout << "\n";
 	}
-	preTrainedLines = iteratePreTrainedPos;
-	/*printf("weighting lines is %d\n", countWeightingLines);
-	for (int j = 0; j < countWeightingLines; j++) { //starting at 2 will skip the header data
-		//printf("%d\n", countLines);
-		//int objectStringLength = strlen(objectList[i]);
-		printf("training list is %s", trainingList[j]); //this is now apparently a string!
-	}
-	printf("testing some bugs\n");
-	printf("%s", trainingList[0]);
-	printf("%s", trainingList[1]);
-	printf("%s", trainingList[2]);*/
+	FILE_COUNTER.close();
+	return returnCounter;
 }
 
+//get files from mobilenet dump location and save to struct
+void objectsFileToStruct(std::string fileName) {
+	printf("DEBUG: objectsFileToStruct()\n");
+	std::string objectsDelimiter = ":";
+	ifstream FILE_READER(fileName);
+	std::string line;
+	int objectNumber = 0;
+	while (getline(FILE_READER, line)) {
+		int delimiterPos = 0;
+		std::string getObjectName; //temporary storage for object name
+		std::string getObjectConfidence; //temporary storage for object confidence
+		getObjectName = line.substr(0, line.find(objectsDelimiter)); //string between pos 0 and delimiter
+		//cout << getObjectName; //print object name
+		getObjectConfidence = line.substr(line.find(objectsDelimiter) +1); //string between delimiter and end of line
+		objects[objectNumber].objectName = getObjectName;
+		//cout << ::atof(getObjectConfidence.c_str()); //print object confidence
+		double getObjectConfidence2Double = std::atof(getObjectConfidence.c_str()); //cast confidence string to double
+		objects[objectNumber].objectConfidence = getObjectConfidence2Double; //set object confidence
+		objectNumber++; //iterate to next object
+	}
+	FILE_READER.close();
+	totalObjectsFromMnet = objectNumber; //set total number of objects in mobilenet
+}
 
-void calculateWeightings() {
-	printf("weighting lines %d\n", preTrainedLines);
-	/*for (int i = 0; i < preTrainedLines; i++) {
-		for (int j = 0; j < countObjectLines; j++) {
-			printf("%s", preTrained[i].objectName[0]);
-			printf("%s", objectList[j]);
-			int result = strcmp(preTrained[i].objectName[0], objectList[j]);
-			//printf("%d\n", result);
-			//flag matches first
-			if (result == 0) { //found a matching string
-				printf("found match\n");
-				preTrained[i].alreadyExists = 1;
-			}
-			else {
-				if (preTrained[i].alreadyExists == 1) {
-					//ignore
-				}
-				else {
-					printf("didn't find match\n");
-					preTrained[i].alreadyExists = 0;
-				}
+//get list of rooms and save to struct
+void roomListToStruct(std::string fileName) {
+	printf("DEBUG: roomListToStruct()\n");
+	std::string roomsDelimiter = ":";
+	ifstream FILE_READER(fileName);
+	std::string line;
+	int roomNumber = 0;
+	while (getline(FILE_READER, line)) {
+		int delimiterPos = 0;
+		std::string getRoomName; //temporary room name
+		int getRoomId; //temporary room id
+		getRoomName = line.substr(0, line.find(roomsDelimiter)); //string between 0 and delimiter
+		room[roomNumber].roomName = getRoomName; //set room name
+		cout << getRoomName; //print room name
+		getRoomId = std::stoi(line.substr(line.find(roomsDelimiter) +1)); //get room id
+		room[roomNumber].id = getRoomId; //set room id
+		cout << getRoomId << "\n"; //print room id
+		roomNumber++; //iterate to next room
+	}
+	FILE_READER.close();
+}
 
-			}
-			//if count object lines is less than or equal trained lines
+void restructRoomList() {
+	cout << "DEBUG: restruct rooms list \n";
+	//get array of room names from file
+	int roomListExists = createFile(roomListLoc); //create room list
+	//add list of rooms to struct array
+	roomListToStruct(roomListLoc);
 
-			//if two arrays are same length - it must be equal
-		}
+	totalRooms = calculateLines(roomListLoc);
+	/*printf("DEBUG: roomStruct\n");
+	for (int i = 0; i < totalRooms; i++) {
+		cout << room[i].roomName;
+		cout << ":";
+		cout << room[i].id;
+		cout << "\n";
 	}*/
-	for (int i = 0; i < preTrainedLines; i++) {
-		for (int j = 0; j < countObjectLines; j++) {
-			int result = strcmp(preTrained[i].objectName[0], objectsStuct[j].objectName[0]);
-			printf("%s", preTrained[i].objectName[0]);
-			printf("%s\n", objectsStuct[j].objectName[0]);
 
-			if ((preTrained[i].alreadyExists == 1) || (objectsStuct[j].alreadyExists == 1)) {
-				printf("already found a match\n");
-			}
-			else if ((preTrained[i].alreadyExists == 0) && (objectsStuct[j].alreadyExists == 0)) {
-				if (result == 0) {
-					preTrained[i].alreadyExists = 1;
-					objectsStuct[j].alreadyExists = 1;
-					printf("found first match\n");
+	//if room name doesn't exist in the struct, write back to the file, then add a weights file
+	int foundRoomMatch = 0;
+	for (int i = 0; i < totalRooms; i++) {
+		if (room[i].roomName == roomNameROSParam) { //if array in room struct is equal to ros parameter room name
+			//found a room match
+			foundRoomMatch = 1; //set matched room name to 1
+		}
+	}
+	if (foundRoomMatch == 0) { //if match hasn't been found
+		//after loop, if a match hasn't been found - add room to file.
+		ofstream WRITE_FILE(roomListLoc); //create room list file
+		for (int line = 0; line < totalRooms; line++) {
+			WRITE_FILE << room[line].roomName << ":" << room[line].id << "\n"; //add rooms to room list
+		}
+		WRITE_FILE << roomNameROSParam << ":" << totalRooms; //no need for return on last line of file
+		WRITE_FILE.close();
+		std::string createNewWeightingFile = weightingFileLoc + roomNameROSParam + weightingFileType; //append destination of new weights file
+		createFile(createNewWeightingFile); //create new weighting file
+	}
+	totalRooms = calculateLines(roomListLoc); //set total number of rooms
+	roomListToStruct(roomListLoc); //set room list to struct
 
+	printf("DEBUG: roomStruct\n");
+	for (int i = 0; i < totalRooms; i++) {
+		cout << room[i].roomName;
+		cout << ":";
+		cout << room[i].id;
+		cout << "\n";
+	}
+}
+
+void readTrainingFile(std::string fileName, int roomIdParam) {
+	printSeparator(0);
+	printf("DEBUG: readTrainingFile()\n");
+	ofstream FILE_WRITER; //declare write file
+	ifstream FILE_READER; //declare read file
+	FILE_READER.open(fileName);
+	if (FILE_READER.peek() == std::ifstream::traits_type::eof()) { //peek to see if file is empty
+		cout << "weighting file is empty, starting to populate data. \n";
+		FILE_READER.close();//closed for peeking
+		FILE_WRITER.open(fileName); //open write file
+		FILE_WRITER << roomNameROSParam << "\n";
+		FILE_WRITER << 0; //first time training
+		FILE_WRITER.close(); //close write file
+		FILE_READER.open(fileName); //reopen file after peek
+	}
+	std::string line;
+	int lineNumber = 0;
+	int objectNumber = 0;
+	while (getline(FILE_READER, line)) {
+		if (lineNumber == 0) { //if line number is 0 - i.e. room name
+			//do nothing room name
+			cout << "reading Room Name: " << line << "\n";
+		}
+		else if (lineNumber == 1) { //if line number is 1 - i.e. training times
+			//get times trained
+			std::string getTimesTrainedString = line;
+			int getTimesTrained = ::atoi(line.c_str()); //cast times trained string to int
+			getTimesTrained++;
+			room[roomIdParam].timesTrained = getTimesTrained; //set times trained to correponding room
+			cout << "reading Times Trained: " << room[roomIdParam].timesTrained << "\n";
+		}
+		else if (lineNumber > 1) { //rest of the lines are trained objects
+			//find delimiter positions
+			std::string delimiter = ":"; //look for colon 
+			int delimiterPos[5]; //set array of delimiter positions
+			int delimiterNumber = 0; //current delimiter
+			int lineLength = line.length(); //get length of line
+			char lineArray[lineLength + 1]; //create array of chars
+			strcpy(lineArray, line.c_str()); //set string to chars
+			for (int charPos = 0; charPos < lineLength; charPos++) {
+				if (lineArray[charPos] == ':') { //if char is colon
+					//printf("%c\n", lineArray[i]);
+					//printf("found delimiter\n");
+					delimiterPos[delimiterNumber] = charPos; //add position of delimiter to array
+					delimiterNumber++; //iterate to next delimiter
 				}
-				else {
-					preTrained[i].alreadyExists = 0;
-					objectsStuct[j].alreadyExists = 0;
-					printf("didn't find match\n");
+			}
+
+
+			//extract substrings between delimiters
+			for (int section = 0; section < delimiterNumber +1; section++) { //go through line at each delimiter position
+				if (section == 0) {
+					preTrained[roomIdParam][objectNumber].objectName = line.substr(0, delimiterPos[0]); //set first substring to pretrained struct
+					cout << "object number is " << objectNumber << "\n"; 
+					cout << "preTrained objectname is: " + preTrained[roomIdParam][objectNumber].objectName + "\n";
+				}
+				else if (section == 1) {
+					double weightingToDouble = std::atof(line.substr(delimiterPos[0] + 1, delimiterPos[1]).c_str()); //cast weighting from string to double
+					preTrained[roomIdParam][objectNumber].objectWeighting = weightingToDouble; //set second substring to pretrained struct and cast to double
+					cout << "preTrained objectWeighting is: " << preTrained[roomIdParam][objectNumber].objectWeighting << "\n";
+				}
+				else if (section == 2) {
+					double uniquenessToDouble = std::atof(line.substr(delimiterPos[1] + 1).c_str()); //cast uniqueness from string to double
+					preTrained[roomIdParam][objectNumber].uniqueness = uniquenessToDouble; //set third substring to pretrained struct and cast to double
+					cout << "preTrained uniqueness is: " << preTrained[roomIdParam][objectNumber].uniqueness << "\n";
 				}
 			}
-			else {
-				printf("ERROR: inconsistency\n");
-			}
-		}
-	}
-	for (int i = 0; i < countObjectLines; i++) { //test to make sure all the objects appear as found
-		printf("existing %s\n", objectsStuct[i].objectName[0]);
-		printf("existing %d\n", objectsStuct[i].alreadyExists);
-	}
+			delimiterNumber = 0; //set back to 0 when finished
 
-	for (int i = 0; i < countObjectLines; i++) {
-		printf("object struct is %s\n", objectsStuct[i].objectName[0]);
-		for (int j = 0; j < preTrainedLines; j++) {
-			//int result = strcmp(objectsStuct[i].objectName[0], )
-		}
-	}
-	//struct now contains flags of objects that already exist
+			objectNumber+=1;
+			//totalObjectsFromWeights = objectNumber;
+			room[roomIdParam].totalObjects = objectNumber; //set number of objects for room struct
+			cout << "total objects are " << room[roomIdParam].totalObjects << "\n";
 
-	//find already existing items and perform calculation based on how many times they have been trained
-
-	if (timesTrained < MAX_TRAINING_TIMES) {
-		timesTrained++;
-	}
-	else {
-		//don't do anything
-	}
-
-	int trainedCounter = 0;
-	for (int k = 0; k < preTrainedLines; k++) {
-		int weightValue = (MAX_TRAIN_VALUE / timesTrained);
-		strcat(trained[trainedCounter].objectName[0], preTrained[k].objectName[0]);
-		if (preTrained[k].alreadyExists == 1) { //it will add if it exists
-			int newWeighting = preTrained[k].objectWeighting + weightValue;
-			if (newWeighting > MAX_TRAIN_VALUE) {
-				trained[trainedCounter].objectWeighting = MAX_TRAIN_VALUE;
-				trainedCounter++;
-			}
-			else {
-				trained[trainedCounter].objectWeighting = newWeighting;
-				trainedCounter++;
-			}
 		}
-		else if (preTrained[k].alreadyExists == 0) {
-			int newWeighting = preTrained[k].objectWeighting - weightValue;
-			if (newWeighting < MIN_TRAIN_VALUE) {
-				trained[trainedCounter].objectWeighting = 0;
-				trainedCounter++;
-			}
-			else {
-				trained[trainedCounter].objectWeighting = newWeighting;
-				trainedCounter++;
-			}
-		}
+		lineNumber++;
 	}
-	//find new items and perform the default 100 calculation
-	for (int l = 0; l < countObjectLines; l++) {
-		if (objectsStuct[l].alreadyExists == 0) { //new objects found
-			strcat(trained[trainedCounter].objectName[0], objectsStuct[l].objectName[0]);
-			trained[trainedCounter].objectWeighting = MAX_TRAIN_VALUE;
-			trainedCounter++;
+	FILE_READER.close();
+	
+	printSeparator(0);
+}
+
+void startTraining(std::string roomNameStringParam) { //training only runs one room
+	printf("DEBUG: startTraining()\n");
+	//this is currently the work in progress function
+	
+	
+
+	//run through for loop until room name parameter matches
+	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
+		if (room[isRoom].roomName == roomNameStringParam) { //if room from para is the same as room in struct
+			cout << "found corresponding room name " << room[isRoom].roomName << "\n";
+			correspondingRoomId = isRoom; //get id and set to global variable
 		}
 		else {
-			//don't do anything
+			//do nothing, carry on looping
 		}
 	}
-	sizeOfTrained = trainedCounter;
+	std::string tmpMnetObject; //variable for debugging and printing
+	std::string tmpPreTrainedObject; //variable for debugging and printing
+	//iterate through objects list and find matches in weighting list
+	for (int isMnetObject = 0; isMnetObject < totalObjectsFromMnet; isMnetObject++) {
+		tmpMnetObject = objects[isMnetObject].objectName; //set object name from mnet to variable
+		for (int isWeightingObject = 0; isWeightingObject < room[correspondingRoomId].totalObjects; isWeightingObject++) {
+			tmpPreTrainedObject = preTrained[correspondingRoomId][isWeightingObject].objectName; //set object name from pretrained to variable
+			cout << tmpMnetObject << " and " << tmpPreTrainedObject << "\n"; //print debugging from pretrained struct and mnet struct
+		
+			if ((preTrained[correspondingRoomId][isWeightingObject].alreadyExists == 1) || (objects[isMnetObject].alreadyExists == 1)) { //if already exists in pretrained and objects
+				//if it's already been set to 1 - then don't change back to 0 when not detected
+				cout << "already matched \n";
+			}
+			else if ((preTrained[correspondingRoomId][isWeightingObject].alreadyExists == 0) && (objects[isMnetObject].alreadyExists == 0)) { //if none exists in both structs
+				if (objects[isMnetObject].objectName == preTrained[correspondingRoomId][isWeightingObject].objectName) { //and if objects are equal to both
+					//found first match
+					cout << "found match \n";
+					preTrained[correspondingRoomId][isWeightingObject].alreadyExists = 1; //set to exists
+					objects[isMnetObject].alreadyExists = 1;
+				}
+				else {
+					//didn't find match
+					cout << "didn't find match: " << preTrained[correspondingRoomId][isWeightingObject].objectName << " : " << objects[isMnetObject].objectName << "\n";
 
-	//add to trained struct
+					preTrained[correspondingRoomId][isWeightingObject].alreadyExists = 0;  //set exists to 0
+					objects[isMnetObject].alreadyExists = 0;
+				}
+			}
+		}
+	}
 
-	//save trained struct back to file
+
+
+	//print debug info
+	printSeparator(0);
+	cout << "DEBUG existing weights \n";
+	cout << "total objects from weights " << room[0].totalObjects << "\n";
+	for (int i = 0; i < room[0].totalObjects; i++) {
+		cout << preTrained[0][i].objectName << " : " << preTrained[0][i].alreadyExists << "\n";
+	}
+	printSeparator(0);
+	cout << "DEBUG existing objects \n";
+	cout << "total objects from mnet " << totalObjectsFromMnet << "\n";
+
+	for (int i = 0; i < totalObjectsFromMnet; i++) {
+		cout << objects[i].objectName << " : " << objects[i].alreadyExists << "\n";
+	}
+
+	printSeparator(0);
+	int currentTrainingPos = 0;
+	int weightingValueCalc = 0; //variable stores divider for object weighting
+	//move items into currentTraining (pre calculated, but organised)
+	if (room[correspondingRoomId].timesTrained <= MAX_TRAINING_TIMES) { //if times trained is less than maximum training sessions
+		double weightingDividerValue = room[correspondingRoomId].timesTrained; //get times trained
+		weightingValueCalc = MAX_WEIGHTING / weightingDividerValue; //divide maximum training weight by times trained
+	}
+	else if (room[correspondingRoomId].timesTrained > MAX_TRAINING_TIMES) { //if times trained is greater than maximum training sessions
+		double weightingDividerValue = MAX_TRAINING_TIMES; //set weighting to maximum trained sessions
+		weightingValueCalc = MAX_WEIGHTING / weightingDividerValue; //divide maximum training weight by max times trained
+	}
+
+	for (int isWeightingObject = 0; isWeightingObject < room[correspondingRoomId].totalObjects; isWeightingObject++) {
+		if (preTrained[correspondingRoomId][isWeightingObject].alreadyExists == 1) { //if one exists - add to weighting
+			trained[correspondingRoomId][currentTrainingPos].objectName = preTrained[correspondingRoomId][isWeightingObject].objectName; //get and set object name
+			int isCurrentWeighting = preTrained[correspondingRoomId][isWeightingObject].objectWeighting; //get current weighting value
+			int newWeightingValue = isCurrentWeighting + weightingValueCalc; //add weighting value to current weight
+			cout << isCurrentWeighting << " is current weighting \n";
+			cout << weightingValueCalc << " is divider\n";
+			cout << newWeightingValue << " is new weighting value\n";
+			if (newWeightingValue > MAX_WEIGHTING) {
+				trained[correspondingRoomId][currentTrainingPos].objectWeighting = MAX_WEIGHTING; //set to max weighting if higher
+				cout << trained[correspondingRoomId][currentTrainingPos].objectWeighting << " is set weighting\n";
+			}
+			else {
+				trained[correspondingRoomId][currentTrainingPos].objectWeighting = newWeightingValue; //set to new weighting value
+				cout << trained[correspondingRoomId][currentTrainingPos].objectWeighting << " is set weighting\n";
+			}
+			trained[correspondingRoomId][currentTrainingPos].uniqueness = preTrained[correspondingRoomId][isWeightingObject].uniqueness; //get and set uniqueness
+		}
+		else if (preTrained[correspondingRoomId][isWeightingObject].alreadyExists == 0) {//if it doesn't exist - subtract weighting
+			trained[correspondingRoomId][currentTrainingPos].objectName = preTrained[correspondingRoomId][isWeightingObject].objectName; //get and set object name
+			int isCurrentWeighting = preTrained[correspondingRoomId][isWeightingObject].objectWeighting; //get current weighting value
+			int newWeightingValue = isCurrentWeighting - weightingValueCalc; //subtract weighting value from current weight
+			cout << isCurrentWeighting << " is current weighting \n";
+			cout << weightingValueCalc << " is divider\n";
+			cout << newWeightingValue << " is new weighting value\n";
+			if (newWeightingValue < MIN_WEIGHTING) {
+				trained[correspondingRoomId][currentTrainingPos].objectWeighting = MIN_WEIGHTING; //set to min weighting if lower
+				cout << trained[correspondingRoomId][currentTrainingPos].objectWeighting << " is set weighting\n";
+			}
+			else {
+				trained[correspondingRoomId][currentTrainingPos].objectWeighting = newWeightingValue; //set to new weighting value
+				cout << trained[correspondingRoomId][currentTrainingPos].objectWeighting << " is set weighting\n";
+			}
+			trained[correspondingRoomId][currentTrainingPos].uniqueness = preTrained[correspondingRoomId][isWeightingObject].uniqueness; //get and set uniqueness
+		}
+		currentTrainingPos++; //iterate to next object position in training struct
+	}
+
+	for (int isMnetObject = 0; isMnetObject < totalObjectsFromMnet; isMnetObject++) {
+		if (objects[isMnetObject].alreadyExists == 1) { //if mnet object exists already
+			//do nothing because it has already been added
+		}
+		else if (objects[isMnetObject].alreadyExists == 0) { //if it's a new object
+			trained[correspondingRoomId][currentTrainingPos].objectName = objects[isMnetObject].objectName; //get and set object name
+			int isCurrentWeighting = 0; //get current weighting value of 0
+			int newWeightingValue = isCurrentWeighting + weightingValueCalc; //add weighting value
+			cout << isCurrentWeighting << " OB: is current weighting \n";
+			cout << weightingValueCalc << " OB: is divider\n";
+			cout << newWeightingValue << " OB: is new weighting value\n";
+			if (newWeightingValue > MAX_WEIGHTING) {
+				trained[correspondingRoomId][currentTrainingPos].objectWeighting = MAX_WEIGHTING; //set to max weighting if higher
+				cout << trained[correspondingRoomId][currentTrainingPos].objectWeighting << " OB: is set weighting\n";
+			}
+			else {
+				trained[correspondingRoomId][currentTrainingPos].objectWeighting = newWeightingValue; //set to new weighting value
+				cout << trained[correspondingRoomId][currentTrainingPos].objectWeighting << " OB: is set weighting\n";
+			}
+			trained[correspondingRoomId][currentTrainingPos].uniqueness = 0; //set uniqueness as 0
+			currentTrainingPos++; //only iterate for new objects
+		}
+	}
+	totalTrained = currentTrainingPos; //total objects in trained struct
+	printSeparator(0);
+
+
+	for (int i = 0; i < totalTrained; i++) {
+		cout << trained[correspondingRoomId][i].objectName << ":" <<
+		trained[correspondingRoomId][i].objectWeighting <<  ":" <<
+		trained[correspondingRoomId][i].uniqueness << "\n";
+	}
 }
 
-void startTraining(FILE *filePointer, char fileName[], char fileMode[]) {
-	countWeightingLines = calculateLines((FILE*)filePointer, fileName, objectFileMode);
-	//printf("number of training lines are %d\n", countWeightingLines);
-	//getWeightingHeader((FILE*)filePointer, fileName, objectFileMode); //set roomName and timesTrained
-	//readWeightingFile((FILE*)filePointer, fileName, objectFileMode);
-	if (timesTrained == 0) {
-		printf("weighting file is empty, start initial object adding\n");
-
-		//initialObjectTraining((FILE*)filePointer, fileName, objectFileMode);
+void structToWeightingFile(std::string roomNameStringParam) {
+	std::string fileName = weightingFileLoc + roomNameStringParam + weightingFileType; //generate filename from room name
+	cout << fileName << "\n";
+	ofstream FILE_WRITER;
+	FILE_WRITER.open(fileName);
+	FILE_WRITER << room[correspondingRoomId].roomName << "\n";
+	FILE_WRITER << room[correspondingRoomId].timesTrained << "\n";
+	for (int isLine = 0; isLine < totalTrained; isLine++) {
+		FILE_WRITER <<  trained[correspondingRoomId][isLine].objectName << ":" << 
+						trained[correspondingRoomId][isLine].objectWeighting << ":" << 
+						trained[correspondingRoomId][isLine].uniqueness << "\n";
 	}
-	else {
-		printf("weighting file is not empty, start reading file\n");
-	}
-	trainingFileToArray((FILE*)filePointer, fileName, objectFileMode);
-	trainingArrayToString();
-	trainingListToStruct();
-
-
-
-	//filePointer = fopen(fileName, fileMode);
-	//readWeightingFile((FILE*)filePointer, fileName, fileMode);
+	FILE_WRITER.close();
 }
 
-void saveToTrainingFile(FILE *filePointer, char fileName[], char fileMode[]) {
-	filePointer = fopen(fileName, fileMode); //open file
-	char buffer1[1][MAX_STRING_SIZE];
-	char buffer2[1][MAX_STRING_SIZE];
-	memset(&buffer1, 0, sizeof(buffer1));
-	memset(&buffer2, 0, sizeof(buffer2));
-	strcat(buffer1[0], roomName);
-	strcat(buffer1[0], "\n");
-	printf("%s", buffer1[0]);
-	fprintf(filePointer, "%s", buffer1[0]);
-
-	char timesTrainedToChar[10];
-	sprintf(timesTrainedToChar, "%d", timesTrained);
-	strcat(buffer2[0], timesTrainedToChar);
-	strcat(buffer2[0], "\n");
-	printf("%s", buffer2[0]);
-	fprintf(filePointer, "%s", buffer2[0]);
-
-	for (int i = 0; i < sizeOfTrained; i++) {
-		char buffer3[1][40];
-		memset(&buffer3, 0, sizeof(buffer3));
-		strcat(buffer3[0], trained[i].objectName[0]);
-		strcat(buffer3[0], ":");
-		char weightingToChar[10];
-		sprintf(weightingToChar, "%d", trained[i].objectWeighting);
-		strcat(buffer3[0], weightingToChar);
-		strcat(buffer3[0], "\n");
-		printf("%s", buffer3[0]);
-		fprintf(filePointer, "%s", buffer3[0]);
-	}
-	fclose((FILE*)filePointer);
+void calculateuniqueness() {
+	
 }
-
-
-
-
-
 
 
 
@@ -462,21 +502,115 @@ void saveToTrainingFile(FILE *filePointer, char fileName[], char fileMode[]) {
  */
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "context_training");
-  ros::NodeHandle n;
-  ros::Publisher chatter_pub = n.advertise<std_msgs::String>("context_training_topic", 1000);
+	//set up ROS node, get all parameters etc
+  	ros::init(argc, argv, "context_training");
+  	ros::NodeHandle n;
+  	ros::Publisher chatter_pub = n.advertise<std_msgs::String>("context_training_topic", 1000);
 
+  	printSeparator(0);
 	printf("Training Context Software\n");
 	printf("%s\n", softwareVersion.c_str());
 
-	std::string roomNameROSParam;
-	n.getParam("/param/context_training/room_name", roomNameROSParam);
+	n.getParam("/wheelchair_robot/user/room_name", roomNameROSParam);
+	if (!n.hasParam("/wheelchair_robot/user/room_name")) { //check program if room name param is not available
+		std_msgs::String msg;
+
+	    std::stringstream ss;
+	    ss << "Couldn't get ROS PARAM room name";
+	    msg.data = ss.str();
+
+	    ROS_INFO("%s", msg.data.c_str());
+		ros::shutdown();
+		exit(0); //stop program if parameter room name is not available!
+	}
 	printf("Room name parameter is: %s\n", roomNameROSParam.c_str());
 
-	//std::string path = ros::package::getPath("roslib");
+	doesWheelchairDumpPkgExist();
+
+
 	std::string wheelchair_dump_loc = ros::package::getPath("wheelchair_dump");
-	objectsLocation = wheelchair_dump_loc + "/dump/mobilenet/" + roomNameROSParam + mobilenetFileType;
-	printf("%s\n", objectsLocation.c_str());
+	objectsFileLoc = wheelchair_dump_loc + "/dump/mobilenet/" + roomNameROSParam + mobilenetFileType;
+	//weightingFileLoc = wheelchair_dump_loc + "/dump/context_training/" + roomNameROSParam + weightingFileType;
+	weightingFileLoc = wheelchair_dump_loc + "/dump/context_training/";
+	roomListLoc = wheelchair_dump_loc + "/dump/context_training/room.list";
+	printf("%s\n", objectsFileLoc.c_str()); //print location of files
+	printf("%s\n", weightingFileLoc.c_str());
+	printf("%s\n", roomListLoc.c_str());
+	printSeparator(1);
+
+
+	/////////////////////////////////////////////////////////////////
+
+	restructRoomList();
+
+	printSeparator(1);
+	/////////////////////////////////////////////////////////////////
+
+
+
+
+	//createFile(weightingFileLoc); //creates new weighting file - not needed any more <- moved to restruct
+
+
+
+
+
+
+
+
+	printSeparator(1);
+
+	totalObjectsFromMnet = calculateLines(objectsFileLoc);
+	//printf("total objects: %d\n", totalObjectsFromMnet);
+
+	printSeparator(1);
+
+	objectsFileToStruct(objectsFileLoc);
+
+	printSeparator(1);
+	printf("DEBUG: objectsStruct\n");
+	for (int i = 0; i < totalObjectsFromMnet; i++) {
+		cout << objects[i].objectName;
+		cout << ":";
+		cout << objects[i].objectConfidence;
+		cout << "\n";
+	}
+
+/*
+	ifstream MyReadFile(objectsLocation);
+	std::string getlines;
+	while (getline (MyReadFile, getlines)) {
+
+  		// Output the text from the file
+  		cout << getlines;
+  		cout << "\n";
+	}
+	MyReadFile.close();
+*/
+
+
+
+
+	/////////////////////////////////////////////////////////////////
+
+	//struct Training preTrainedKitchen[10000];
+	//populate 2d array of [room][objects] -> pass this to readtrainingfile as parameter
+	for (int i = 0; i < totalRooms; i++) {
+		//get roomname from corresponding position in for loop, add file extention and pass to function
+		std::string generateRoomWeightFile = weightingFileLoc + room[i].roomName + weightingFileType;
+		readTrainingFile(generateRoomWeightFile, i); //2nd param is room id
+	}
+	printSeparator(1);
+	//cout << preTrainedKitchen[0].objectName << ":" << preTrainedKitchen[0].objectWeighting << ":" << preTrainedKitchen[0].uniqueness << "\n";
+	/*for (int i = 0; i < 100; i++) {
+		for (int j = 0; j < 100; j++) {
+			cout << "pretrained debug " << preTrained[i][j].objectName << "\n";
+		}
+	}*/
+
+	/////////////////////////////////////////////////////////////////
+	startTraining(roomNameROSParam);
+	structToWeightingFile(roomNameROSParam);
 
   ros::Rate loop_rate(10);
   int doOnce = 1;
@@ -506,6 +640,8 @@ int main(int argc, char **argv)
 
 	    ros::spinOnce();
 			printf("spinned once\n");
+			cout << "Finished Training \n";
+			ros::shutdown();
 	    //loop_rate.sleep();
 	    ++count;
 	    doOnce = 0;
