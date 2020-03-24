@@ -3,7 +3,7 @@
 <!--<param name="param/mobilenet/image_src" type="string" value="/wheelchair_robot/left_camera/image_raw" />-->
 <!--<param name="/wheelchair_robot/user/room_name" type="string" value="kitchen" />-->
 
-<node pkg="context_training" name="context_training" type="context_training" output="screen"></node>
+<node pkg="calculate_context" name="calculate_context" type="calculate_context" output="screen"></node>
 <!--<node name="image_view" pkg="image_view" type="image_view" respawn="false" output="screen">
 <!--<remap from="image" to="/wheelchair_robot/mobilenet/annotated_camera" />-->
 </node>-->
