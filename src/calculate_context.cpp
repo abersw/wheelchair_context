@@ -388,6 +388,58 @@ std::string calculateContext() {
 	return returnContext;
 }
 
+void structToWeightingFile() {
+	ofstream FILE_WRITER;
+	std::string fileName;
+	for (int isRoom = 0; isRoom < totalRooms; isRoom++) {
+		fileName = weightingFileLoc + room[isRoom].roomName + weightingFileType;
+		cout << "filename is " << fileName << "\n";
+		cout << "times trained is " << room[isRoom].timesTrained << "\n";
+		FILE_WRITER.open(fileName);
+		FILE_WRITER << room[isRoom].roomName << "\n";
+		FILE_WRITER << room[isRoom].timesTrained << "\n";
+		for (int isObject = 0; isObject < room[isRoom].totalObjects; isObject++) {
+			FILE_WRITER << preTrained[isRoom][isObject].objectName << ":";
+			FILE_WRITER << preTrained[isRoom][isObject].objectWeighting << ":";
+			FILE_WRITER << preTrained[isRoom][isObject].uniqueness << "\n";
+		}
+		FILE_WRITER.close();
+	}
+
+
+
+
+/*
+	std::string fileName = weightingFileLoc + roomNameStringParam + weightingFileType; //generate filename from room name
+	cout << fileName << "\n";
+	ofstream FILE_WRITER;
+	FILE_WRITER.open(fileName);
+	FILE_WRITER << room[correspondingRoomId].roomName << "\n";
+	FILE_WRITER << room[correspondingRoomId].timesTrained << "\n";
+	for (int isLine = 0; isLine < totalTrained; isLine++) {
+		FILE_WRITER <<  trained[correspondingRoomId][isLine].objectName << ":" << 
+						trained[correspondingRoomId][isLine].objectWeighting << ":" << 
+						trained[correspondingRoomId][isLine].uniqueness << "\n";
+	}
+	FILE_WRITER.close();
+
+	//this is the bit from above - go through all rooms and objects and then set uniqueness, does it read uniqueness from the file though?
+	//why not have a history of uniqueness saved to file? Because its a dynamic environment, objects found in multiple rooms take less of a weighting
+	//but you don't want false positives influencing the training - a bed for a couch or a picture as a traffic sign - over multiple training sessions, these items will fall off list...
+	for (int isRoom = 0; isRoom < totalRooms; isRoom++) { //iterate through room
+		//cout << "db " << isRoom << "\n";
+		for (int isObject = 0; isObject < room[isRoom].totalObjects; isObject++) { //iterate through objects in each room
+			std::string getObjectName = preTrained[isRoom][isObject].objectName; //get object name from preTrained struct
+			if (getPreObjectName == getObjectName) { // if preobject list and pretrained struct is the same
+				int getInstances = preObjectDictionary[isPreObject].instances; //
+				//preTrained[isRoom][isObject].instances = getInstances;
+				int calcUniqueness = 100 / getInstances;
+				preTrained[isRoom][isObject].uniqueness = calcUniqueness;
+			}
+		}
+	}*/
+}
+
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "calculate_context");
   	ros::NodeHandle n;
@@ -399,7 +451,7 @@ int main(int argc, char **argv) {
   	printSeparator(0);
 	std::string wheelchair_dump_loc = ros::package::getPath("wheelchair_dump");
 	objectsFileLoc = wheelchair_dump_loc + "/dump/mobilenet/found" + mobilenetFileType;
-	//weightingFileLoc = wheelchair_dump_loc + "/dump/context_training/" + roomNameROSParam + weightingFileType;
+	weightingFileLoc = wheelchair_dump_loc + "/dump/context_training/";
 	weightingFileLoc = wheelchair_dump_loc + "/dump/context_training/";
 	roomListLoc = wheelchair_dump_loc + "/dump/context_training/room.list";
 	totalRooms = calculateLines(roomListLoc); //get number of rooms
@@ -425,6 +477,7 @@ int main(int argc, char **argv) {
 	calculateUniqueness();
 	std::string roomResult = calculateContext();
 	cout << "room result is " << roomResult << "\n";
+	structToWeightingFile();
 
 
 	return 0;
