@@ -373,6 +373,9 @@ std::string calculateContext() {
 			}
 		}
 	}
+	for (int i = 0; i < totalRooms; i++) {
+		cout << "room score is " << room[i].roomName << ":" << room[i].score << "\n";
+	}
 	int currentMaxScore = room[0].score;
 	int currentRoomPos = 0;
 	for (int isNext = 1; isNext < totalRooms; isNext++) {
