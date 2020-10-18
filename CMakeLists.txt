@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(wheelchair_context)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -116,6 +114,9 @@ catkin_package(
 ## Build ##
 ###########
 
+# Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
+
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
@@ -137,6 +138,8 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/context_training_node.cpp)
+add_executable(context_training src/context_training.cpp)
+add_executable(calculate_context src/calculate_context.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -152,6 +155,8 @@ include_directories(
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+target_link_libraries(context_training ${catkin_LIBRARIES})
+target_link_libraries(calculate_context ${catkin_LIBRARIES})
 
 #############
 ## Install ##
@@ -207,10 +212,3 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
-add_compile_options(-std=c++11)
-add_executable(context_training src/context_training.cpp)
-target_link_libraries(context_training ${catkin_LIBRARIES})
-
-add_executable(calculate_context src/calculate_context.cpp)
-target_link_libraries(calculate_context ${catkin_LIBRARIES})
-# add_dependencies(context_training roslib)
