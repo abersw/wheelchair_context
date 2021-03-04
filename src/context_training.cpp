@@ -511,8 +511,8 @@ int main(int argc, char **argv)
 	printf("Training Context Software\n");
 	printf("%s\n", softwareVersion.c_str());
 
-	n.getParam("/wheelchair_robot/user/room_name", roomNameROSParam);
-	if (!n.hasParam("/wheelchair_robot/user/room_name")) { //check program if room name param is not available
+	n.getParam("/wheelchair_param/user/room_name", roomNameROSParam);
+	if (!n.hasParam("/wheelchair_param/user/room_name")) { //check program if room name param is not available
 		std_msgs::String msg;
 
 	    std::stringstream ss;
