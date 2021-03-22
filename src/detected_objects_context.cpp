@@ -7,5 +7,8 @@
 
 int main (int argc, char **argv[]) {
     //add code here
+    //notes:
+    //take UID from publish_objects_location and pass it through here
+    //when msg comes through with UID of object - append a room name to the object
     return 0;
 }
