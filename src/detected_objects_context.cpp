@@ -16,6 +16,10 @@
 #include <sstream>
 using namespace std;
 
+const int DEBUG_main = 0;
+
+std::string userRoomName;
+
 void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
 
 }
@@ -28,5 +32,15 @@ int main (int argc, char **argv) {
     ros::init(argc, argv, "detected_objects_context");
     ros::NodeHandle n;
     ros::Subscriber sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/detected_objects", 10, objectLocationsCallback);
+    
+    ros::Rate rate(10.0);
+    while(ros::ok()) {
+        n.getParam("/wheelchair_robot/param/user/room_name", userRoomName);
+        if (DEBUG_main) {
+            cout << "spin \n";
+        }
+        ros::spinOnce();
+        rate.sleep();
+    }
     return 0;
 }
