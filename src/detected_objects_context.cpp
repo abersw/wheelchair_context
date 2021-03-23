@@ -34,6 +34,29 @@ std::string dump_context_loc = "/dump/context/";
 std::string room_list_name = "room.list";
 std::string room_list_loc;
 
+//function for printing space sizes
+void printSeparator(int spaceSize) {
+	if (spaceSize == 0) {
+		printf("--------------------------------------------\n");
+	}
+	else {
+		printf("\n");
+		printf("--------------------------------------------\n");
+		printf("\n");
+	}
+}
+
+//does the wheelchair dump package exist in the workspace?
+void doesWheelchairDumpPkgExist() {
+	if (ros::package::getPath("wheelchair_dump") == "") {
+		cout << "FATAL:  Couldn't find package 'wheelchair_dump' \n";
+		cout << "FATAL:  Closing training_context node. \n";
+		printSeparator(1);
+		ros::shutdown();
+		exit(0);
+	}
+}
+
 //create a file
 int createFile(std::string fileName) { //if this doesn't get called, no file is created
     if (DEBUG_createFile) {
