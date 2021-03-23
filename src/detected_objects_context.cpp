@@ -46,7 +46,10 @@ void printSeparator(int spaceSize) {
 	}
 }
 
-//does the wheelchair dump package exist in the workspace?
+/**
+ * Does the wheelchair_dump package exist in the workspace?
+ * If it's missing, close down the node safely
+ */
 void doesWheelchairDumpPkgExist() {
 	if (ros::package::getPath("wheelchair_dump") == "") {
 		cout << "FATAL:  Couldn't find package 'wheelchair_dump' \n";
@@ -57,7 +60,12 @@ void doesWheelchairDumpPkgExist() {
 	}
 }
 
-//create a file
+/**
+ * Function to check if file exists in the 'fileName' path, if it doesn't exist create a new one
+ *
+ * @param pass the path and file name to be created called 'fileName'
+ * @return return '1' if file already exists, return '0' if file was missing and has been created
+ */
 int createFile(std::string fileName) { //if this doesn't get called, no file is created
     if (DEBUG_createFile) {
         printf("DEBUG: createFile()\n");
@@ -85,14 +93,30 @@ int createFile(std::string fileName) { //if this doesn't get called, no file is 
 	}
 }
 
+/**
+ * Main callback function triggered by received ROS topic 
+ *
+ * @param parameter 'obLoc' is the array of messages from the publish_object_locations node
+ *        message belongs to wheelchair_msgs objectLocations.msg ca
+ */
 void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     int totalObjectsInMsg = obLoc.totalObjects; //total detected objects in ROS msg
 }
 
+/**
+ * Last function to save all struct data into files, ready for using on next startup 
+ */
 void saveAllFiles() {
     cout << "saving all files" << endl;
 }
 
+/**
+ * Main function that contains ROS info, subscriber callback trigger and while loop to get room name
+ *
+ * @param argc - number of arguments
+ * @param argv - content of arguments
+ * @return 0 - end of program
+ */
 int main (int argc, char **argv) {
     //add code here
     //notes:
@@ -102,9 +126,9 @@ int main (int argc, char **argv) {
     ros::NodeHandle n;
     ros::Subscriber sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/detected_objects", 10, objectLocationsCallback);
     std::string wheelchair_dump_loc = ros::package::getPath("wheelchair_dump");
-
-	room_list_loc = wheelchair_dump_loc + dump_context_loc + room_list_name;
-    createFile(room_list_loc);
+    doesWheelchairDumpPkgExist(); //check to see if dump package is present
+	room_list_loc = wheelchair_dump_loc + dump_context_loc + room_list_name; //concatenate vars to create location of room list
+    createFile(room_list_loc); //check to see if file is present, if not create a new one
     
     ros::Rate rate(10.0);
     while(ros::ok()) {
