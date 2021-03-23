@@ -16,12 +16,58 @@
 #include <sstream>
 using namespace std;
 
-const int DEBUG_main = 0;
+const int DEBUG_createFile = 1;
+const int DEBUG_main = 1;
+
+struct Objects {
+    int object_id;
+    string object_name;
+    int room_id;
+    string room_name;
+};
 
 std::string userRoomName;
 
-void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
+//list of file locations
+std::string wheelchair_dump_loc;
+std::string dump_context_loc = "/dump/context/";
+std::string room_list_name = "room.list";
+std::string room_list_loc;
 
+//create a file
+int createFile(std::string fileName) { //if this doesn't get called, no file is created
+    if (DEBUG_createFile) {
+        printf("DEBUG: createFile()\n");
+    }
+	std::ifstream fileExists(fileName);
+
+	if (fileExists.good() == 1) {
+		//File exists
+        if (DEBUG_createFile) {
+            printf("Weighting file exists\n");
+        }
+		//cout << fileName;
+		return 1;
+	}
+	else {
+		//File doesn't exist
+        if (DEBUG_createFile) {
+            printf("Weighting file doesn't exist\n");
+            printf("creating new file\n");
+        }
+		ofstream NEW_FILE (fileName);
+		NEW_FILE.close();
+		//cout << fileName;
+		return 0;
+	}
+}
+
+void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
+    int totalObjectsInMsg = obLoc.totalObjects; //total detected objects in ROS msg
+}
+
+void saveAllFiles() {
+    cout << "saving all files" << endl;
 }
 
 int main (int argc, char **argv) {
@@ -32,6 +78,10 @@ int main (int argc, char **argv) {
     ros::init(argc, argv, "detected_objects_context");
     ros::NodeHandle n;
     ros::Subscriber sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/detected_objects", 10, objectLocationsCallback);
+    std::string wheelchair_dump_loc = ros::package::getPath("wheelchair_dump");
+
+	room_list_loc = wheelchair_dump_loc + dump_context_loc + room_list_name;
+    createFile(room_list_loc);
     
     ros::Rate rate(10.0);
     while(ros::ok()) {
@@ -42,5 +92,6 @@ int main (int argc, char **argv) {
         ros::spinOnce();
         rate.sleep();
     }
+    saveAllFiles();
     return 0;
 }
