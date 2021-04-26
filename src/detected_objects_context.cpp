@@ -186,7 +186,12 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
         objectsFileStruct[isObject].quat_y = obLoc.quat_y[isObject];
         objectsFileStruct[isObject].quat_z = obLoc.quat_z[isObject];
         objectsFileStruct[isObject].quat_w = obLoc.quat_w[isObject];
+
+        objectContext[isObject].object_id = objectsFileStruct[isObject].id;
+        objectContext[isObject].object_name = objectsFileStruct[isObject].object_name;
+        objectContext[isObject].object_confidence = objectsFileStruct[isObject].object_confidence;
     }
+    totalObjectContextStruct = totalObjectsFileStruct;
 }
 
 /**
