@@ -38,9 +38,10 @@
 #include <sstream>
 using namespace std;
 
-const int DEBUG_doesPkgExist = 0;
-const int DEBUG_createFile = 0;
-const int DEBUG_main = 1;
+static const int DEBUG_doesPkgExist = 0;
+static const int DEBUG_createFile = 0;
+static const int DEBUG_detectedObjectCallback = 1;
+static const int DEBUG_main = 1;
 
 struct Objects { //struct for publishing topic
     int id; //get object id from ros msg
@@ -195,6 +196,24 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
  */
 void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
     int totalObjectsInMsg = obLoc.totalObjects; //total detected objects in ROS msg
+    int detPos = 0; //detection position corresponds with previous frames
+    totalObjectsDetectedStruct[detPos] = totalObjectsInMsg;
+    for (int detectedObject = 0; detectedObject < totalObjectsInMsg; detectedObject++) {
+        //add to struct
+        objectsDetectedStruct[detPos][detectedObject].id = obLoc.id[detectedObject];
+        objectsDetectedStruct[detPos][detectedObject].object_name = obLoc.object_name[detectedObject];
+        objectsDetectedStruct[detPos][detectedObject].object_confidence = obLoc.object_confidence[detectedObject];
+
+        objectsDetectedStruct[detPos][detectedObject].point_x = obLoc.point_x[detectedObject];
+        objectsDetectedStruct[detPos][detectedObject].point_y = obLoc.point_y[detectedObject];
+        objectsDetectedStruct[detPos][detectedObject].point_z = obLoc.point_z[detectedObject];
+
+        objectsDetectedStruct[detPos][detectedObject].quat_x = obLoc.quat_x[detectedObject];
+        objectsDetectedStruct[detPos][detectedObject].quat_y = obLoc.quat_y[detectedObject];
+        objectsDetectedStruct[detPos][detectedObject].quat_z = obLoc.quat_z[detectedObject];
+        objectsDetectedStruct[detPos][detectedObject].quat_w = obLoc.quat_w[detectedObject];
+    }
+
     for (int detectedObject = 0; detectedObject < totalObjectsInMsg; detectedObject++) {
         //iterate through each object in msg
         //only objects with new ids are sent through to this node, so no need to compare bounding box sizes, only object id id is needed
