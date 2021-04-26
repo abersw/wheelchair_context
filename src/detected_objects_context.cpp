@@ -56,10 +56,13 @@ struct Objects { //struct for publishing topic
     float quat_z; //get transform rotation quaternion z
     float quat_w; //get transform rotation quaternion w
 
-    int inLastFrame; //unique to context file - set var to 1 if in last frame
+    int inLastFrame = 0; //unique to context file - set var to 1 if in last frame
 };
 struct Objects objectsFileStruct[100000]; //array for storing object data
 int totalObjectsFileStruct = 0; //total objects inside struct
+static const int numOfPastFrames = 5;
+struct Objects objectsDetectedStruct[numOfPastFrames][1000]; //5 previous frames, 1000 potential objects
+int totalObjectsDetectedStruct[numOfPastFrames]; //size of struct for previous 5 frames
 
 struct Context {
     int object_id;
@@ -192,6 +195,13 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
  */
 void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
     int totalObjectsInMsg = obLoc.totalObjects; //total detected objects in ROS msg
+    for (int detectedObject = 0; detectedObject < totalObjectsInMsg; detectedObject++) {
+        //iterate through each object in msg
+        //only objects with new ids are sent through to this node, so no need to compare bounding box sizes, only object id id is needed
+        for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) {
+            //go through entire struct and search for associated ids
+        }
+    }
 }
 
 /**
