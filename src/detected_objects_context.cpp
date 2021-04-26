@@ -173,6 +173,7 @@ int createFile(std::string fileName) { //if this doesn't get called, no file is 
 void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     int totalObjectsInMsg = obLoc.totalObjects; //total detected objects in ROS msg
     totalObjectsFileStruct = totalObjectsInMsg;
+    totalObjectContextStruct = totalObjectsFileStruct;
     for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) {
         objectsFileStruct[isObject].id = obLoc.id[isObject];
         objectsFileStruct[isObject].object_name = obLoc.object_name[isObject];
@@ -191,7 +192,6 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
         objectContext[isObject].object_name = objectsFileStruct[isObject].object_name;
         objectContext[isObject].object_confidence = objectsFileStruct[isObject].object_confidence;
     }
-    totalObjectContextStruct = totalObjectsFileStruct;
 }
 
 /**
