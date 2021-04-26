@@ -198,7 +198,7 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
     int totalObjectsInMsg = obLoc.totalObjects; //total detected objects in ROS msg
     int detPos = 0; //detection position corresponds with previous frames
     totalObjectsDetectedStruct[detPos] = totalObjectsInMsg;
-    for (int detectedObject = 0; detectedObject < totalObjectsInMsg; detectedObject++) {
+    for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[detPos]; detectedObject++) {
         //add to struct
         objectsDetectedStruct[detPos][detectedObject].id = obLoc.id[detectedObject];
         objectsDetectedStruct[detPos][detectedObject].object_name = obLoc.object_name[detectedObject];
@@ -212,6 +212,22 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
         objectsDetectedStruct[detPos][detectedObject].quat_y = obLoc.quat_y[detectedObject];
         objectsDetectedStruct[detPos][detectedObject].quat_z = obLoc.quat_z[detectedObject];
         objectsDetectedStruct[detPos][detectedObject].quat_w = obLoc.quat_w[detectedObject];
+
+        if (DEBUG_detectedObjectCallback) {
+            cout << 
+            objectsDetectedStruct[detPos][detectedObject].id << "," << 
+            objectsDetectedStruct[detPos][detectedObject].object_name << "," << 
+            objectsDetectedStruct[detPos][detectedObject].object_confidence << "," << 
+
+            objectsDetectedStruct[detPos][detectedObject].point_x << "," << 
+            objectsDetectedStruct[detPos][detectedObject].point_y << "," << 
+            objectsDetectedStruct[detPos][detectedObject].point_z << "," << 
+
+            objectsDetectedStruct[detPos][detectedObject].quat_x << "," << 
+            objectsDetectedStruct[detPos][detectedObject].quat_y << "," << 
+            objectsDetectedStruct[detPos][detectedObject].quat_z << "," << 
+            objectsDetectedStruct[detPos][detectedObject].quat_w << endl; 
+        }
     }
 
     for (int detectedObject = 0; detectedObject < totalObjectsInMsg; detectedObject++) {
