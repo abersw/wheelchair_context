@@ -93,8 +93,8 @@ std::string userRoomName;
 //list of file locations
 std::string wheelchair_dump_loc;
 std::string dump_context_loc = "/dump/context/";
-std::string room_list_name = "room.list";
-std::string room_list_loc;
+std::string context_list_name = "objects.context";
+std::string context_list_loc;
 
 //function for printing space sizes
 void printSeparator(int spaceSize) {
@@ -133,7 +133,8 @@ std::string doesPkgExist(std::string pkg_name) {
 }
 
 void contextListToStruct(std::string fileName) {
-    //add stuff
+    std::string objectsDelimiter = ","; //delimiter character is comma
+	ifstream FILE_READER(fileName); //open file
 }
 
 /**
@@ -286,13 +287,13 @@ int main (int argc, char **argv) {
     //notes:
     //take UID from publish_objects_location and pass it through here
     //when msg comes through with UID of object - append a room name to the object
-    contextListToStruct("filename"); //add list to struct
     ros::init(argc, argv, "detected_objects_context");
     ros::NodeHandle n;
 
     wheelchair_dump_loc = doesPkgExist("wheelchair_dump");//check to see if dump package exists
-    room_list_loc = wheelchair_dump_loc + dump_context_loc + room_list_name; //concatenate vars to create location of room list
-    createFile(room_list_loc); //check to see if file is present, if not create a new one
+    context_list_loc = wheelchair_dump_loc + dump_context_loc + context_list_name; //concatenate vars to create location of room list
+    createFile(context_list_loc); //check to see if file is present, if not create a new one
+    contextListToStruct(context_list_loc); //add list to struct
 
     ros::Subscriber objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/objects", 10, objectLocationsCallback); //full list of objects
     ros::Subscriber detected_objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/detected_objects", 10, detectedObjectCallback); //detected objects in frame
