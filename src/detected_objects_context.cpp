@@ -40,6 +40,7 @@ using namespace std;
 
 static const int DEBUG_doesPkgExist = 0;
 static const int DEBUG_createFile = 0;
+static const int DEBUG_listToContextInfo = 1;
 static const int DEBUG_contextListToStruct = 1;
 static const int DEBUG_detectedObjectCallback = 1;
 static const int DEBUG_main = 1;
@@ -80,6 +81,11 @@ struct Context {
 
 struct Context objectContext[100000]; //struct for storing object context info
 int totalObjectContextStruct = 0; //total objects in struct
+
+struct TrainingInfo {
+    int times_trained;
+};
+struct TrainingInfo trainingInfo;
 
 //list of file locations
 std::string wheelchair_dump_loc;
@@ -125,9 +131,33 @@ std::string doesPkgExist(std::string pkg_name) {
     return getPkgPath;
 }
 
+/**
+ * Function to add training session info from param 'fileName' path, start assigning info from each line of file
+ *
+ * @param pass the path and file name to be created called 'fileName'
+ */
 void listToContextInfo(std::string fileName) {
-    //do stuff
-
+	ifstream FILE_READER(fileName); //open file
+    int lineNumber = 0; //iterate on each line
+    if (FILE_READER.peek() == std::ifstream::traits_type::eof()) {
+        //don't do anything if next character in file is eof
+        cout << "file is empty" << endl;
+    }
+    else {
+        std::string line;
+        while (getline(FILE_READER, line)) { //go through line by line
+            //times trained read in and assign to struct
+            if (lineNumber == 0) {
+                //if line is 0, must be times trained
+                int getTimesTrained = std::stoi(line);
+                trainingInfo.times_trained = getTimesTrained + 1; //add one to times trained on startup
+                if (DEBUG_listToContextInfo) {
+                    cout << "training session is " << trainingInfo.times_trained << endl;
+                }
+            }
+            lineNumber++; //iterate to next line
+        }
+    }
 }
 
 void contextListToStruct(std::string fileName) {
@@ -311,7 +341,13 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
  * Function to save all context training info, ready for using on next startup 
  */
 void contextInfoToList() {
-    cout << "saving all files" << endl;
+    ofstream FILE_WRITER;
+	FILE_WRITER.open(context_info_loc);
+    for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) {
+        FILE_WRITER << trainingInfo.times_trained << "\n";
+    }
+    FILE_WRITER.close();
+    cout << "finished saving function" << endl;
 }
 
 /**
