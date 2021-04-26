@@ -38,7 +38,7 @@
 using namespace std;
 
 const int DEBUG_doesPkgExist = 0;
-const int DEBUG_createFile = 1;
+const int DEBUG_createFile = 0;
 const int DEBUG_main = 1;
 
 struct Objects {
@@ -68,7 +68,10 @@ void printSeparator(int spaceSize) {
 	}
 }
 
-//does the wheelchair dump package exist in the workspace?
+/**
+ * Does the wheelchair_dump package exist in the workspace?
+ * If it's missing, close down the node safely
+ */
 std::string doesPkgExist(std::string pkg_name) {
     std::string getPkgPath;
 	if (ros::package::getPath(pkg_name) == "") {
@@ -87,20 +90,6 @@ std::string doesPkgExist(std::string pkg_name) {
         }
     }
     return getPkgPath;
-}
-
-/**
- * Does the wheelchair_dump package exist in the workspace?
- * If it's missing, close down the node safely
- */
-void doesWheelchairDumpPkgExist() {
-	if (ros::package::getPath("wheelchair_dump") == "") {
-		cout << "FATAL:  Couldn't find package 'wheelchair_dump' \n";
-		cout << "FATAL:  Closing training_context node. \n";
-		printSeparator(1);
-		ros::shutdown();
-		exit(0);
-	}
 }
 
 /**
