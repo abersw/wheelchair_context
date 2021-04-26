@@ -51,7 +51,7 @@ struct Context {
     float object_weighting;
     float object_uniqueness;
     int object_instances;
-}
+};
 
 struct Context objectContext[100000]; //struct for storing object context info
 int totalObjectContextStruct = 0; //total objects in struct
