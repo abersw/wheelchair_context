@@ -123,6 +123,11 @@ std::string doesPkgExist(std::string pkg_name) {
     return getPkgPath;
 }
 
+void listToContextInfo() {
+    //do stuff
+
+}
+
 void contextListToStruct(std::string fileName) {
     std::string objectsDelimiter = ","; //delimiter character is comma
 	ifstream FILE_READER(fileName); //open file
@@ -288,6 +293,9 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
         if (DEBUG_detectedObjectCallback) {
             cout << "nothing in struct pos " << detPos+1 << endl;
         }
+        for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) { //run through entire objects struct
+            //do stuff
+        }
     }
     else {
         //history exists, therefore compare with history to see if object was in previous frame
@@ -298,9 +306,16 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
 }
 
 /**
+ * Function to save all context training info, ready for using on next startup 
+ */
+void contextInfoToList() {
+    cout << "saving all files" << endl;
+}
+
+/**
  * Last function to save all struct data into files, ready for using on next startup 
  */
-void saveAllFiles() {
+void contextStructToList() {
     cout << "saving all files" << endl;
 }
 
@@ -333,6 +348,6 @@ int main (int argc, char **argv) {
         ros::spinOnce();
         rate.sleep();
     }
-    saveAllFiles();
+    //contextStructToList();
     return 0;
 }
