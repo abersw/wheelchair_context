@@ -81,15 +81,6 @@ struct Context {
 struct Context objectContext[100000]; //struct for storing object context info
 int totalObjectContextStruct = 0; //total objects in struct
 
-struct Links {
-    int object_id;
-    string object_name;
-    int room_id;
-    string room_name;
-};
-
-std::string userRoomName;
-
 //list of file locations
 std::string wheelchair_dump_loc;
 std::string dump_context_loc = "/dump/context/";
@@ -304,15 +295,6 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
             cout << "data exists in struct pos " << detPos+1 << endl;
         }
     }
-
-    //ignore this stuff for now:
-    for (int detectedObject = 0; detectedObject < totalObjectsInMsg; detectedObject++) {
-        //iterate through each object in msg
-        //only objects with new ids are sent through to this node, so no need to compare bounding box sizes, only object id id is needed
-        for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) {
-            //go through entire struct and search for associated ids
-        }
-    }
 }
 
 /**
@@ -330,10 +312,8 @@ void saveAllFiles() {
  * @return 0 - end of program
  */
 int main (int argc, char **argv) {
-    //add code here
-    //notes:
     //take UID from publish_objects_location and pass it through here
-    //when msg comes through with UID of object - append a room name to the object
+    //when msg comes through with ID of object - append a room name to the object
     ros::init(argc, argv, "detected_objects_context");
     ros::NodeHandle n;
 
@@ -347,7 +327,6 @@ int main (int argc, char **argv) {
     
     ros::Rate rate(10.0);
     while(ros::ok()) {
-        n.getParam("/wheelchair_robot/param/user/room_name", userRoomName);
         if (DEBUG_main) {
             cout << "spin \n";
         }
