@@ -85,7 +85,9 @@ int totalObjectContextStruct = 0; //total objects in struct
 std::string wheelchair_dump_loc;
 std::string dump_context_loc = "/dump/context/";
 std::string context_list_name = "objects.context";
+std::string context_info_name = "info.context";
 std::string context_list_loc;
+std::string context_info_loc;
 
 //function for printing space sizes
 void printSeparator(int spaceSize) {
@@ -123,7 +125,7 @@ std::string doesPkgExist(std::string pkg_name) {
     return getPkgPath;
 }
 
-void listToContextInfo() {
+void listToContextInfo(std::string fileName) {
     //do stuff
 
 }
@@ -336,6 +338,11 @@ int main (int argc, char **argv) {
     context_list_loc = wheelchair_dump_loc + dump_context_loc + context_list_name; //concatenate vars to create location of room list
     createFile(context_list_loc); //check to see if file is present, if not create a new one
     contextListToStruct(context_list_loc); //add list to struct
+
+    context_info_loc = wheelchair_dump_loc + dump_context_loc + context_info_name; //concatenate vars to create location of room list
+    createFile(context_info_loc); //check to see if file is present, if not create a new one
+    listToContextInfo(context_info_loc); //set context training info to struct
+
 
     ros::Subscriber objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/objects", 10, objectLocationsCallback); //full list of objects
     ros::Subscriber detected_objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/detected_objects", 10, detectedObjectCallback); //detected objects in frame
