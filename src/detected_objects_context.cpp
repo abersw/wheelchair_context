@@ -37,6 +37,7 @@
 #include <sstream>
 using namespace std;
 
+const int DEBUG_doesPkgExist = 0;
 const int DEBUG_createFile = 1;
 const int DEBUG_main = 1;
 
@@ -65,6 +66,27 @@ void printSeparator(int spaceSize) {
 		printf("--------------------------------------------\n");
 		printf("\n");
 	}
+}
+
+//does the wheelchair dump package exist in the workspace?
+std::string doesPkgExist(std::string pkg_name) {
+    std::string getPkgPath;
+	if (ros::package::getPath(pkg_name) == "") {
+		cout << "FATAL:  Couldn't find package " << pkg_name << "\n";
+		cout << "FATAL:  Closing node. \n";
+        if (DEBUG_doesPkgExist) {
+            cout << getPkgPath << endl;
+        }
+		ros::shutdown();
+		exit(0);
+	}
+    else {
+        getPkgPath = ros::package::getPath(pkg_name);
+        if (DEBUG_doesPkgExist) {
+            cout << getPkgPath << endl;
+        }
+    }
+    return getPkgPath;
 }
 
 /**
@@ -145,11 +167,12 @@ int main (int argc, char **argv) {
     //when msg comes through with UID of object - append a room name to the object
     ros::init(argc, argv, "detected_objects_context");
     ros::NodeHandle n;
-    ros::Subscriber sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/detected_objects", 10, objectLocationsCallback);
-    std::string wheelchair_dump_loc = ros::package::getPath("wheelchair_dump");
-    doesWheelchairDumpPkgExist(); //check to see if dump package is present
-	room_list_loc = wheelchair_dump_loc + dump_context_loc + room_list_name; //concatenate vars to create location of room list
+
+    wheelchair_dump_loc = doesPkgExist("wheelchair_dump");//check to see if dump package exists
+    room_list_loc = wheelchair_dump_loc + dump_context_loc + room_list_name; //concatenate vars to create location of room list
     createFile(room_list_loc); //check to see if file is present, if not create a new one
+
+    ros::Subscriber sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/detected_objects", 10, objectLocationsCallback);
     
     ros::Rate rate(10.0);
     while(ros::ok()) {
