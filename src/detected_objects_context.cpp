@@ -168,6 +168,17 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     totalObjectsFileStruct = totalObjectsInMsg;
     for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) {
         objectsFileStruct[isObject].id = obLoc.id[isObject];
+        objectsFileStruct[isObject].object_name = obLoc.object_name[isObject];
+        objectsFileStruct[isObject].object_confidence = obLoc.object_confidence[isObject];
+
+        objectsFileStruct[isObject].point_x = obLoc.point_x[isObject];
+        objectsFileStruct[isObject].point_y = obLoc.point_y[isObject];
+        objectsFileStruct[isObject].point_z = obLoc.point_z[isObject];
+
+        objectsFileStruct[isObject].quat_x = obLoc.quat_x[isObject];
+        objectsFileStruct[isObject].quat_y = obLoc.quat_y[isObject];
+        objectsFileStruct[isObject].quat_z = obLoc.quat_z[isObject];
+        objectsFileStruct[isObject].quat_w = obLoc.quat_w[isObject];
     }
 }
 
