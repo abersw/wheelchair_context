@@ -75,6 +75,7 @@ struct Context {
     float object_uniqueness; //object uniqueness result
     int object_instances; //number of objects in env
 };
+//object_id,object_name,object_confidence,object_detected,object_weighting,object_uniqueness,object_instances
 
 struct Context objectContext[100000]; //struct for storing object context info
 int totalObjectContextStruct = 0; //total objects in struct
