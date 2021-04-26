@@ -240,13 +240,16 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
     //finished adding detected data to pos 0 in 2d array
 
     if (totalObjectsDetectedStruct[detPos+1] == 0) {
+        //no history to compare with, therefore do all the calculation stuff
         if (DEBUG_detectedObjectCallback) {
             cout << "nothing in struct pos " << detPos+1 << endl;
         }
-        //no history to compare with, therefore do all the calculation stuff
     }
     else {
         //history exists, therefore compare with history to see if object was in previous frame
+        if (DEBUG_detectedObjectCallback) {
+            cout << "data exists in struct pos " << detPos+1 << endl;
+        }
     }
 
     //ignore this stuff for now:
