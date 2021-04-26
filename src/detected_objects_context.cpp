@@ -73,7 +73,7 @@ struct Context {
 struct Context objectContext[100000]; //struct for storing object context info
 int totalObjectContextStruct = 0; //total objects in struct
 
-struct Objects {
+struct Links {
     int object_id;
     string object_name;
     int room_id;
@@ -165,6 +165,10 @@ int createFile(std::string fileName) { //if this doesn't get called, no file is 
  */
 void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     int totalObjectsInMsg = obLoc.totalObjects; //total detected objects in ROS msg
+    totalObjectsFileStruct = totalObjectsInMsg;
+    for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) {
+        objectsFileStruct[isObject].id = obLoc.id[isObject];
+    }
 }
 
 /**
@@ -203,8 +207,8 @@ int main (int argc, char **argv) {
     room_list_loc = wheelchair_dump_loc + dump_context_loc + room_list_name; //concatenate vars to create location of room list
     createFile(room_list_loc); //check to see if file is present, if not create a new one
 
-    ros::Subscriber sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/objects", 10, objectLocationsCallback); //full list of objects
-    ros::Subscriber sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/detected_objects", 10, detectedObjectCallback); //detected objects in frame
+    ros::Subscriber objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/objects", 10, objectLocationsCallback); //full list of objects
+    ros::Subscriber detected_objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/detected_objects", 10, detectedObjectCallback); //detected objects in frame
     
     ros::Rate rate(10.0);
     while(ros::ok()) {
