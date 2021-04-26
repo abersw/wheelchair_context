@@ -55,6 +55,8 @@ struct Objects { //struct for publishing topic
     float quat_y; //get transform rotation quaternion y
     float quat_z; //get transform rotation quaternion z
     float quat_w; //get transform rotation quaternion w
+
+    int inLastFrame; //unique to context file - set var to 1 if in last frame
 };
 struct Objects objectsFileStruct[100000]; //array for storing object data
 int totalObjectsFileStruct = 0; //total objects inside struct
