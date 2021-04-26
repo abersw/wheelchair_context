@@ -135,6 +135,53 @@ std::string doesPkgExist(std::string pkg_name) {
 void contextListToStruct(std::string fileName) {
     std::string objectsDelimiter = ","; //delimiter character is comma
 	ifstream FILE_READER(fileName); //open file
+    int objectNumber = 0; //iterate on each object
+    if (FILE_READER.peek() == std::ifstream::traits_type::eof()) {
+        //don't do anything if next character in file is eof
+        cout << "file is empty" << endl;
+    }
+    else {
+        std::string line;
+        while (getline(FILE_READER, line)) { //go through line by line
+            int lineSection = 0; //var for iterating through serialised line
+            int pos = 0; //position of delimiter in line
+            std::string token;
+            while ((pos = line.find(objectsDelimiter)) != std::string::npos) {
+                token = line.substr(0, pos);
+                //std::cout << token << std::endl;
+                line.erase(0, pos + objectsDelimiter.length());
+                //deserialise the line sections below:
+                if (lineSection == 0) {
+                    objectContext[objectNumber].object_id = std::stoi(token); //set id of object from existing id
+                }
+                else if (lineSection == 1) {
+                    objectContext[objectNumber].object_name = token; //set object name
+                }
+                else if (lineSection == 2) {
+                    objectContext[objectNumber].object_confidence = std::stof(token); //set object confidence
+                }
+                else if (lineSection == 3) {
+                    objectContext[objectNumber].object_detected = std::stoi(token); //set times object has been detected
+                }
+                else if (lineSection == 4) {
+                    objectContext[objectNumber].object_weighting = std::stof(token); //set object weighting
+                }
+                else if (lineSection == 5) {
+                    objectContext[objectNumber].object_uniqueness = std::stof(token); //set object uniqueness
+                }
+                lineSection++; //move to next element in line
+            }
+            objectContext[objectNumber].object_instances = std::stof(line); //set object instances
+            if (DEBUG_contextListToStruct) { //print off debug lines
+                cout << "sections in line " << lineSection << endl;
+                cout << objectContext[objectNumber].object_id << "," << objectContext[objectNumber].object_name << ", " << objectContext[objectNumber].object_confidence << endl;
+                cout << objectContext[objectNumber].object_detected << ", " << objectContext[objectNumber].object_weighting << ", " << objectContext[objectNumber].object_uniqueness << ", " << objectContext[objectNumber].object_instances << endl;
+                printSeparator(0);
+            }
+            objectNumber++; //iterate to next object in list
+        }
+    }
+    //totalObjectsFileStruct = objectNumber; //var to add number of objects in struct
 }
 
 /**
