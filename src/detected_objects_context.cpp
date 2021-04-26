@@ -42,6 +42,23 @@ const int DEBUG_doesPkgExist = 0;
 const int DEBUG_createFile = 0;
 const int DEBUG_main = 1;
 
+struct Objects { //struct for publishing topic
+    int id; //get object id from ros msg
+    string object_name; //get object name/class
+    float object_confidence; //get object confidence
+
+    float point_x; //get transform point x
+    float point_y; //get transform point y
+    float point_z; //get transform point z
+
+    float quat_x; //get transform rotation quaternion x
+    float quat_y; //get transform rotation quaternion y
+    float quat_z; //get transform rotation quaternion z
+    float quat_w; //get transform rotation quaternion w
+};
+struct Objects objectsFileStruct[100000]; //array for storing object data
+int totalObjectsFileStruct = 0; //total objects inside struct
+
 struct Context {
     int object_id;
     string object_name;
@@ -144,9 +161,19 @@ int createFile(std::string fileName) { //if this doesn't get called, no file is 
  * Main callback function triggered by received ROS topic 
  *
  * @param parameter 'obLoc' is the array of messages from the publish_object_locations node
- *        message belongs to wheelchair_msgs objectLocations.msg ca
+ *        message belongs to wheelchair_msgs objectLocations.msg
  */
 void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
+    int totalObjectsInMsg = obLoc.totalObjects; //total detected objects in ROS msg
+}
+
+/**
+ * Main callback function triggered by detected objects in frame ROS topic 
+ *
+ * @param parameter 'obLoc' is the array of messages from the publish_object_locations node
+ *        message belongs to wheelchair_msgs objectLocations.msg
+ */
+void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
     int totalObjectsInMsg = obLoc.totalObjects; //total detected objects in ROS msg
 }
 
@@ -176,7 +203,8 @@ int main (int argc, char **argv) {
     room_list_loc = wheelchair_dump_loc + dump_context_loc + room_list_name; //concatenate vars to create location of room list
     createFile(room_list_loc); //check to see if file is present, if not create a new one
 
-    ros::Subscriber sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/detected_objects", 10, objectLocationsCallback);
+    ros::Subscriber sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/objects", 10, objectLocationsCallback); //full list of objects
+    ros::Subscriber sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/detected_objects", 10, detectedObjectCallback); //detected objects in frame
     
     ros::Rate rate(10.0);
     while(ros::ok()) {
