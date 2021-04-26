@@ -233,6 +233,17 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
     }
     //finished adding detected data to pos 0 in 2d array
 
+    if (totalObjectsDetectedStruct[detPos+1] == 0) {
+        if (DEBUG_detectedObjectCallback) {
+            cout << "nothing in struct pos 1" << endl;
+        }
+        //no history to compare with, therefore do all the calculation stuff
+    }
+    else {
+        //history exists, therefore compare with history to see if object was in previous frame
+    }
+
+    //ignore this stuff for now:
     for (int detectedObject = 0; detectedObject < totalObjectsInMsg; detectedObject++) {
         //iterate through each object in msg
         //only objects with new ids are sent through to this node, so no need to compare bounding box sizes, only object id id is needed
