@@ -235,7 +235,7 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
 
     if (totalObjectsDetectedStruct[detPos+1] == 0) {
         if (DEBUG_detectedObjectCallback) {
-            cout << "nothing in struct pos 1" << endl;
+            cout << "nothing in struct pos " << detPos+1 << endl;
         }
         //no history to compare with, therefore do all the calculation stuff
     }
