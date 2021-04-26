@@ -32,6 +32,7 @@
 #include "ros/ros.h" //main ROS library
 #include "ros/package.h" //find ROS packages, needs roslib dependency
 #include "wheelchair_msgs/objectLocations.h"
+#include "wheelchair_msgs/objectContext.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -40,6 +41,20 @@ using namespace std;
 const int DEBUG_doesPkgExist = 0;
 const int DEBUG_createFile = 0;
 const int DEBUG_main = 1;
+
+struct Context {
+    int object_id;
+    string object_name;
+    float object_confidence;
+    int object_detected;
+
+    float object_weighting;
+    float object_uniqueness;
+    int object_instances;
+}
+
+struct Context objectContext[100000]; //struct for storing object context info
+int totalObjectContextStruct = 0; //total objects in struct
 
 struct Objects {
     int object_id;
