@@ -199,7 +199,7 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
     int detPos = 0; //detection position corresponds with previous frames
     totalObjectsDetectedStruct[detPos] = totalObjectsInMsg;
     for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[detPos]; detectedObject++) {
-        //add to struct
+        //add to struct position [0][object number]
         objectsDetectedStruct[detPos][detectedObject].id = obLoc.id[detectedObject];
         objectsDetectedStruct[detPos][detectedObject].object_name = obLoc.object_name[detectedObject];
         objectsDetectedStruct[detPos][detectedObject].object_confidence = obLoc.object_confidence[detectedObject];
@@ -212,6 +212,8 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
         objectsDetectedStruct[detPos][detectedObject].quat_y = obLoc.quat_y[detectedObject];
         objectsDetectedStruct[detPos][detectedObject].quat_z = obLoc.quat_z[detectedObject];
         objectsDetectedStruct[detPos][detectedObject].quat_w = obLoc.quat_w[detectedObject];
+
+        //objectsDetectedStruct[detPos][detectedObject].inLastFrame; //don't do anything yet
 
         if (DEBUG_detectedObjectCallback) {
             cout << 
@@ -229,6 +231,7 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
             objectsDetectedStruct[detPos][detectedObject].quat_w << endl; 
         }
     }
+    //finished adding detected data to pos 0 in 2d array
 
     for (int detectedObject = 0; detectedObject < totalObjectsInMsg; detectedObject++) {
         //iterate through each object in msg
