@@ -66,14 +66,14 @@ struct Objects objectsDetectedStruct[numOfPastFrames][1000]; //5 previous frames
 int totalObjectsDetectedStruct[numOfPastFrames]; //size of struct for previous 5 frames
 
 struct Context {
-    int object_id;
-    string object_name;
-    float object_confidence;
-    int object_detected;
+    int object_id; //object id
+    string object_name; //object name
+    float object_confidence; //object confidence from dnn
+    int object_detected; //times object has been detected
 
-    float object_weighting;
-    float object_uniqueness;
-    int object_instances;
+    float object_weighting; //object weighting result
+    float object_uniqueness; //object uniqueness result
+    int object_instances; //number of objects in env
 };
 
 struct Context objectContext[100000]; //struct for storing object context info
