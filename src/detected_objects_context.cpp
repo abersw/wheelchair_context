@@ -40,6 +40,7 @@ using namespace std;
 
 static const int DEBUG_doesPkgExist = 0;
 static const int DEBUG_createFile = 0;
+static const int DEBUG_contextListToStruct = 1;
 static const int DEBUG_detectedObjectCallback = 1;
 static const int DEBUG_main = 1;
 
@@ -129,6 +130,10 @@ std::string doesPkgExist(std::string pkg_name) {
         }
     }
     return getPkgPath;
+}
+
+void contextListToStruct(std::string fileName) {
+    //add stuff
 }
 
 /**
@@ -281,6 +286,7 @@ int main (int argc, char **argv) {
     //notes:
     //take UID from publish_objects_location and pass it through here
     //when msg comes through with UID of object - append a room name to the object
+    contextListToStruct("filename"); //add list to struct
     ros::init(argc, argv, "detected_objects_context");
     ros::NodeHandle n;
 
