@@ -132,6 +132,39 @@ std::string doesPkgExist(std::string pkg_name) {
 }
 
 /**
+ * Function to check if file exists in the 'fileName' path, if it doesn't exist create a new one
+ *
+ * @param pass the path and file name to be created called 'fileName'
+ * @return return '1' if file already exists, return '0' if file was missing and has been created
+ */
+int createFile(std::string fileName) { //if this doesn't get called, no file is created
+    if (DEBUG_createFile) {
+        printf("DEBUG: createFile()\n");
+    }
+	std::ifstream fileExists(fileName);
+
+	if (fileExists.good() == 1) {
+		//File exists
+        if (DEBUG_createFile) {
+            printf("Weighting file exists\n");
+        }
+		//cout << fileName;
+		return 1;
+	}
+	else {
+		//File doesn't exist
+        if (DEBUG_createFile) {
+            printf("Weighting file doesn't exist\n");
+            printf("creating new file\n");
+        }
+		ofstream NEW_FILE (fileName);
+		NEW_FILE.close();
+		//cout << fileName;
+		return 0;
+	}
+}
+
+/**
  * Function to add training session info from param 'fileName' path, start assigning info from each line of file
  *
  * @param pass the path and file name to be created called 'fileName'
@@ -211,39 +244,6 @@ void contextListToStruct(std::string fileName) {
         }
     }
     //totalObjectsFileStruct = objectNumber; //var to add number of objects in struct
-}
-
-/**
- * Function to check if file exists in the 'fileName' path, if it doesn't exist create a new one
- *
- * @param pass the path and file name to be created called 'fileName'
- * @return return '1' if file already exists, return '0' if file was missing and has been created
- */
-int createFile(std::string fileName) { //if this doesn't get called, no file is created
-    if (DEBUG_createFile) {
-        printf("DEBUG: createFile()\n");
-    }
-	std::ifstream fileExists(fileName);
-
-	if (fileExists.good() == 1) {
-		//File exists
-        if (DEBUG_createFile) {
-            printf("Weighting file exists\n");
-        }
-		//cout << fileName;
-		return 1;
-	}
-	else {
-		//File doesn't exist
-        if (DEBUG_createFile) {
-            printf("Weighting file doesn't exist\n");
-            printf("creating new file\n");
-        }
-		ofstream NEW_FILE (fileName);
-		NEW_FILE.close();
-		//cout << fileName;
-		return 0;
-	}
 }
 
 /**
