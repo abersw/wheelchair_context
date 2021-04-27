@@ -245,7 +245,7 @@ void contextListToStruct(std::string fileName) {
             objectNumber++; //iterate to next object in list
         }
     }
-    //totalObjectsFileStruct = objectNumber; //var to add number of objects in struct
+    totalObjectContextStruct = objectNumber; //var to add number of objects in struct
 }
 
 /**
