@@ -40,8 +40,8 @@ using namespace std;
 
 static const int DEBUG_doesPkgExist = 0;
 static const int DEBUG_createFile = 0;
-static const int DEBUG_listToContextInfo = 1;
-static const int DEBUG_contextListToStruct = 1;
+static const int DEBUG_listToContextInfo = 0;
+static const int DEBUG_contextListToStruct = 0;
 static const int DEBUG_detectedObjectCallback = 1;
 static const int DEBUG_main = 0;
 
