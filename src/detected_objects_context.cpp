@@ -43,6 +43,8 @@ static const int DEBUG_createFile = 0;
 static const int DEBUG_listToContextInfo = 0;
 static const int DEBUG_contextListToStruct = 0;
 static const int DEBUG_detectedObjectCallback = 1;
+static const int DEBUG_contextInfoToList = 0;
+static const int DEBUG_contextStructToList = 0;
 static const int DEBUG_main = 0;
 
 struct Objects { //struct for publishing topic
@@ -348,7 +350,9 @@ void contextInfoToList() {
 	FILE_WRITER.open(context_info_loc);
     FILE_WRITER << trainingInfo.times_trained << "\n";
     FILE_WRITER.close();
-    cout << "finished saving function" << endl;
+    if (DEBUG_contextInfoToList) {
+        cout << "finished saving context training information" << endl;
+    }
 }
 
 /**
@@ -369,7 +373,9 @@ void contextStructToList() {
         objectContext[isObject].object_instances << "\n";
     }
     FILE_WRITER.close();
-    cout << "saving all files" << endl;
+    if (DEBUG_contextStructToList) {
+        cout << "finished saving context struct" << endl;
+    }
 }
 
 /**
