@@ -354,6 +354,20 @@ void contextInfoToList() {
  * Last function to save all struct data into files, ready for using on next startup 
  */
 void contextStructToList() {
+    //object_id,object_name,object_confidence,object_detected,object_weighting,object_uniqueness,object_instances
+    ofstream FILE_WRITER;
+	FILE_WRITER.open(context_list_loc);
+    for (int isObject = 0; isObject < totalObjectContextStruct; isObject++) {
+        FILE_WRITER << 
+        objectContext[isObject].object_id << "," << 
+        objectContext[isObject].object_name << "," << 
+        objectContext[isObject].object_confidence << "," << 
+        objectContext[isObject].object_detected << "," << 
+        objectContext[isObject].object_weighting << "," << 
+        objectContext[isObject].object_uniqueness << "," << 
+        objectContext[isObject].object_instances << "\n";
+    }
+    FILE_WRITER.close();
     cout << "saving all files" << endl;
 }
 
