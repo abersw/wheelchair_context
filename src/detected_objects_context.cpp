@@ -92,12 +92,12 @@ struct TrainingInfo trainingInfo;
 ros::Publisher *ptr_object_context;
 
 //list of file locations
-std::string wheelchair_dump_loc;
-std::string dump_context_loc = "/dump/context/";
-std::string context_list_name = "objects.context";
-std::string context_info_name = "info.context";
-std::string context_list_loc;
-std::string context_info_loc;
+std::string wheelchair_dump_loc; //location of wheelchair_dump package
+std::string dump_context_loc = "/dump/context/"; //location of context dir in wheelchair_dump
+std::string context_list_name = "objects.context"; //name of object context file
+std::string context_info_name = "info.context"; //name of context training info file
+std::string context_list_loc; //full path to object context file
+std::string context_info_loc; //full path to context training info file
 
 //function for printing space sizes
 void printSeparator(int spaceSize) {
@@ -403,8 +403,8 @@ int main (int argc, char **argv) {
 
     ros::Subscriber objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/objects", 10, objectLocationsCallback); //full list of objects
     ros::Subscriber detected_objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/detected_objects", 10, detectedObjectCallback); //detected objects in frame
-    ros::Publisher object_context_pub = n.advertise<wheelchair_msgs::objectContext>("/wheelchair_robot/context/objects", 1000);
-    ptr_object_context = &object_context_pub;
+    ros::Publisher object_context_pub = n.advertise<wheelchair_msgs::objectContext>("/wheelchair_robot/context/objects", 1000); //publish object context info for decision making
+    ptr_object_context = &object_context_pub; //pointer to publish object context
 
     ros::Rate rate(10.0);
     while(ros::ok()) {
