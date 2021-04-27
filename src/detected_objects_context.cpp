@@ -142,6 +142,7 @@ void listToContextInfo(std::string fileName) {
     if (FILE_READER.peek() == std::ifstream::traits_type::eof()) {
         //don't do anything if next character in file is eof
         cout << "file is empty" << endl;
+        trainingInfo.times_trained = 1;
     }
     else {
         std::string line;
@@ -343,9 +344,7 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
 void contextInfoToList() {
     ofstream FILE_WRITER;
 	FILE_WRITER.open(context_info_loc);
-    for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) {
-        FILE_WRITER << trainingInfo.times_trained << "\n";
-    }
+    FILE_WRITER << trainingInfo.times_trained << "\n";
     FILE_WRITER.close();
     cout << "finished saving function" << endl;
 }
