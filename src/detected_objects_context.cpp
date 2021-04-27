@@ -405,6 +405,7 @@ int main (int argc, char **argv) {
         ros::spinOnce();
         rate.sleep();
     }
-    //contextStructToList();
+    contextInfoToList(); //save training info
+    contextStructToList(); //save object context
     return 0;
 }
