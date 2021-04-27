@@ -292,18 +292,18 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
     totalObjectsDetectedStruct[detPos] = totalObjectsInMsg;
     for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[detPos]; detectedObject++) {
         //add to struct position [0][object number]
-        objectsDetectedStruct[detPos][detectedObject].id = obLoc.id[detectedObject];
-        objectsDetectedStruct[detPos][detectedObject].object_name = obLoc.object_name[detectedObject];
-        objectsDetectedStruct[detPos][detectedObject].object_confidence = obLoc.object_confidence[detectedObject];
+        objectsDetectedStruct[detPos][detectedObject].id = obLoc.id[detectedObject]; //assign object id to struct
+        objectsDetectedStruct[detPos][detectedObject].object_name = obLoc.object_name[detectedObject]; //assign object name to struct
+        objectsDetectedStruct[detPos][detectedObject].object_confidence = obLoc.object_confidence[detectedObject]; //assign object confidence to struct
 
-        objectsDetectedStruct[detPos][detectedObject].point_x = obLoc.point_x[detectedObject];
-        objectsDetectedStruct[detPos][detectedObject].point_y = obLoc.point_y[detectedObject];
-        objectsDetectedStruct[detPos][detectedObject].point_z = obLoc.point_z[detectedObject];
+        objectsDetectedStruct[detPos][detectedObject].point_x = obLoc.point_x[detectedObject]; //assign object vector point x to struct
+        objectsDetectedStruct[detPos][detectedObject].point_y = obLoc.point_y[detectedObject]; //assign object vector point y to struct
+        objectsDetectedStruct[detPos][detectedObject].point_z = obLoc.point_z[detectedObject]; //assign object vector point z to struct
 
-        objectsDetectedStruct[detPos][detectedObject].quat_x = obLoc.quat_x[detectedObject];
-        objectsDetectedStruct[detPos][detectedObject].quat_y = obLoc.quat_y[detectedObject];
-        objectsDetectedStruct[detPos][detectedObject].quat_z = obLoc.quat_z[detectedObject];
-        objectsDetectedStruct[detPos][detectedObject].quat_w = obLoc.quat_w[detectedObject];
+        objectsDetectedStruct[detPos][detectedObject].quat_x = obLoc.quat_x[detectedObject]; //assign object quaternion x to struct
+        objectsDetectedStruct[detPos][detectedObject].quat_y = obLoc.quat_y[detectedObject]; //assign object quaternion y to struct
+        objectsDetectedStruct[detPos][detectedObject].quat_z = obLoc.quat_z[detectedObject]; //assign object quaternion z to struct
+        objectsDetectedStruct[detPos][detectedObject].quat_w = obLoc.quat_w[detectedObject]; //assign object quaternion w to struct
 
         //objectsDetectedStruct[detPos][detectedObject].inLastFrame; //don't do anything yet
 
