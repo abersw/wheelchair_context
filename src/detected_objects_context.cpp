@@ -43,7 +43,7 @@ static const int DEBUG_createFile = 0;
 static const int DEBUG_listToContextInfo = 1;
 static const int DEBUG_contextListToStruct = 1;
 static const int DEBUG_detectedObjectCallback = 1;
-static const int DEBUG_main = 1;
+static const int DEBUG_main = 0;
 
 struct Objects { //struct for publishing topic
     int id; //get object id from ros msg
