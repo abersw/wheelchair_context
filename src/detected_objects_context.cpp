@@ -87,6 +87,8 @@ struct TrainingInfo {
 };
 struct TrainingInfo trainingInfo;
 
+ros::Publisher *ptr_object_context;
+
 //list of file locations
 std::string wheelchair_dump_loc;
 std::string dump_context_loc = "/dump/context/";
@@ -395,6 +397,8 @@ int main (int argc, char **argv) {
 
     ros::Subscriber objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/objects", 10, objectLocationsCallback); //full list of objects
     ros::Subscriber detected_objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/detected_objects", 10, detectedObjectCallback); //detected objects in frame
+    ros::Publisher object_context_pub = n.advertise<wheelchair_msgs::objectContext>("/wheelchair_robot/context/objects", 1000);
+    ptr_object_context = &object_context_pub;
     
     ros::Rate rate(10.0);
     while(ros::ok()) {
