@@ -256,25 +256,25 @@ void contextListToStruct(std::string fileName) {
  */
 void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     int totalObjectsInMsg = obLoc.totalObjects; //total detected objects in ROS msg
-    totalObjectsFileStruct = totalObjectsInMsg;
-    totalObjectContextStruct = totalObjectsFileStruct;
-    for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) {
-        objectsFileStruct[isObject].id = obLoc.id[isObject];
-        objectsFileStruct[isObject].object_name = obLoc.object_name[isObject];
-        objectsFileStruct[isObject].object_confidence = obLoc.object_confidence[isObject];
+    totalObjectsFileStruct = totalObjectsInMsg; //set message total objects to total objects in file struct
+    totalObjectContextStruct = totalObjectsFileStruct; //set object context struct size to replicate size of object struct
+    for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) { //iterate through entire msg topic array
+        objectsFileStruct[isObject].id = obLoc.id[isObject]; //assign object id to struct
+        objectsFileStruct[isObject].object_name = obLoc.object_name[isObject]; //assign object name to struct
+        objectsFileStruct[isObject].object_confidence = obLoc.object_confidence[isObject]; //assign object confidence to struct
 
-        objectsFileStruct[isObject].point_x = obLoc.point_x[isObject];
-        objectsFileStruct[isObject].point_y = obLoc.point_y[isObject];
-        objectsFileStruct[isObject].point_z = obLoc.point_z[isObject];
+        objectsFileStruct[isObject].point_x = obLoc.point_x[isObject]; //assign object vector point x to struct
+        objectsFileStruct[isObject].point_y = obLoc.point_y[isObject]; //assign object vector point y to struct
+        objectsFileStruct[isObject].point_z = obLoc.point_z[isObject]; //assign object vector point z to struct
 
-        objectsFileStruct[isObject].quat_x = obLoc.quat_x[isObject];
-        objectsFileStruct[isObject].quat_y = obLoc.quat_y[isObject];
-        objectsFileStruct[isObject].quat_z = obLoc.quat_z[isObject];
-        objectsFileStruct[isObject].quat_w = obLoc.quat_w[isObject];
+        objectsFileStruct[isObject].quat_x = obLoc.quat_x[isObject]; //assign object quaternion x to struct
+        objectsFileStruct[isObject].quat_y = obLoc.quat_y[isObject]; //assign object quaternion y to struct
+        objectsFileStruct[isObject].quat_z = obLoc.quat_z[isObject]; //assign object quaternion z to struct
+        objectsFileStruct[isObject].quat_w = obLoc.quat_w[isObject]; //assign object quaternion w to struct
 
-        objectContext[isObject].object_id = objectsFileStruct[isObject].id;
-        objectContext[isObject].object_name = objectsFileStruct[isObject].object_name;
-        objectContext[isObject].object_confidence = objectsFileStruct[isObject].object_confidence;
+        objectContext[isObject].object_id = objectsFileStruct[isObject].id; //assign object id to context struct
+        objectContext[isObject].object_name = objectsFileStruct[isObject].object_name; //assign object name to context struct
+        objectContext[isObject].object_confidence = objectsFileStruct[isObject].object_confidence; //assign object confidence to context struct
     }
 }
 
@@ -399,7 +399,7 @@ int main (int argc, char **argv) {
     ros::Subscriber detected_objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/detected_objects", 10, detectedObjectCallback); //detected objects in frame
     ros::Publisher object_context_pub = n.advertise<wheelchair_msgs::objectContext>("/wheelchair_robot/context/objects", 1000);
     ptr_object_context = &object_context_pub;
-    
+
     ros::Rate rate(10.0);
     while(ros::ok()) {
         if (DEBUG_main) {
