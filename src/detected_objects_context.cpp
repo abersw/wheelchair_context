@@ -86,6 +86,8 @@ int totalObjectContextStruct = 0; //total objects in struct
 
 struct TrainingInfo {
     int times_trained;
+    int max_weighting = 100;
+    int min_weighting = 0;
 };
 struct TrainingInfo trainingInfo;
 
@@ -325,13 +327,41 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
     }
     //finished adding detected data to pos 0 in 2d array
 
+    int currentWeightingValue = trainingInfo.max_weighting / trainingInfo.times_trained; //calculate session weighting value
+    if (DEBUG_detectedObjectCallback) {
+        cout << "current weighting value is " << currentWeightingValue << endl;
+    }
+
     if (totalObjectsDetectedStruct[detPos+1] == 0) {
         //no history to compare with, therefore do all the calculation stuff
         if (DEBUG_detectedObjectCallback) {
             cout << "nothing in struct pos " << detPos+1 << endl;
         }
-        for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) { //run through entire objects struct
-            //do stuff
+        //first work out whether to add or delete from existing weighting value
+        //no previous history, so add to weighting
+        for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[detPos]; detectedObject++) { //run through struct of pos 0
+            //run through each detected object
+            int getDetObjID = objectsDetectedStruct[detPos][detectedObject].id; //get id
+            std::string getDetObjName = objectsDetectedStruct[detPos][detectedObject].object_name; //get name
+            for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //run through entire context struct
+                int getContextID = objectContext[isContext].object_id; //get context ID
+                std::string getContextName = objectContext[isContext].object_name; //get context name
+                if ((getDetObjID == getContextID) && (getDetObjName == getContextName)) { //if object ID and name are equal
+                    //update object weighting and detected
+                    int isCurrentWeighting = objectContext[isContext].object_weighting;
+                    int isNewWeighting = isCurrentWeighting + trainingInfo.times_trained;
+                    if (isNewWeighting > trainingInfo.max_weighting) { //if outside of max weighting
+                        objectContext[isContext].object_weighting = trainingInfo.max_weighting;
+                    }
+                    else if (isNewWeighting < trainingInfo.min_weighting) { //if outside of min weighting
+                        objectContext[isContext].object_weighting = trainingInfo.min_weighting;
+                    }
+                    else { //if inside bounding weight
+                        objectContext[isContext].object_weighting = isNewWeighting;
+                    }
+                    //work out uniqueness
+                }
+            }
         }
     }
     else {
