@@ -286,6 +286,12 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     }
 }
 
+/**
+ * Function to shift data in objects detected struct from pos 'from' to 'to'
+ *
+ * @param parameter 'from' is the position in the objects detected struct array where data is coming from
+ * @param parameter 'to' is the position in the objects detected struct array where data is going to
+ */
 void shiftObjectsDetectedStructPos(int from, int to) {
     //shift data from pos 0 to pos 1, ready for next object detection callback
     for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[from]; detectedObject++) {
