@@ -350,14 +350,26 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
                     //update object weighting and detected
                     int isCurrentWeighting = objectContext[isContext].object_weighting;
                     int isNewWeighting = isCurrentWeighting + trainingInfo.times_trained;
+                    if (DEBUG_detectedObjectCallback) {
+                        cout << "new weighting is " << isNewWeighting << endl;
+                    }
                     if (isNewWeighting > trainingInfo.max_weighting) { //if outside of max weighting
                         objectContext[isContext].object_weighting = trainingInfo.max_weighting;
+                        if (DEBUG_detectedObjectCallback) {
+                            cout << "set weighting to max: " << trainingInfo.max_weighting << endl;
+                        }
                     }
                     else if (isNewWeighting < trainingInfo.min_weighting) { //if outside of min weighting
                         objectContext[isContext].object_weighting = trainingInfo.min_weighting;
+                        if (DEBUG_detectedObjectCallback) {
+                            cout << "set weighting to min: " << trainingInfo.min_weighting << endl;
+                        }
                     }
                     else { //if inside bounding weight
                         objectContext[isContext].object_weighting = isNewWeighting;
+                        if (DEBUG_detectedObjectCallback) {
+                            cout << "assigned to context struct pos " << isContext << " weighting " << objectContext[isContext].object_weighting << endl;
+                        }
                     }
                     //work out uniqueness
                 }
