@@ -410,6 +410,20 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
         if (DEBUG_detectedObjectCallback) {
             cout << "data exists in struct pos " << detPos+1 << endl;
         }
+        for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[0]; detectedObject++) { //run through struct of detected objects
+            int getDetObjID = objectsDetectedStruct[0][detectedObject].id; //get id
+            std::string getDetObjName = objectsDetectedStruct[0][detectedObject].object_name; //get name
+            for (int lastDetectedObject = 0; lastDetectedObject < totalObjectsDetectedStruct[1]; lastDetectedObject++) { //run through struct of last detected objects
+                int getLastObjID = objectsDetectedStruct[1][detectedObject].id; //get id
+                std::string getLastObjName = objectsDetectedStruct[1][detectedObject].object_name; //get name
+                if ((getDetObjID == getLastObjID) && (getDetObjName == getLastObjName)) { //if object id and name match, it can still see the same object
+                    //if match found, do not recalculate weighting
+                }
+                else {
+                    //do stuff
+                }
+            }
+        }
     }
 }
 
