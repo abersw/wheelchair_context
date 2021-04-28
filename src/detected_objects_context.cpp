@@ -86,7 +86,7 @@ int totalObjectContextStruct = 0; //total objects in struct
 
 struct TrainingInfo {
     int times_trained; //real times trained
-    int times_trained_max 5; //value to prevent times trained val becoming too small
+    int times_trained_max = 5; //value to prevent times trained val becoming too small
     int times_trained_val; //actual value used for calculating object weighting
     int max_weighting = 100; //max value for object weighting
     int min_weighting = 0; //min value for object weighting
@@ -193,8 +193,12 @@ void listToContextInfo(std::string fileName) {
                 //if line is 0, must be times trained
                 int getTimesTrained = std::stoi(line);
                 trainingInfo.times_trained = getTimesTrained + 1; //add one to times trained on startup
+                if (trainingInfo.times_trained > trainingInfo.times_trained_max) { //if actual times trained is greater than max times trained
+                    trainingInfo.times_trained_val = trainingInfo.times_trained_max; //assign max times trained to calculation value
+                }
                 if (DEBUG_listToContextInfo) {
                     cout << "training session is " << trainingInfo.times_trained << endl;
+                    cout << "training value used is " << trainingInfo.times_trained_val << endl;
                 }
             }
             lineNumber++; //iterate to next line
