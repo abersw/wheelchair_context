@@ -60,8 +60,6 @@ struct Objects { //struct for publishing topic
     float quat_y; //get transform rotation quaternion y
     float quat_z; //get transform rotation quaternion z
     float quat_w; //get transform rotation quaternion w
-
-    int inLastFrame = 0; //unique to context file - set var to 1 if in last frame
 };
 struct Objects objectsFileStruct[100000]; //array for storing object data
 int totalObjectsFileStruct = 0; //total objects inside struct
@@ -288,6 +286,25 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     }
 }
 
+void shiftObjectsDetectedStructPos(int from, int to) {
+    //shift data from pos 0 to pos 1, ready for next object detection callback
+    for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[from]; detectedObject++) {
+        objectsDetectedStruct[to][detectedObject].id = objectsDetectedStruct[from][detectedObject].id; //assign object id to struct
+        objectsDetectedStruct[to][detectedObject].object_name = objectsDetectedStruct[from][detectedObject].object_name; //assign object name to struct
+        objectsDetectedStruct[to][detectedObject].object_confidence = objectsDetectedStruct[from][detectedObject].object_confidence; //assign object confidence to struct
+
+        objectsDetectedStruct[to][detectedObject].point_x = objectsDetectedStruct[from][detectedObject].point_x; //assign object vector point x to struct
+        objectsDetectedStruct[to][detectedObject].point_y = objectsDetectedStruct[from][detectedObject].point_y; //assign object vector point y to struct
+        objectsDetectedStruct[to][detectedObject].point_z = objectsDetectedStruct[from][detectedObject].point_z; //assign object vector point z to struct
+
+        objectsDetectedStruct[to][detectedObject].quat_x = objectsDetectedStruct[from][detectedObject].quat_x; //assign object quaternion x to struct
+        objectsDetectedStruct[to][detectedObject].quat_y = objectsDetectedStruct[from][detectedObject].quat_y; //assign object quaternion y to struct
+        objectsDetectedStruct[to][detectedObject].quat_z = objectsDetectedStruct[from][detectedObject].quat_z; //assign object quaternion z to struct
+        objectsDetectedStruct[to][detectedObject].quat_w = objectsDetectedStruct[from][detectedObject].quat_w; //assign object quaternion w to struct
+    }
+    totalObjectsDetectedStruct[to] = totalObjectsDetectedStruct[from]; //set total objects in detection struct to pos 1
+}
+
 /**
  * Main callback function triggered by detected objects in frame ROS topic 
  *
@@ -354,6 +371,7 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
                 std::string getContextName = objectContext[isContext].object_name; //get context name
                 if ((getDetObjID == getContextID) && (getDetObjName == getContextName)) { //if object ID and name are equal
                     //update object weighting and detected
+                    objectContext[isContext].object_detected++; //add one to times object was detected in env
                     int isCurrentWeighting = objectContext[isContext].object_weighting;
                     int isNewWeighting = isCurrentWeighting + trainingInfo.times_trained_val;
                     if (DEBUG_detectedObjectCallback) {
@@ -381,6 +399,7 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
                 }
             }
         }
+        shiftObjectsDetectedStructPos(0,1); //shift detection data from struct pos 0 to 1
     }
     else {
         //history exists, therefore compare with history to see if object was in previous frame
