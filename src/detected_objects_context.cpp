@@ -316,6 +316,29 @@ void shiftObjectsDetectedStructPos(int from, int to) {
     totalObjectsDetectedStruct[to] = totalObjectsDetectedStruct[from]; //set total objects in detection struct to pos 1
 }
 
+/**
+ * Function to assign ROS topic msg context to struct
+ * @param 'detPos' is the objects detected sequence used - 0 latest, 1 previous
+ * @param 'detectedObject' object position in detected array
+ * @param 'obLoc' belongs to wheelchair_msgs::objectLocations - contains object info
+*/
+void assignObjectsDetectedStruct(int detPos, int detectedObject, const wheelchair_msgs::objectLocations obLoc) {
+    objectsDetectedStruct[detPos][detectedObject].id = obLoc.id[detectedObject]; //assign object id to struct
+    objectsDetectedStruct[detPos][detectedObject].object_name = obLoc.object_name[detectedObject]; //assign object name to struct
+    objectsDetectedStruct[detPos][detectedObject].object_confidence = obLoc.object_confidence[detectedObject]; //assign object confidence to struct
+
+    objectsDetectedStruct[detPos][detectedObject].point_x = obLoc.point_x[detectedObject]; //assign object vector point x to struct
+    objectsDetectedStruct[detPos][detectedObject].point_y = obLoc.point_y[detectedObject]; //assign object vector point y to struct
+    objectsDetectedStruct[detPos][detectedObject].point_z = obLoc.point_z[detectedObject]; //assign object vector point z to struct
+
+    objectsDetectedStruct[detPos][detectedObject].quat_x = obLoc.quat_x[detectedObject]; //assign object quaternion x to struct
+    objectsDetectedStruct[detPos][detectedObject].quat_y = obLoc.quat_y[detectedObject]; //assign object quaternion y to struct
+    objectsDetectedStruct[detPos][detectedObject].quat_z = obLoc.quat_z[detectedObject]; //assign object quaternion z to struct
+    objectsDetectedStruct[detPos][detectedObject].quat_w = obLoc.quat_w[detectedObject]; //assign object quaternion w to struct
+
+    //objectsDetectedStruct[detPos][detectedObject].inLastFrame; //don't do anything yet
+}
+
 /*
  * Function to print off current object info in objects detected struct
 */
@@ -349,20 +372,7 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
     totalObjectsDetectedStruct[detPos] = totalObjectsInMsg;
     for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[detPos]; detectedObject++) {
         //add to struct position [0][object number]
-        objectsDetectedStruct[detPos][detectedObject].id = obLoc.id[detectedObject]; //assign object id to struct
-        objectsDetectedStruct[detPos][detectedObject].object_name = obLoc.object_name[detectedObject]; //assign object name to struct
-        objectsDetectedStruct[detPos][detectedObject].object_confidence = obLoc.object_confidence[detectedObject]; //assign object confidence to struct
-
-        objectsDetectedStruct[detPos][detectedObject].point_x = obLoc.point_x[detectedObject]; //assign object vector point x to struct
-        objectsDetectedStruct[detPos][detectedObject].point_y = obLoc.point_y[detectedObject]; //assign object vector point y to struct
-        objectsDetectedStruct[detPos][detectedObject].point_z = obLoc.point_z[detectedObject]; //assign object vector point z to struct
-
-        objectsDetectedStruct[detPos][detectedObject].quat_x = obLoc.quat_x[detectedObject]; //assign object quaternion x to struct
-        objectsDetectedStruct[detPos][detectedObject].quat_y = obLoc.quat_y[detectedObject]; //assign object quaternion y to struct
-        objectsDetectedStruct[detPos][detectedObject].quat_z = obLoc.quat_z[detectedObject]; //assign object quaternion z to struct
-        objectsDetectedStruct[detPos][detectedObject].quat_w = obLoc.quat_w[detectedObject]; //assign object quaternion w to struct
-
-        //objectsDetectedStruct[detPos][detectedObject].inLastFrame; //don't do anything yet
+        assignObjectsDetectedStruct(detPos, detectedObject, obLoc); //assign ROS topic msg to struct
         printObjectsDetectedStruct(detPos, detectedObject); //print out objects detected struct when debug enabled
         
     }
