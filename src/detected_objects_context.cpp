@@ -85,9 +85,11 @@ struct Context objectContext[100000]; //struct for storing object context info
 int totalObjectContextStruct = 0; //total objects in struct
 
 struct TrainingInfo {
-    int times_trained;
-    int max_weighting = 100;
-    int min_weighting = 0;
+    int times_trained; //real times trained
+    int times_trained_max 5; //value to prevent times trained val becoming too small
+    int times_trained_val; //actual value used for calculating object weighting
+    int max_weighting = 100; //max value for object weighting
+    int min_weighting = 0; //min value for object weighting
 };
 struct TrainingInfo trainingInfo;
 
