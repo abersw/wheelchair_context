@@ -355,7 +355,7 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
                 if ((getDetObjID == getContextID) && (getDetObjName == getContextName)) { //if object ID and name are equal
                     //update object weighting and detected
                     int isCurrentWeighting = objectContext[isContext].object_weighting;
-                    int isNewWeighting = isCurrentWeighting + trainingInfo.times_trained;
+                    int isNewWeighting = isCurrentWeighting + trainingInfo.times_trained_val;
                     if (DEBUG_detectedObjectCallback) {
                         cout << "new weighting is " << isNewWeighting << endl;
                     }
