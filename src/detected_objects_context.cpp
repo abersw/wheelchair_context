@@ -316,6 +316,9 @@ void shiftObjectsDetectedStructPos(int from, int to) {
     totalObjectsDetectedStruct[to] = totalObjectsDetectedStruct[from]; //set total objects in detection struct to pos 1
 }
 
+/*
+ * Function to print off current object info in objects detected struct
+*/
 void printObjectsDetectedStruct(int detPos, int detectedObject) {
     if (DEBUG_detectedObjectCallback) {
         cout << 
