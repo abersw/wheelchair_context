@@ -374,15 +374,26 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
         //add to struct position [0][object number]
         assignObjectsDetectedStruct(detPos, detectedObject, obLoc); //assign ROS topic msg to struct
         printObjectsDetectedStruct(detPos, detectedObject); //print out objects detected struct when debug enabled
-        
     }
     //finished adding detected data to pos 0 in 2d array
 
-    int currentWeightingValue = trainingInfo.max_weighting / trainingInfo.times_trained; //calculate session weighting value
+    //start calculating weighting value for training session
+    if (trainingInfo.times_trained <= trainingInfo.times_trained_max) {
+        //if times trained hasn't grown out of training boundary
+        trainingInfo.times_trained_val = trainingInfo.max_weighting / trainingInfo.times_trained; //calculate session weighting value
+    }
+    else {
+        //times trained outside of training boundary, cap the value to max times trained
+        trainingInfo.times_trained_val = trainingInfo.max_weighting / trainingInfo.times_trained_max; //set to max training session weighting value
+        if (DEBUG_detectedObjectCallback) {
+            cout << "capped times trained to " << trainingInfo.times_trained_max << endl;
+        }
+    }
     if (DEBUG_detectedObjectCallback) {
-        cout << "current weighting value is " << currentWeightingValue << endl;
+        cout << "current weighting value is " << trainingInfo.times_trained_val << endl;
     }
 
+    //start off with first object detections in sequence
     if (totalObjectsDetectedStruct[detPos+1] == 0) {
         //no history to compare with, therefore do all the calculation stuff
         if (DEBUG_detectedObjectCallback) {
