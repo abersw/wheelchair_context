@@ -204,6 +204,11 @@ void listToContextInfo(std::string fileName) {
     }
 }
 
+/**
+ * Function to add context data from param 'fileName' path, start assigning info from each line of file
+ *
+ * @param pass the path and file name to be created called 'fileName'
+ */
 void contextListToStruct(std::string fileName) {
     std::string objectsDelimiter = ","; //delimiter character is comma
 	ifstream FILE_READER(fileName); //open file
