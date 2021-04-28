@@ -311,6 +311,24 @@ void shiftObjectsDetectedStructPos(int from, int to) {
     totalObjectsDetectedStruct[to] = totalObjectsDetectedStruct[from]; //set total objects in detection struct to pos 1
 }
 
+void printObjectsDetectedStruct(int detPos, int detectedObject) {
+    if (DEBUG_detectedObjectCallback) {
+        cout << 
+        objectsDetectedStruct[detPos][detectedObject].id << "," << 
+        objectsDetectedStruct[detPos][detectedObject].object_name << "," << 
+        objectsDetectedStruct[detPos][detectedObject].object_confidence << "," << 
+
+        objectsDetectedStruct[detPos][detectedObject].point_x << "," << 
+        objectsDetectedStruct[detPos][detectedObject].point_y << "," << 
+        objectsDetectedStruct[detPos][detectedObject].point_z << "," << 
+
+        objectsDetectedStruct[detPos][detectedObject].quat_x << "," << 
+        objectsDetectedStruct[detPos][detectedObject].quat_y << "," << 
+        objectsDetectedStruct[detPos][detectedObject].quat_z << "," << 
+        objectsDetectedStruct[detPos][detectedObject].quat_w << endl; 
+    }
+}
+
 /**
  * Main callback function triggered by detected objects in frame ROS topic 
  *
@@ -337,22 +355,8 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
         objectsDetectedStruct[detPos][detectedObject].quat_w = obLoc.quat_w[detectedObject]; //assign object quaternion w to struct
 
         //objectsDetectedStruct[detPos][detectedObject].inLastFrame; //don't do anything yet
-
-        if (DEBUG_detectedObjectCallback) {
-            cout << 
-            objectsDetectedStruct[detPos][detectedObject].id << "," << 
-            objectsDetectedStruct[detPos][detectedObject].object_name << "," << 
-            objectsDetectedStruct[detPos][detectedObject].object_confidence << "," << 
-
-            objectsDetectedStruct[detPos][detectedObject].point_x << "," << 
-            objectsDetectedStruct[detPos][detectedObject].point_y << "," << 
-            objectsDetectedStruct[detPos][detectedObject].point_z << "," << 
-
-            objectsDetectedStruct[detPos][detectedObject].quat_x << "," << 
-            objectsDetectedStruct[detPos][detectedObject].quat_y << "," << 
-            objectsDetectedStruct[detPos][detectedObject].quat_z << "," << 
-            objectsDetectedStruct[detPos][detectedObject].quat_w << endl; 
-        }
+        printObjectsDetectedStruct(detPos, detectedObject); //print out objects detected struct when debug enabled
+        
     }
     //finished adding detected data to pos 0 in 2d array
 
@@ -411,6 +415,20 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
         //history exists, therefore compare with history to see if object was in previous frame
         if (DEBUG_detectedObjectCallback) {
             cout << "data exists in struct pos " << detPos+1 << endl;
+        }
+        for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[0]; detectedObject++) { //run through struct of detected objects
+            int getDetObjID = objectsDetectedStruct[0][detectedObject].id; //get id
+            std::string getDetObjName = objectsDetectedStruct[0][detectedObject].object_name; //get name
+            for (int lastDetectedObject = 0; lastDetectedObject < totalObjectsDetectedStruct[1]; lastDetectedObject++) { //run through struct of last detected objects
+                int getLastObjID = objectsDetectedStruct[1][detectedObject].id; //get id
+                std::string getLastObjName = objectsDetectedStruct[1][detectedObject].object_name; //get name
+                if ((getDetObjID == getLastObjID) && (getDetObjName == getLastObjName)) { //if object id and name match, it can still see the same object
+                    //if match found, do not recalculate weighting
+                }
+                else {
+                    //do stuff
+                }
+            }
         }
     }
 }
