@@ -297,12 +297,9 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
         objectContext[isObject].object_id = objectsFileStruct[isObject].id; //assign object id to context struct
         objectContext[isObject].object_name = objectsFileStruct[isObject].object_name; //assign object name to context struct
         objectContext[isObject].object_confidence = objectsFileStruct[isObject].object_confidence; //assign object confidence to context struct
-
-        /*if (objectContext[isObject].object_weighting != 0) {
-            //calculate the uniqueness of all objects
-        }*/
     }
 
+    //create and add object names to object dictionary struct
     for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) {
         //run through all objects
         int objectMatched = 0;
@@ -335,7 +332,7 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
         printSeparator(1);
     }
 
-    //get object instances
+    //get object instances and assign to object dictionary struct
     for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) { //iterate through object dictionary
         std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from dictionary
         for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) { //iterate through object struct
@@ -348,6 +345,7 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
             }
         }
     }
+    //print out list and instances of objects
     if (DEBUG_objectLocationsCallback) {
         for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
             cout << objectDictionary[isDict].object_name << ":" << objectDictionary[isDict].instances << endl;
