@@ -42,6 +42,7 @@ static const int DEBUG_doesPkgExist = 0;
 static const int DEBUG_createFile = 0;
 static const int DEBUG_listToContextInfo = 0;
 static const int DEBUG_contextListToStruct = 0;
+static const int DEBUG_publishObjectContext = 1;
 static const int DEBUG_objectLocationsCallback = 1;
 static const int DEBUG_detectedObjectCallback = 1;
 static const int DEBUG_contextInfoToList = 0;
@@ -273,6 +274,13 @@ void contextListToStruct(std::string fileName) {
     totalObjectContextStruct = objectNumber; //var to add number of objects in struct
 }
 
+void publishObjectContext() {
+    if (DEBUG_publishObjectContext) {
+        //print out some debug stuff
+    }
+    //publish context data as ROS msg array
+}
+
 /**
  * Main callback function triggered by received ROS topic 
  *
@@ -355,9 +363,7 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
         }
     }
 
-    //assign data to correct place
-    /*float object_uniqueness; //object uniqueness result
-    int object_instances; //number of objects in env*/
+    //assign data to correct places
     for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
         std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from dictionary
         int getObjDictInstances = objectDictionary[isDict].instances; //get instances from object dictionary
@@ -376,6 +382,8 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
             }
         }
     }
+
+    publishObjectContext(); //publish object context data as ROS msg
 }
 
 /**
