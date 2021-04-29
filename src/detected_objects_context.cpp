@@ -495,6 +495,7 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
                 }
             }
         }
+        shiftObjectsDetectedStructPos(0,1); //shift detection data from struct pos 0 to 1
     }
 }
 
