@@ -301,6 +301,46 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
             //calculate the uniqueness of all objects
         }*/
     }
+
+    for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) {
+        //run through all objects
+        int objectMatched = 0;
+        std::string getObjName = objectsFileStruct[isObject].object_name;
+        if (totalObjectDictionaryStruct == 0) {
+            objectDictionary[0].object_name = getObjName; //set object name in first element in full objects struct
+            totalObjectDictionaryStruct++; //add 1 to total objects in dictionary
+        }
+        for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
+            std::string getObjDictName = objectDictionary[isDict].object_name;
+            if (getObjName == getObjDictName) {
+                objectMatched = 1;
+            }
+        }
+        if (objectMatched) {
+            //if object is already in struct, don't add anything
+        }
+        else {
+            //add object name to struct
+            objectDictionary[totalObjectDictionaryStruct].object_name = getObjName;
+            totalObjectDictionaryStruct++;
+        }
+    }
+    printSeparator(1);
+    for (int isDet = 0; isDet < totalObjectDictionaryStruct; isDet++) {
+        cout << objectDictionary[isDet].object_name << endl;
+    }
+    printSeparator(1);
+
+    //add data for calculating object uniqueness
+    /*for (int isDict = 0; isDict <= totalObjectDictionaryStruct; isDict++) {
+        std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from dictionary
+        for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) {
+            std::string getObjName = objectsFileStruct[isObject].object_name; //get object name from full struct of objects
+            if (getObjDictName == getObjName) { //if object names are equal - found an instance
+                //do stuff
+            }
+        }
+    }*/
 }
 
 /**
