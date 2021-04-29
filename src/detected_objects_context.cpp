@@ -76,6 +76,7 @@ struct Context {
 
     float object_weighting; //object weighting result
     float object_uniqueness; //object uniqueness result
+    float object_score; //calculation of object weighting and uniqueness
     int object_instances; //number of objects in env
 };
 //object_id,object_name,object_confidence,object_detected,object_weighting,object_uniqueness,object_instances
@@ -89,6 +90,8 @@ struct TrainingInfo {
     int times_trained_val; //actual value used for calculating object weighting
     int max_weighting = 100; //max value for object weighting
     int min_weighting = 0; //min value for object weighting
+    int max_uniqueness = 100; //max value for object uniqueness
+    int min_uniqueness = 0; //min value for object uniqueness
 };
 struct TrainingInfo trainingInfo;
 
@@ -349,6 +352,28 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     if (DEBUG_objectLocationsCallback) {
         for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
             cout << objectDictionary[isDict].object_name << ":" << objectDictionary[isDict].instances << endl;
+        }
+    }
+
+    //assign data to correct place
+    /*float object_uniqueness; //object uniqueness result
+    int object_instances; //number of objects in env*/
+    for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
+        std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from dictionary
+        int getObjDictInstances = objectDictionary[isDict].instances; //get instances from object dictionary
+        float currentObjDictUniqueness = trainingInfo.max_uniqueness / getObjDictInstances; //main calculation for uniqueness
+        for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //iterate through entire context struct
+            std::string getObjName = objectContext[isContext].object_name;
+            if (getObjDictName == getObjName) {
+                objectContext[isContext].object_uniqueness = currentObjDictUniqueness;
+                objectContext[isContext].object_instances = getObjDictInstances;
+
+                float getObjWeighting = objectContext[isContext].object_weighting;
+                objectContext[isContext].object_score = getObjWeighting * objectContext[isContext].object_uniqueness; //calculate object score
+            }
+            else {
+                //don't do anything if objects don't match
+            }
         }
     }
 }
