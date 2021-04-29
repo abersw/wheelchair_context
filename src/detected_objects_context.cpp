@@ -457,6 +457,8 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
                 else {
                     //run through entire context struct for returning correct object id position
                     for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
+                        int getContextID = objectContext[isContext].object_id; //get context ID
+                        std::string getContextName = objectContext[isContext].object_name; //get context name
                         if ((getDetObjID == getContextID) && (getDetObjName == getContextName)) { //if object ID and name are equal
                             //if new object in detected struct pos 0 is equal to object in context
                         }
