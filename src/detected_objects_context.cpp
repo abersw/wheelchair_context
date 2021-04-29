@@ -42,6 +42,7 @@ static const int DEBUG_doesPkgExist = 0;
 static const int DEBUG_createFile = 0;
 static const int DEBUG_listToContextInfo = 0;
 static const int DEBUG_contextListToStruct = 0;
+static const int DEBUG_objectLocationsCallback = 1;
 static const int DEBUG_detectedObjectCallback = 1;
 static const int DEBUG_contextInfoToList = 0;
 static const int DEBUG_contextStructToList = 0;
@@ -325,11 +326,14 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
             totalObjectDictionaryStruct++;
         }
     }
-    printSeparator(1);
-    for (int isDet = 0; isDet < totalObjectDictionaryStruct; isDet++) {
-        cout << objectDictionary[isDet].object_name << endl;
+    //print out list of objects
+    if (DEBUG_objectLocationsCallback) {
+        printSeparator(1);
+        for (int isDet = 0; isDet < totalObjectDictionaryStruct; isDet++) {
+            cout << objectDictionary[isDet].object_name << endl;
+        }
+        printSeparator(1);
     }
-    printSeparator(1);
 
     //add data for calculating object uniqueness
     /*for (int isDict = 0; isDict <= totalObjectDictionaryStruct; isDict++) {
