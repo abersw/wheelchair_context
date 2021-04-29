@@ -348,6 +348,11 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
             }
         }
     }
+    if (DEBUG_objectLocationsCallback) {
+        for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
+            cout << objectDictionary[isDict].object_name << ":" << objectDictionary[isDict].instances << endl;
+        }
+    }
 }
 
 /**
