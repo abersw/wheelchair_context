@@ -455,7 +455,15 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
                     //if match found, do not recalculate weighting
                 }
                 else {
-                    //do stuff
+                    //run through entire context struct for returning correct object id position
+                    for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
+                        if ((getDetObjID == getContextID) && (getDetObjName == getContextName)) { //if object ID and name are equal
+                            //if new object in detected struct pos 0 is equal to object in context
+                        }
+                        else {
+                            //skip over, don't assign anything if detected object and context don't match
+                        }
+                    }
                 }
             }
         }
