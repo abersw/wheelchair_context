@@ -91,6 +91,14 @@ struct TrainingInfo {
 };
 struct TrainingInfo trainingInfo;
 
+//struct will store single object names and the instances inside the entire environment
+struct ObjectDictionary {
+    std::string object_name; //object name
+    int instances; //instances of object in environment
+};
+struct ObjectDictionary objectDictionary[1000]; //struct for storing data needed to calc uniqueness of objects
+int totalObjectDictionaryStruct = 0; //total list of objects used to calc uniqueness
+
 ros::Publisher *ptr_object_context;
 
 //list of file locations
@@ -288,6 +296,10 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
         objectContext[isObject].object_id = objectsFileStruct[isObject].id; //assign object id to context struct
         objectContext[isObject].object_name = objectsFileStruct[isObject].object_name; //assign object name to context struct
         objectContext[isObject].object_confidence = objectsFileStruct[isObject].object_confidence; //assign object confidence to context struct
+
+        /*if (objectContext[isObject].object_weighting != 0) {
+            //calculate the uniqueness of all objects
+        }*/
     }
 }
 
@@ -500,6 +512,7 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
         }
         shiftObjectsDetectedStructPos(0,1); //shift detection data from struct pos 0 to 1
     }
+    //calculate uniqueness here would probably work - doesn't need to detect an object to calculate - probably quicker too...
 }
 
 /**
