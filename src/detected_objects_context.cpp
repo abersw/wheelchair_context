@@ -367,6 +367,7 @@ void printObjectsDetectedStruct(int detPos, int detectedObject) {
  *        message belongs to wheelchair_msgs objectLocations.msg
  */
 void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
+    printSeparator(1);
     int totalObjectsInMsg = obLoc.totalObjects; //total detected objects in ROS msg
     int detPos = 0; //detection position corresponds with previous frames
     totalObjectsDetectedStruct[detPos] = totalObjectsInMsg;
@@ -409,6 +410,7 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
                 int getContextID = objectContext[isContext].object_id; //get context ID
                 std::string getContextName = objectContext[isContext].object_name; //get context name
                 if ((getDetObjID == getContextID) && (getDetObjName == getContextName)) { //if object ID and name are equal
+                printSeparator(0);
                     //update object weighting and detected
                     objectContext[isContext].object_detected++; //add one to times object was detected in env
                     int isCurrentWeighting = objectContext[isContext].object_weighting;
@@ -460,6 +462,7 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
                         int getContextID = objectContext[isContext].object_id; //get context ID
                         std::string getContextName = objectContext[isContext].object_name; //get context name
                         if ((getDetObjID == getContextID) && (getDetObjName == getContextName)) { //if object ID and name are equal
+                            printSeparator(0);
                             //if new object in detected struct pos 0 is equal to object in context
                             //update object weighting and detected
                             objectContext[isContext].object_detected++; //add one to times object was detected in env
