@@ -336,20 +336,18 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     }
 
     //get object instances
-    for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) {
-        //run through all objects and add instances to dictionary struct
-    }
-
-    //add data for calculating object uniqueness
-    /*for (int isDict = 0; isDict <= totalObjectDictionaryStruct; isDict++) {
+    for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) { //iterate through object dictionary
         std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from dictionary
-        for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) {
-            std::string getObjName = objectsFileStruct[isObject].object_name; //get object name from full struct of objects
-            if (getObjDictName == getObjName) { //if object names are equal - found an instance
-                //do stuff
+        for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) { //iterate through object struct
+            std::string getObjName = objectsFileStruct[isObject].object_name; //get object name from main struct
+            if (getObjDictName == getObjName) { //if object name in dictionary and main struct are equal
+                objectDictionary[isDict].instances++; //add 1 to object instances
+            }
+            else {
+                //don't do anything if match not found between dictionary and main object struct
             }
         }
-    }*/
+    }
 }
 
 /**
