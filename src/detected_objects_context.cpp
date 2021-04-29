@@ -335,6 +335,11 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
         printSeparator(1);
     }
 
+    //get object instances
+    for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) {
+        //run through all objects and add instances to dictionary struct
+    }
+
     //add data for calculating object uniqueness
     /*for (int isDict = 0; isDict <= totalObjectDictionaryStruct; isDict++) {
         std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from dictionary
