@@ -300,10 +300,10 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     }
 
     //create and add object names to object dictionary struct
-    for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) {
+    for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
         //run through all objects
         int objectMatched = 0;
-        std::string getObjName = objectsFileStruct[isObject].object_name;
+        std::string getObjName = objectsFileStruct[isContext].object_name;
         if (totalObjectDictionaryStruct == 0) {
             objectDictionary[0].object_name = getObjName; //set object name in first element in full objects struct
             totalObjectDictionaryStruct++; //add 1 to total objects in dictionary
@@ -335,8 +335,8 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     //get object instances and assign to object dictionary struct
     for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) { //iterate through object dictionary
         std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from dictionary
-        for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) { //iterate through object struct
-            std::string getObjName = objectsFileStruct[isObject].object_name; //get object name from main struct
+        for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //iterate through object struct
+            std::string getObjName = objectsFileStruct[isContext].object_name; //get object name from main struct
             if (getObjDictName == getObjName) { //if object name in dictionary and main struct are equal
                 objectDictionary[isDict].instances++; //add 1 to object instances
             }
