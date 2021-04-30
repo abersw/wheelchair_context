@@ -274,11 +274,35 @@ void contextListToStruct(std::string fileName) {
     totalObjectContextStruct = objectNumber; //var to add number of objects in struct
 }
 
+//publish context data as ROS msg array
 void publishObjectContext() {
-    if (DEBUG_publishObjectContext) {
-        //print out some debug stuff
+    wheelchair_msgs::objectContext objContext;
+
+    for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
+        if (DEBUG_publishObjectContext) {
+            cout <<
+            objectContext[isContext].object_id << ", " <<
+            objectContext[isContext].object_name << ", " <<
+            objectContext[isContext].object_confidence << ", " <<
+            objectContext[isContext].object_detected << ", " <<
+
+            objectContext[isContext].object_weighting << ", " <<
+            objectContext[isContext].object_uniqueness << ", " <<
+            objectContext[isContext].object_score << ", " <<
+            objectContext[isContext].object_instances << endl;
+        }
+        objContext.object_id.push_back(objectContext[isContext].object_id);
+        objContext.object_name.push_back(objectContext[isContext].object_name);
+        objContext.object_confidence.push_back(objectContext[isContext].object_confidence);
+        objContext.object_detected.push_back(objectContext[isContext].object_detected);
+
+        objContext.object_weighting.push_back(objectContext[isContext].object_weighting);
+        objContext.object_uniqueness.push_back(objectContext[isContext].object_uniqueness);
+        objContext.object_score.push_back(objectContext[isContext].object_score);
+        objContext.object_instances.push_back(objectContext[isContext].object_instances);
     }
-    //publish context data as ROS msg array
+    objContext.totalObjects = totalObjectContextStruct;
+    ptr_object_context->publish(objContext);
 }
 
 /**
