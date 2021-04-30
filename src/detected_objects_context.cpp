@@ -42,7 +42,7 @@ static const int DEBUG_doesPkgExist = 0;
 static const int DEBUG_createFile = 0;
 static const int DEBUG_listToContextInfo = 0;
 static const int DEBUG_contextListToStruct = 0;
-static const int DEBUG_publishObjectContext = 1;
+static const int DEBUG_publishObjectContext = 0;
 static const int DEBUG_objectLocationsCallback = 1;
 static const int DEBUG_detectedObjectCallback = 1;
 static const int DEBUG_contextInfoToList = 0;
@@ -355,14 +355,16 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
         else {
             //add object name to struct
             objectDictionary[totalObjectDictionaryStruct].object_name = getObjName;
+            objectDictionary[totalObjectDictionaryStruct].instances = 0;
             totalObjectDictionaryStruct++;
         }
     }
     //print out list of objects
     if (DEBUG_objectLocationsCallback) {
         printSeparator(1);
+        cout << "pre-instance calculations, total size of struct is " << totalObjectDictionaryStruct << endl;
         for (int isDet = 0; isDet < totalObjectDictionaryStruct; isDet++) {
-            cout << objectDictionary[isDet].object_name << endl;
+            cout << objectDictionary[isDet].object_name << ":" << objectDictionary[isDet].instances << endl;
         }
         printSeparator(1);
     }
@@ -371,7 +373,7 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) { //iterate through object dictionary
         std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from dictionary
         for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //iterate through object struct
-            std::string getObjName = objectsFileStruct[isContext].object_name; //get object name from main struct
+            std::string getObjName = objectContext[isContext].object_name; //get object name from main struct
             if (getObjDictName == getObjName) { //if object name in dictionary and main struct are equal
                 objectDictionary[isDict].instances++; //add 1 to object instances
             }
@@ -388,7 +390,7 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     }
 
     //assign data to correct places
-    for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
+    /*for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
         std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from dictionary
         int getObjDictInstances = objectDictionary[isDict].instances; //get instances from object dictionary
         float currentObjDictUniqueness = trainingInfo.max_uniqueness / getObjDictInstances; //main calculation for uniqueness
@@ -405,9 +407,9 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
                 //don't do anything if objects don't match
             }
         }
-    }
+    }*/
 
-    publishObjectContext(); //publish object context data as ROS msg
+    //publishObjectContext(); //publish object context data as ROS msg
 }
 
 /**
