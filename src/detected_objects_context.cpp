@@ -412,6 +412,12 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
 
                 float getObjWeighting = objectContext[isContext].object_weighting;
                 objectContext[isContext].object_score = getObjWeighting * objectContext[isContext].object_uniqueness; //calculate object score
+                if (DEBUG_objectLocationsCallback) {
+                    cout << "pos is " << isContext <<
+                    ", object uniqueness: " << objectContext[isContext].object_uniqueness <<
+                    ", object instances: " << objectContext[isContext].object_instances <<
+                    ", object score: " << objectContext[isContext].object_score << endl;
+                }
             }
             else {
                 //don't do anything if objects don't match
