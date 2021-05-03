@@ -400,7 +400,7 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     }
 
     //assign data to correct places
-    /*for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
+    for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
         std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from dictionary
         int getObjDictInstances = objectDictionary[isDict].instances; //get instances from object dictionary
         float currentObjDictUniqueness = trainingInfo.max_uniqueness / getObjDictInstances; //main calculation for uniqueness
@@ -417,9 +417,9 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
                 //don't do anything if objects don't match
             }
         }
-    }*/
+    }
 
-    //publishObjectContext(); //publish object context data as ROS msg
+    publishObjectContext(); //publish object context data as ROS msg
 }
 
 /**
