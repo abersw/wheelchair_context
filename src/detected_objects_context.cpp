@@ -1,29 +1,9 @@
 /*
  * detected_objects_context.cpp
  * wheelchair_context
- * version: 0.0.1 Majestic Maidenhair
- * Status: Pre-Alpha
+ * version: 0.1.0 Majestic Maidenhair
+ * Status: Beta
  * 
- * Goal for this software:
- * add same calculation software
- * object weighting = maximum weighting value (100%) / times trained (by user)
- * object weighting is capped at 0 and 100%
- * object uniqueness = maximum uniqueness (100%) / instances
- * 
- * notes for calculating uniqueness
- * uniqueness is percentage
- * if you have two rooms and it is located in 1, it's a unique item
- * occurances divided by total rooms
- *  1 / 2 = 0.5 * 100 = 50 - 50% common
- *  2 / 3 = 0.6667 * 100 = 66.66  |  100 - 66.6 = 33.34
- * what about rooms which haven't been trained as extensively? What affect does that have on uniqueness?
-
- * Now we have the number of objects within the room..., so we can take this into consideration
- * 
- * On second thought all this stuff above could go in the navigation node - as it's part of the decision making process
- * 
- * This needs an input from the user - this is the kitchen
- * Detected objects will then be allocated a room
 */
 
 #include <stdio.h>
