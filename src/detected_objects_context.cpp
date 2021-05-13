@@ -22,6 +22,7 @@ static const int DEBUG_doesPkgExist = 0;
 static const int DEBUG_createFile = 0;
 static const int DEBUG_listToContextInfo = 0;
 static const int DEBUG_contextListToStruct = 0;
+static const int DEBUG_calculateContextScore = 0;
 static const int DEBUG_publishObjectContext = 1;
 static const int DEBUG_objectLocationsCallback = 0;
 static const int DEBUG_detectedObjectCallback = 0;
@@ -255,13 +256,24 @@ void contextListToStruct(std::string fileName) {
 }
 
 /**
- * calculate context score for each object
-*/
-void calculateContext(int isContext) {
+ * Function to calculate the object context score
+ *
+ * @param parameter 'isContext' is the current position in the array objectContext
+ *        object is called from the objectLocationsCallback function
+ */
+void calculateContextScore(int isContext) {
     objectContext[isContext].object_score =
     objectContext[isContext].object_weighting *
     objectContext[isContext].object_uniqueness *
-    objectContext[isContext].object_confidence; //calculate object score
+    objectContext[isContext].object_confidence;
+
+    //print the current object context data
+    if (DEBUG_calculateContextScore) {
+        cout << "pos is " << isContext <<
+        ", object uniqueness: " << objectContext[isContext].object_uniqueness <<
+        ", object instances: " << objectContext[isContext].object_instances <<
+        ", object score: " << objectContext[isContext].object_score << endl;
+    }
 }
 
 //publish context data as ROS msg array
@@ -397,23 +409,15 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
         for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //iterate through entire context struct
             std::string getObjName = objectContext[isContext].object_name;
             if (getObjDictName == getObjName) {
-                objectContext[isContext].object_uniqueness = currentObjDictUniqueness;
-                objectContext[isContext].object_instances = getObjDictInstances;
-
-                calculateContext(isContext);
-                if (DEBUG_objectLocationsCallback) {
-                    cout << "pos is " << isContext <<
-                    ", object uniqueness: " << objectContext[isContext].object_uniqueness <<
-                    ", object instances: " << objectContext[isContext].object_instances <<
-                    ", object score: " << objectContext[isContext].object_score << endl;
-                }
+                objectContext[isContext].object_uniqueness = currentObjDictUniqueness; //assign current object uniqueness
+                objectContext[isContext].object_instances = getObjDictInstances; //assign instances of objects
+                calculateContextScore(isContext); //calculate object context score
             }
             else {
                 //don't do anything if objects don't match
             }
         }
     }
-
     publishObjectContext(); //publish object context data as ROS msg
 }
 
