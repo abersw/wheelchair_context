@@ -254,6 +254,16 @@ void contextListToStruct(std::string fileName) {
     totalObjectContextStruct = objectNumber; //var to add number of objects in struct
 }
 
+/**
+ * calculate context score for each object
+*/
+void calculateContext(int isContext) {
+    objectContext[isContext].object_score =
+    objectContext[isContext].object_weighting *
+    objectContext[isContext].object_uniqueness *
+    objectContext[isContext].object_confidence; //calculate object score
+}
+
 //publish context data as ROS msg array
 void publishObjectContext() {
     wheelchair_msgs::objectContext objContext;
@@ -390,8 +400,7 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
                 objectContext[isContext].object_uniqueness = currentObjDictUniqueness;
                 objectContext[isContext].object_instances = getObjDictInstances;
 
-                float getObjWeighting = objectContext[isContext].object_weighting;
-                objectContext[isContext].object_score = getObjWeighting * objectContext[isContext].object_uniqueness * objectContext[isContext].object_confidence; //calculate object score
+                calculateContext(isContext);
                 if (DEBUG_objectLocationsCallback) {
                     cout << "pos is " << isContext <<
                     ", object uniqueness: " << objectContext[isContext].object_uniqueness <<
