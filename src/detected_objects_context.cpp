@@ -23,8 +23,9 @@ static const int DEBUG_createFile = 0;
 static const int DEBUG_listToContextInfo = 0;
 static const int DEBUG_contextListToStruct = 0;
 static const int DEBUG_calculateContextScore = 0;
-static const int DEBUG_publishObjectContext = 1;
+static const int DEBUG_publishObjectContext = 0;
 static const int DEBUG_objectLocationsCallback = 0;
+static const int DEBUG_objectLocationsCallbackDictionary = 1;
 static const int DEBUG_detectedObjectCallback = 0;
 static const int DEBUG_contextInfoToList = 0;
 static const int DEBUG_contextStructToList = 0;
@@ -395,7 +396,7 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
         }
     }
     //print out list and instances of objects
-    if (DEBUG_objectLocationsCallback) {
+    if (DEBUG_objectLocationsCallbackDictionary) {
         for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
             cout << objectDictionary[isDict].object_name << ":" << objectDictionary[isDict].instances << endl;
         }
