@@ -57,9 +57,9 @@ struct Context {
     float object_confidence; //object confidence from dnn
     int object_detected; //times object has been detected
 
-    float object_weighting; //object weighting result
-    float object_uniqueness; //object uniqueness result
-    float object_score; //calculation of object weighting and uniqueness
+    double object_weighting; //object weighting result
+    double object_uniqueness; //object uniqueness result
+    double object_score; //calculation of object weighting and uniqueness
     int object_instances; //number of objects in env
 };
 //object_id,object_name,object_confidence,object_detected,object_weighting,object_uniqueness,object_instances
@@ -233,17 +233,17 @@ void contextListToStruct(std::string fileName) {
                     objectContext[objectNumber].object_confidence = std::stof(token); //set object confidence
                 }
                 else if (lineSection == 3) {
-                    objectContext[objectNumber].object_detected = std::stoi(token); //set times object has been detected
+                    objectContext[objectNumber].object_detected = std::stod(token); //set times object has been detected
                 }
                 else if (lineSection == 4) {
-                    objectContext[objectNumber].object_weighting = std::stof(token); //set object weighting
+                    objectContext[objectNumber].object_weighting = std::stod(token); //set object weighting
                 }
                 else if (lineSection == 5) {
-                    objectContext[objectNumber].object_uniqueness = std::stof(token); //set object uniqueness
+                    objectContext[objectNumber].object_uniqueness = std::stod(token); //set object uniqueness
                 }
                 lineSection++; //move to next element in line
             }
-            objectContext[objectNumber].object_instances = std::stof(line); //set object instances
+            objectContext[objectNumber].object_instances = std::stod(line); //set object instances
             if (DEBUG_contextListToStruct) { //print off debug lines
                 cout << "sections in line " << lineSection << endl;
                 cout << objectContext[objectNumber].object_id << "," << objectContext[objectNumber].object_name << ", " << objectContext[objectNumber].object_confidence << endl;
@@ -544,8 +544,8 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
                 printSeparator(0);
                     //update object weighting and detected
                     objectContext[isContext].object_detected++; //add one to times object was detected in env
-                    int isCurrentWeighting = objectContext[isContext].object_weighting;
-                    int isNewWeighting = isCurrentWeighting + trainingInfo.times_trained_val;
+                    double isCurrentWeighting = objectContext[isContext].object_weighting;
+                    double isNewWeighting = isCurrentWeighting + trainingInfo.times_trained_val;
                     if (DEBUG_detectedObjectCallback) {
                         cout << "new weighting is " << isNewWeighting << endl;
                     }
@@ -597,8 +597,8 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
                             //if new object in detected struct pos 0 is equal to object in context
                             //update object weighting and detected
                             objectContext[isContext].object_detected++; //add one to times object was detected in env
-                            int isCurrentWeighting = objectContext[isContext].object_weighting;
-                            int isNewWeighting = isCurrentWeighting + trainingInfo.times_trained_val;
+                            double isCurrentWeighting = objectContext[isContext].object_weighting;
+                            double isNewWeighting = isCurrentWeighting + trainingInfo.times_trained_val;
                             if (DEBUG_detectedObjectCallback) {
                                 cout << "new weighting is " << isNewWeighting << endl;
                             }
