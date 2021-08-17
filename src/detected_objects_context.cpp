@@ -89,18 +89,6 @@ std::string context_info_name = "info.context"; //name of context training info 
 std::string context_list_loc; //full path to object context file
 std::string context_info_loc; //full path to context training info file
 
-//function for printing space sizes
-void printSeparator(int spaceSize) {
-	if (spaceSize == 0) {
-		printf("--------------------------------------------\n");
-	}
-	else {
-		printf("\n");
-		printf("--------------------------------------------\n");
-		printf("\n");
-	}
-}
-
 /**
  * Function to check if file exists in the 'fileName' path, if it doesn't exist create a new one
  *
@@ -217,7 +205,7 @@ void contextListToStruct(std::string fileName) {
                 cout << "sections in line " << lineSection << endl;
                 cout << objectContext[objectNumber].object_id << "," << objectContext[objectNumber].object_name << ", " << objectContext[objectNumber].object_confidence << endl;
                 cout << objectContext[objectNumber].object_detected << ", " << objectContext[objectNumber].object_weighting << ", " << objectContext[objectNumber].object_uniqueness << ", " << objectContext[objectNumber].object_instances << endl;
-                printSeparator(0);
+                tofToolBox->printSeparator(0);
             }
             objectNumber++; //iterate to next object in list
         }
@@ -335,18 +323,18 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     }
     //print out list of objects
     if (DEBUG_objectLocationsCallback) {
-        printSeparator(1);
+        tofToolBox->printSeparator(1);
         cout << "pre-instance calculations, total size of struct is " << totalObjectDictionaryStruct << endl;
         for (int isDet = 0; isDet < totalObjectDictionaryStruct; isDet++) {
             cout << objectDictionary[isDet].object_name << ":" << objectDictionary[isDet].instances << endl;
         }
-        printSeparator(1);
+        tofToolBox->printSeparator(1);
     }
 
     //get object instances and assign to object dictionary struct
     for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) { //iterate through object dictionary
         std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from dictionary
-        printSeparator(1);
+        tofToolBox->printSeparator(1);
         cout << "total objects in dictionary is " << totalObjectDictionaryStruct << endl;
         cout << "object from dict is " << getObjDictName << endl;
         for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //iterate through object struct
@@ -467,7 +455,7 @@ void printObjectsDetectedStruct(int detPos, int detectedObject) {
  *        message belongs to wheelchair_msgs objectLocations.msg
  */
 void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
-    printSeparator(1);
+    tofToolBox->printSeparator(1);
     int totalObjectsInMsg = obLoc.totalObjects; //total detected objects in ROS msg
     int detPos = 0; //detection position corresponds with previous frames
     totalObjectsDetectedStruct[detPos] = totalObjectsInMsg;
@@ -510,7 +498,7 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
                 int getContextID = objectContext[isContext].object_id; //get context ID
                 std::string getContextName = objectContext[isContext].object_name; //get context name
                 if ((getDetObjID == getContextID) && (getDetObjName == getContextName)) { //if object ID and name are equal
-                printSeparator(0);
+                tofToolBox->printSeparator(0);
                     //update object weighting and detected
                     objectContext[isContext].object_detected++; //add one to times object was detected in env
                     double isCurrentWeighting = objectContext[isContext].object_weighting;
@@ -562,7 +550,7 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
                         int getContextID = objectContext[isContext].object_id; //get context ID
                         std::string getContextName = objectContext[isContext].object_name; //get context name
                         if ((getDetObjID == getContextID) && (getDetObjName == getContextName)) { //if object ID and name are equal
-                            printSeparator(0);
+                            tofToolBox->printSeparator(0);
                             //if new object in detected struct pos 0 is equal to object in context
                             //update object weighting and detected
                             objectContext[isContext].object_detected++; //add one to times object was detected in env
