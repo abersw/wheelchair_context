@@ -10,7 +10,6 @@
 
 using namespace std;
 
-static const int DEBUG_doesPkgExist = 0;
 static const int DEBUG_createFile = 0;
 static const int DEBUG_listToContextInfo = 0;
 static const int DEBUG_contextListToStruct = 0;
@@ -100,30 +99,6 @@ void printSeparator(int spaceSize) {
 		printf("--------------------------------------------\n");
 		printf("\n");
 	}
-}
-
-/**
- * Does the wheelchair_dump package exist in the workspace?
- * If it's missing, close down the node safely
- */
-std::string doesPkgExist(std::string pkg_name) {
-    std::string getPkgPath;
-	if (ros::package::getPath(pkg_name) == "") {
-		cout << "FATAL:  Couldn't find package " << pkg_name << "\n";
-		cout << "FATAL:  Closing node. \n";
-        if (DEBUG_doesPkgExist) {
-            cout << getPkgPath << endl;
-        }
-		ros::shutdown();
-		exit(0);
-	}
-    else {
-        getPkgPath = ros::package::getPath(pkg_name);
-        if (DEBUG_doesPkgExist) {
-            cout << getPkgPath << endl;
-        }
-    }
-    return getPkgPath;
 }
 
 /**
@@ -680,7 +655,7 @@ int main (int argc, char **argv) {
     ros::init(argc, argv, "detected_objects_context");
     ros::NodeHandle n;
 
-    wheelchair_dump_loc = doesPkgExist("wheelchair_dump");//check to see if dump package exists
+    wheelchair_dump_loc = tofToolBox->doesPkgExist("wheelchair_dump");//check to see if dump package exists
     context_list_loc = wheelchair_dump_loc + dump_context_loc + context_list_name; //concatenate vars to create location of room list
     createFile(context_list_loc); //check to see if file is present, if not create a new one
     contextListToStruct(context_list_loc); //add list to struct
