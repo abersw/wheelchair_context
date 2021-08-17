@@ -10,7 +10,6 @@
 
 using namespace std;
 
-static const int DEBUG_createFile = 0;
 static const int DEBUG_listToContextInfo = 0;
 static const int DEBUG_contextListToStruct = 0;
 static const int DEBUG_calculateContextScore = 0;
@@ -88,39 +87,6 @@ std::string context_list_name = "objects.context"; //name of object context file
 std::string context_info_name = "info.context"; //name of context training info file
 std::string context_list_loc; //full path to object context file
 std::string context_info_loc; //full path to context training info file
-
-/**
- * Function to check if file exists in the 'fileName' path, if it doesn't exist create a new one
- *
- * @param pass the path and file name to be created called 'fileName'
- * @return return '1' if file already exists, return '0' if file was missing and has been created
- */
-int createFile(std::string fileName) { //if this doesn't get called, no file is created
-    if (DEBUG_createFile) {
-        printf("DEBUG: createFile()\n");
-    }
-	std::ifstream fileExists(fileName);
-
-	if (fileExists.good() == 1) {
-		//File exists
-        if (DEBUG_createFile) {
-            printf("Weighting file exists\n");
-        }
-		//cout << fileName;
-		return 1;
-	}
-	else {
-		//File doesn't exist
-        if (DEBUG_createFile) {
-            printf("Weighting file doesn't exist\n");
-            printf("creating new file\n");
-        }
-		ofstream NEW_FILE (fileName);
-		NEW_FILE.close();
-		//cout << fileName;
-		return 0;
-	}
-}
 
 /**
  * Function to add training session info from param 'fileName' path, start assigning info from each line of file
@@ -645,11 +611,11 @@ int main (int argc, char **argv) {
 
     wheelchair_dump_loc = tofToolBox->doesPkgExist("wheelchair_dump");//check to see if dump package exists
     context_list_loc = wheelchair_dump_loc + dump_context_loc + context_list_name; //concatenate vars to create location of room list
-    createFile(context_list_loc); //check to see if file is present, if not create a new one
+    tofToolBox->createFile(context_list_loc); //check to see if file is present, if not create a new one
     contextListToStruct(context_list_loc); //add list to struct
 
     context_info_loc = wheelchair_dump_loc + dump_context_loc + context_info_name; //concatenate vars to create location of room list
-    createFile(context_info_loc); //check to see if file is present, if not create a new one
+    tofToolBox->createFile(context_info_loc); //check to see if file is present, if not create a new one
     listToContextInfo(context_info_loc); //set context training info to struct
 
 
