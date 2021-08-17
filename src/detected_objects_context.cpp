@@ -6,16 +6,8 @@
  * 
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "ros/ros.h" //main ROS library
-#include "ros/package.h" //find ROS packages, needs roslib dependency
-#include "wheelchair_msgs/objectLocations.h"
-#include "wheelchair_msgs/objectContext.h"
-#include <fstream>
-#include <iostream>
-#include <sstream>
+#include "tof_tool/tof_tool_box.h"
+
 using namespace std;
 
 static const int DEBUG_doesPkgExist = 0;
@@ -30,6 +22,8 @@ static const int DEBUG_detectedObjectCallback = 0;
 static const int DEBUG_contextInfoToList = 0;
 static const int DEBUG_contextStructToList = 0;
 static const int DEBUG_main = 0;
+
+TofToolBox *tofToolBox;
 
 struct Objects { //struct for publishing topic
     int id; //get object id from ros msg
@@ -678,6 +672,9 @@ void contextStructToList() {
  * @return 0 - end of program
  */
 int main (int argc, char **argv) {
+    TofToolBox tofToolBox_local;
+    tofToolBox = &tofToolBox_local;
+
     //take UID from publish_objects_location and pass it through here
     //when msg comes through with ID of object - append a room name to the object
     ros::init(argc, argv, "detected_objects_context");
