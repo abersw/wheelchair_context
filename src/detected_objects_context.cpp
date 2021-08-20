@@ -8,6 +8,9 @@
 
 #include "tof_tool/tof_tool_box.h"
 
+#include "wheelchair_msgs/objectLocations.h"
+#include "wheelchair_msgs/objectContext.h"
+
 using namespace std;
 
 static const int DEBUG_listToContextInfo = 0;
