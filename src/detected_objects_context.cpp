@@ -203,6 +203,47 @@ void calculateContextScore(int isContext) {
     }
 }
 
+/**
+ * Function to create a dictionary of objects from the main objects array
+ *
+ */
+void addObjectToDictionary() {
+    totalObjectContextStruct = totalObjectsFileStruct; //set object context struct size to replicate size of object struct
+    for (int isObject = 0; isObject < totalObjectContextStruct; isObject++) { //run through all objects
+        int objectMatched = 0; //flag variable sets to 1 if object is already in dictionary
+        std::string getObjName = objectsFileStruct[isObject].object_name; //get object name from objectsFileStruct
+        if (totalObjectDictionaryStruct == 0) {
+            objectDictionary[0].object_name = getObjName; //set object name in first element from full objects struct
+            totalObjectDictionaryStruct++; //add 1 to total objects in dictionary
+        }
+        for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) { //iterate through dictionary struct
+            std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from objectDictionary
+            if (getObjName == getObjDictName) { //if name from objectsFileStruct and objectDictionary is the same
+                objectMatched = 1; //set to true
+            }
+            objectDictionary[isDict].instances = 0; //set objects back to 0
+        }
+        if (objectMatched) {
+            //if object is already in struct, don't add anything
+        }
+        else {
+            //add object name to struct
+            objectDictionary[totalObjectDictionaryStruct].object_name = getObjName; //assign name from objectsFileStruct
+            objectDictionary[totalObjectDictionaryStruct].instances = 0; //set instances to 0
+            totalObjectDictionaryStruct++; //add for next element in array
+        }
+    }
+    //print out list of objects
+    if (DEBUG_objectLocationsCallback) {
+        tofToolBox->printSeparator(1);
+        cout << "pre-instance calculations, total size of struct is " << totalObjectDictionaryStruct << endl;
+        for (int isDet = 0; isDet < totalObjectDictionaryStruct; isDet++) {
+            cout << objectDictionary[isDet].object_name << ":" << objectDictionary[isDet].instances << endl;
+        }
+        tofToolBox->printSeparator(1);
+    }
+}
+
 //publish context data as ROS msg array
 void publishObjectContext() {
     wheelchair_msgs::objectContext objContext;
@@ -243,7 +284,6 @@ void publishObjectContext() {
 void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     int totalObjectsInMsg = obLoc.totalObjects; //total detected objects in ROS msg
     totalObjectsFileStruct = totalObjectsInMsg; //set message total objects to total objects in file struct
-    totalObjectContextStruct = totalObjectsFileStruct; //set object context struct size to replicate size of object struct
     for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) { //iterate through entire msg topic array
         objectsFileStruct[isObject].id = obLoc.id[isObject]; //assign object id to struct
         objectsFileStruct[isObject].object_name = obLoc.object_name[isObject]; //assign object name to struct
@@ -264,41 +304,7 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     }
 
     //create and add object names to object dictionary struct
-    for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
-        //run through all objects
-        int objectMatched = 0;
-        std::string getObjName = objectsFileStruct[isContext].object_name;
-        if (totalObjectDictionaryStruct == 0) {
-            objectDictionary[0].object_name = getObjName; //set object name in first element in full objects struct
-            totalObjectDictionaryStruct++; //add 1 to total objects in dictionary
-        }
-        for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
-            std::string getObjDictName = objectDictionary[isDict].object_name;
-            if (getObjName == getObjDictName) {
-                objectMatched = 1;
-            }
-            //set objects back to 0
-            objectDictionary[isDict].instances = 0;
-        }
-        if (objectMatched) {
-            //if object is already in struct, don't add anything
-        }
-        else {
-            //add object name to struct
-            objectDictionary[totalObjectDictionaryStruct].object_name = getObjName;
-            objectDictionary[totalObjectDictionaryStruct].instances = 0;
-            totalObjectDictionaryStruct++;
-        }
-    }
-    //print out list of objects
-    if (DEBUG_objectLocationsCallback) {
-        tofToolBox->printSeparator(1);
-        cout << "pre-instance calculations, total size of struct is " << totalObjectDictionaryStruct << endl;
-        for (int isDet = 0; isDet < totalObjectDictionaryStruct; isDet++) {
-            cout << objectDictionary[isDet].object_name << ":" << objectDictionary[isDet].instances << endl;
-        }
-        tofToolBox->printSeparator(1);
-    }
+    addObjectToDictionary();
 
     //get object instances and assign to object dictionary struct
     for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) { //iterate through object dictionary
@@ -622,8 +628,8 @@ int main (int argc, char **argv) {
     listToContextInfo(context_info_loc); //set context training info to struct
 
 
-    ros::Subscriber objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/objects", 10, objectLocationsCallback); //full list of objects
-    ros::Subscriber detected_objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/detected_objects", 10, detectedObjectCallback); //detected objects in frame
+    ros::Subscriber objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/objects", 1000, objectLocationsCallback); //full list of objects
+    ros::Subscriber detected_objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/detected_objects", 1000, detectedObjectCallback); //detected objects in frame
     ros::Publisher object_context_pub = n.advertise<wheelchair_msgs::objectContext>("/wheelchair_robot/context/objects", 1000); //publish object context info for decision making
     ptr_object_context = &object_context_pub; //pointer to publish object context
 
