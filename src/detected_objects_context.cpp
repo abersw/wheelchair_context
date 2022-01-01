@@ -443,6 +443,27 @@ void assignObjectsDetectedStruct(int detPos, const wheelchair_msgs::objectLocati
 }
 
 /**
+ * start calculating weighting value for training session
+ *
+ */
+void calculateWeightingValue() {
+    if (trainingInfo.times_trained <= trainingInfo.times_trained_max) {
+        //if times trained hasn't grown out of training boundary
+        trainingInfo.times_trained_val = trainingInfo.max_weighting / trainingInfo.times_trained; //calculate session weighting value
+    }
+    else {
+        //times trained outside of training boundary, cap the value to max times trained
+        trainingInfo.times_trained_val = trainingInfo.max_weighting / trainingInfo.times_trained_max; //set to max training session weighting value
+        if (DEBUG_detectedObjectCallback) {
+            cout << "capped times trained to " << trainingInfo.times_trained_max << endl;
+        }
+    }
+    if (DEBUG_detectedObjectCallback) {
+        cout << "current weighting value is " << trainingInfo.times_trained_val << endl;
+    }
+}
+
+/**
  * Main callback function triggered by detected objects in frame ROS topic 
  *
  * @param parameter 'obLoc' is the array of messages from the publish_object_locations node
@@ -460,20 +481,7 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
     //finished adding detected data to pos 0 in 2d array
 
     //start calculating weighting value for training session
-    if (trainingInfo.times_trained <= trainingInfo.times_trained_max) {
-        //if times trained hasn't grown out of training boundary
-        trainingInfo.times_trained_val = trainingInfo.max_weighting / trainingInfo.times_trained; //calculate session weighting value
-    }
-    else {
-        //times trained outside of training boundary, cap the value to max times trained
-        trainingInfo.times_trained_val = trainingInfo.max_weighting / trainingInfo.times_trained_max; //set to max training session weighting value
-        if (DEBUG_detectedObjectCallback) {
-            cout << "capped times trained to " << trainingInfo.times_trained_max << endl;
-        }
-    }
-    if (DEBUG_detectedObjectCallback) {
-        cout << "current weighting value is " << trainingInfo.times_trained_val << endl;
-    }
+    calculateWeightingValue();
 
     //start off with first object detections in sequence
     if (totalObjectsDetectedStruct[detPos+1] == 0) {
