@@ -204,6 +204,29 @@ void calculateContextScore(int isContext) {
 }
 
 /**
+ * Function to get all data required to calculate context, calls calculate context
+ *
+ */
+void getObjectContext() {
+    for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
+        std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from dictionary
+        int getObjDictInstances = objectDictionary[isDict].instances; //get instances from object dictionary
+        float currentObjDictUniqueness = trainingInfo.max_uniqueness / getObjDictInstances; //main calculation for uniqueness
+        for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //iterate through entire context struct
+            std::string getObjName = objectContext[isContext].object_name;
+            if (getObjDictName == getObjName) {
+                objectContext[isContext].object_uniqueness = currentObjDictUniqueness; //assign current object uniqueness
+                objectContext[isContext].object_instances = getObjDictInstances; //assign instances of objects
+                calculateContextScore(isContext); //calculate object context score
+            }
+            else {
+                //don't do anything if objects don't match
+            }
+        }
+    }
+}
+
+/**
  * Function to create a dictionary of objects from the main objects array
  *
  */
@@ -342,23 +365,10 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     //get object instances and assign to object dictionary struct
     calculateObjectInstances();
 
-    //assign data to correct places
-    for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
-        std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from dictionary
-        int getObjDictInstances = objectDictionary[isDict].instances; //get instances from object dictionary
-        float currentObjDictUniqueness = trainingInfo.max_uniqueness / getObjDictInstances; //main calculation for uniqueness
-        for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //iterate through entire context struct
-            std::string getObjName = objectContext[isContext].object_name;
-            if (getObjDictName == getObjName) {
-                objectContext[isContext].object_uniqueness = currentObjDictUniqueness; //assign current object uniqueness
-                objectContext[isContext].object_instances = getObjDictInstances; //assign instances of objects
-                calculateContextScore(isContext); //calculate object context score
-            }
-            else {
-                //don't do anything if objects don't match
-            }
-        }
-    }
+    //get data to calculate context
+    getObjectContext();
+
+    //publish calculated context via ROS msg
     publishObjectContext(); //publish object context data as ROS msg
 }
 
