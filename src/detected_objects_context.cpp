@@ -397,13 +397,34 @@ void shiftObjectsDetectedStructPos(int from, int to) {
     totalObjectsDetectedStruct[to] = totalObjectsDetectedStruct[from]; //set total objects in detection struct to pos 1
 }
 
+/*
+ * Function to print off current object info in objects detected struct
+*/
+void printObjectsDetectedStruct(int detPos, int detectedObject) {
+    if (DEBUG_detectedObjectCallback) {
+        cout <<
+        objectsDetectedStruct[detPos][detectedObject].id << "," <<
+        objectsDetectedStruct[detPos][detectedObject].object_name << "," <<
+        objectsDetectedStruct[detPos][detectedObject].object_confidence << "," <<
+
+        objectsDetectedStruct[detPos][detectedObject].point_x << "," <<
+        objectsDetectedStruct[detPos][detectedObject].point_y << "," <<
+        objectsDetectedStruct[detPos][detectedObject].point_z << "," <<
+
+        objectsDetectedStruct[detPos][detectedObject].quat_x << "," <<
+        objectsDetectedStruct[detPos][detectedObject].quat_y << "," <<
+        objectsDetectedStruct[detPos][detectedObject].quat_z << "," <<
+        objectsDetectedStruct[detPos][detectedObject].quat_w << endl;
+    }
+}
+
 /**
  * Function to assign ROS topic msg context to struct
  * @param 'detPos' is the objects detected sequence used - 0 latest, 1 previous
  * @param 'detectedObject' object position in detected array
  * @param 'obLoc' belongs to wheelchair_msgs::objectLocations - contains object info
 */
-void assignObjectsDetectedStruct(int detPos, int detectedObject, const wheelchair_msgs::objectLocations obLoc) {
+void assignObjectsDetectedStruct(int detPos, const wheelchair_msgs::objectLocations obLoc, int detectedObject) {
     objectsDetectedStruct[detPos][detectedObject].id = obLoc.id[detectedObject]; //assign object id to struct
     objectsDetectedStruct[detPos][detectedObject].object_name = obLoc.object_name[detectedObject]; //assign object name to struct
     objectsDetectedStruct[detPos][detectedObject].object_confidence = obLoc.object_confidence[detectedObject]; //assign object confidence to struct
@@ -417,28 +438,8 @@ void assignObjectsDetectedStruct(int detPos, int detectedObject, const wheelchai
     objectsDetectedStruct[detPos][detectedObject].quat_z = obLoc.quat_z[detectedObject]; //assign object quaternion z to struct
     objectsDetectedStruct[detPos][detectedObject].quat_w = obLoc.quat_w[detectedObject]; //assign object quaternion w to struct
 
+    printObjectsDetectedStruct(detPos, detectedObject); //print out objects detected struct when debug enabled
     //objectsDetectedStruct[detPos][detectedObject].inLastFrame; //don't do anything yet
-}
-
-/*
- * Function to print off current object info in objects detected struct
-*/
-void printObjectsDetectedStruct(int detPos, int detectedObject) {
-    if (DEBUG_detectedObjectCallback) {
-        cout << 
-        objectsDetectedStruct[detPos][detectedObject].id << "," << 
-        objectsDetectedStruct[detPos][detectedObject].object_name << "," << 
-        objectsDetectedStruct[detPos][detectedObject].object_confidence << "," << 
-
-        objectsDetectedStruct[detPos][detectedObject].point_x << "," << 
-        objectsDetectedStruct[detPos][detectedObject].point_y << "," << 
-        objectsDetectedStruct[detPos][detectedObject].point_z << "," << 
-
-        objectsDetectedStruct[detPos][detectedObject].quat_x << "," << 
-        objectsDetectedStruct[detPos][detectedObject].quat_y << "," << 
-        objectsDetectedStruct[detPos][detectedObject].quat_z << "," << 
-        objectsDetectedStruct[detPos][detectedObject].quat_w << endl; 
-    }
 }
 
 /**
@@ -450,12 +451,11 @@ void printObjectsDetectedStruct(int detPos, int detectedObject) {
 void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
     tofToolBox->printSeparator(1);
     int totalObjectsInMsg = obLoc.totalObjects; //total detected objects in ROS msg
-    int detPos = 0; //detection position corresponds with previous frames
+    int detPos = 0; //'detPos' is the objects detected sequence used - 0 latest, 1 previous
     totalObjectsDetectedStruct[detPos] = totalObjectsInMsg;
     for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[detPos]; detectedObject++) {
         //add to struct position [0][object number]
-        assignObjectsDetectedStruct(detPos, detectedObject, obLoc); //assign ROS topic msg to struct
-        printObjectsDetectedStruct(detPos, detectedObject); //print out objects detected struct when debug enabled
+        assignObjectsDetectedStruct(detPos, obLoc, detectedObject); //assign ROS topic msg to struct
     }
     //finished adding detected data to pos 0 in 2d array
 
