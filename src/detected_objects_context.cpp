@@ -443,6 +443,34 @@ void assignObjectsDetectedStruct(int detPos, const wheelchair_msgs::objectLocati
 }
 
 /**
+ * Apply new object context weighting to struct
+ *
+ */
+void applyNewWeighting(int isContext, double isNewWeighting) {
+    if (DEBUG_detectedObjectCallback) {
+        cout << "new weighting is " << isNewWeighting << endl;
+    }
+    if (isNewWeighting > trainingInfo.max_weighting) { //if outside of max weighting
+        objectContext[isContext].object_weighting = trainingInfo.max_weighting; //assign object weighting max weight
+        if (DEBUG_detectedObjectCallback) {
+            cout << "set weighting to max: " << trainingInfo.max_weighting << endl;
+        }
+    }
+    else if (isNewWeighting < trainingInfo.min_weighting) { //if outside of min weighting
+        objectContext[isContext].object_weighting = trainingInfo.min_weighting; //assign object weighting min weight
+        if (DEBUG_detectedObjectCallback) {
+            cout << "set weighting to min: " << trainingInfo.min_weighting << endl;
+        }
+    }
+    else { //if inside bounding weight
+        objectContext[isContext].object_weighting = isNewWeighting; //assign object weighting caluclated weight
+        if (DEBUG_detectedObjectCallback) {
+            cout << "assigned to context struct pos " << isContext << " weighting " << objectContext[isContext].object_weighting << endl;
+        }
+    }
+}
+
+/**
  * No previous history, so add to weighting
  *
  */
@@ -462,28 +490,7 @@ void contextNoHistory(int detPos) {
                 objectContext[isContext].object_detected++; //add one to times object was detected in env
                 double isCurrentWeighting = objectContext[isContext].object_weighting;
                 double isNewWeighting = isCurrentWeighting + trainingInfo.times_trained_val;
-                if (DEBUG_detectedObjectCallback) {
-                    cout << "new weighting is " << isNewWeighting << endl;
-                }
-                if (isNewWeighting > trainingInfo.max_weighting) { //if outside of max weighting
-                    objectContext[isContext].object_weighting = trainingInfo.max_weighting; //assign object weighting max weight
-                    if (DEBUG_detectedObjectCallback) {
-                        cout << "set weighting to max: " << trainingInfo.max_weighting << endl;
-                    }
-                }
-                else if (isNewWeighting < trainingInfo.min_weighting) { //if outside of min weighting
-                    objectContext[isContext].object_weighting = trainingInfo.min_weighting; //assign object weighting min weight
-                    if (DEBUG_detectedObjectCallback) {
-                        cout << "set weighting to min: " << trainingInfo.min_weighting << endl;
-                    }
-                }
-                else { //if inside bounding weight
-                    objectContext[isContext].object_weighting = isNewWeighting; //assign object weighting caluclated weight
-                    if (DEBUG_detectedObjectCallback) {
-                        cout << "assigned to context struct pos " << isContext << " weighting " << objectContext[isContext].object_weighting << endl;
-                    }
-                }
-                //work out uniqueness
+                applyNewWeighting(isContext, isNewWeighting);
             }
 
         }
@@ -520,28 +527,7 @@ void contextWithHistory() {
                         objectContext[isContext].object_detected++; //add one to times object was detected in env
                         double isCurrentWeighting = objectContext[isContext].object_weighting;
                         double isNewWeighting = isCurrentWeighting + trainingInfo.times_trained_val;
-                        if (DEBUG_detectedObjectCallback) {
-                            cout << "new weighting is " << isNewWeighting << endl;
-                        }
-                        if (isNewWeighting > trainingInfo.max_weighting) { //if outside of max weighting
-                            objectContext[isContext].object_weighting = trainingInfo.max_weighting; //assign object weighting max weight
-                            if (DEBUG_detectedObjectCallback) {
-                                cout << "set weighting to max: " << trainingInfo.max_weighting << endl;
-                            }
-                        }
-                        else if (isNewWeighting < trainingInfo.min_weighting) { //if outside of min weighting
-                            objectContext[isContext].object_weighting = trainingInfo.min_weighting; //assign object weighting min weight
-                            if (DEBUG_detectedObjectCallback) {
-                                cout << "set weighting to min: " << trainingInfo.min_weighting << endl;
-                            }
-                        }
-                        else { //if inside bounding weight
-                            objectContext[isContext].object_weighting = isNewWeighting; //assign object weighting caluclated weight
-                            if (DEBUG_detectedObjectCallback) {
-                                cout << "assigned to context struct pos " << isContext << " weighting " << objectContext[isContext].object_weighting << endl;
-                            }
-                        }
-                        //work out uniqueness
+                        applyNewWeighting(isContext, isNewWeighting);
                     }
                     else {
                         //skip over, don't assign anything if detected object and context don't match
