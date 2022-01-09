@@ -56,6 +56,8 @@ struct Context {
     double object_uniqueness; //object uniqueness result
     double object_score; //calculation of object weighting and uniqueness
     int object_instances; //number of objects in env
+
+    int objectDetectedFlag = 0; //turns to 1 if object has been detected when driving around
 };
 //object_id,object_name,object_confidence,object_detected,object_weighting,object_uniqueness,object_instances
 
@@ -488,6 +490,7 @@ void contextNoHistory(int detPos) {
                 tofToolBox->printSeparator(0);
                 //update object weighting and detected
                 objectContext[isContext].object_detected++; //add one to times object was detected in env
+                objectContext[isContext].objectDetectedFlag = 1; //object has been found, assign 1 to flag
                 double isCurrentWeighting = objectContext[isContext].object_weighting;
                 double isNewWeighting = isCurrentWeighting + trainingInfo.times_trained_val;
                 applyNewWeighting(isContext, isNewWeighting);
@@ -525,6 +528,7 @@ void contextWithHistory() {
                         //if new object in detected struct pos 0 is equal to object in context
                         //update object weighting and detected
                         objectContext[isContext].object_detected++; //add one to times object was detected in env
+                        objectContext[isContext].objectDetectedFlag = 1; //object has been found, assign 1 to flag
                         double isCurrentWeighting = objectContext[isContext].object_weighting;
                         double isNewWeighting = isCurrentWeighting + trainingInfo.times_trained_val;
                         applyNewWeighting(isContext, isNewWeighting);
@@ -558,6 +562,24 @@ void calculateWeightingValue() {
     }
     if (DEBUG_detectedObjectCallback) {
         cout << "current weighting value is " << trainingInfo.times_trained_val << endl;
+    }
+}
+
+/**
+ * Reduces object weighting if object has not been found
+ *
+ */
+void objectNotDetected() {
+    for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //run through entire object context
+        int objectDetectedFlag = objectContext[isContext].objectDetectedFlag; //return 0 if object not detected, 1 if detected
+        if (objectDetectedFlag == 1) { //if object is 1, object has already been detected in the environment
+            //object score has already been calculated
+        }
+        else if (objectDetectedFlag == 0) { //if object remains 0, object has not been detected
+            double isCurrentWeighting = objectContext[isContext].object_weighting; //get current object weighting
+            double isNewWeighting = isCurrentWeighting - trainingInfo.times_trained_val; //
+            applyNewWeighting(isContext, isNewWeighting);
+        }
     }
 }
 
@@ -676,6 +698,7 @@ int main (int argc, char **argv) {
         ros::spinOnce();
         rate.sleep();
     }
+    objectNotDetected(); //call function to reduce context score
     contextInfoToList(); //save training info
     contextStructToList(); //save object context
     return 0;
