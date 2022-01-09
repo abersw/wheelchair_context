@@ -581,6 +581,12 @@ void objectNotDetected() {
             applyNewWeighting(isContext, isNewWeighting);
         }
     }
+
+    //get object instances and assign to object dictionary struct
+    calculateObjectInstances();
+
+    //get data to calculate context
+    getObjectContext();
 }
 
 /**
