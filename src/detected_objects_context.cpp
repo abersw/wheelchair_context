@@ -15,11 +15,12 @@ using namespace std;
 
 static const int DEBUG_listToContextInfo = 0;
 static const int DEBUG_contextListToStruct = 0;
+static const int DEBUG_calculateObjectInstances = 0;
 static const int DEBUG_calculateContextScore = 0;
 static const int DEBUG_publishObjectContext = 0;
 static const int DEBUG_objectLocationsCallback = 0;
 static const int DEBUG_objectLocationsCallbackDictionary = 1;
-static const int DEBUG_detectedObjectCallback = 0;
+static const int DEBUG_detectedObjectCallback = 1;
 static const int DEBUG_contextInfoToList = 0;
 static const int DEBUG_contextStructToList = 0;
 static const int DEBUG_main = 0;
@@ -276,17 +277,22 @@ void addObjectToDictionary() {
 void calculateObjectInstances() {
     for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) { //iterate through object dictionary
         std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from dictionary
-        tofToolBox->printSeparator(1);
-        cout << "total objects in dictionary is " << totalObjectDictionaryStruct << endl;
-        cout << "object from dict is " << getObjDictName << endl;
+        if (DEBUG_calculateObjectInstances) {
+            tofToolBox->printSeparator(1);
+            cout << "total objects in dictionary is " << totalObjectDictionaryStruct << endl;
+            cout << "object from dict is " << getObjDictName << endl;
+        }
         for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //iterate through object struct
             std::string getObjName = objectContext[isContext].object_name; //get object name from main struct
-
-            cout << "total objects in context is " << totalObjectContextStruct << endl;
-            cout << "total objects in struct is " << totalObjectsFileStruct << endl;
-            cout << "object from context is " << getObjName << endl;
+            if (DEBUG_calculateObjectInstances) {
+                cout << "total objects in context is " << totalObjectContextStruct << endl;
+                cout << "total objects in struct is " << totalObjectsFileStruct << endl;
+                cout << "object from context is " << getObjName << endl;
+            }
             if (getObjDictName == getObjName) { //if object name in dictionary and main struct are equal
-            cout << "found instance" << endl;
+                if (DEBUG_calculateObjectInstances) {
+                    cout << "found instance" << endl;
+                }
                 objectDictionary[isDict].instances++; //add 1 to object instances
             }
             else {
