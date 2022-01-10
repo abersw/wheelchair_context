@@ -15,7 +15,7 @@ using namespace std;
 
 static const int DEBUG_listToContextInfo = 0;
 static const int DEBUG_contextListToStruct = 0;
-static const int DEBUG_calculateObjectInstances = 0;
+static const int DEBUG_calculateObjectInstances = 1;
 static const int DEBUG_calculateContextScore = 0;
 static const int DEBUG_publishObjectContext = 0;
 static const int DEBUG_objectLocationsCallback = 0;
