@@ -704,7 +704,7 @@ int main (int argc, char **argv) {
         ros::spinOnce();
         rate.sleep();
     }
-    objectNotDetected(); //call function to reduce context score
+    //objectNotDetected(); //call function to reduce context score
     contextInfoToList(); //save training info
     contextStructToList(); //save object context
     return 0;
