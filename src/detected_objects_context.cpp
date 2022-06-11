@@ -251,6 +251,7 @@ void addObjectToDictionary() {
         }
         if (objectMatched) {
             //if object is already in struct, don't add anything
+            //instances calculated in calculateObjectInstances
         }
         else {
             //add object name to struct
