@@ -13,6 +13,7 @@
 
 using namespace std;
 
+static const int DEBUG_calculateInfluenceWeight = 1;
 static const int DEBUG_listToContextInfo = 0;
 static const int DEBUG_contextListToStruct = 0;
 static const int DEBUG_calculateObjectInstances = 0;
@@ -68,7 +69,7 @@ int totalObjectContextStruct = 0; //total objects in struct
 struct TrainingInfo {
     int times_trained; //real times trained
     int times_trained_max = 5; //value to prevent times trained val becoming too small
-    int times_trained_val; //actual value used for calculating object weighting
+    double times_trained_val; //actual value used for calculating object weighting
     int max_weighting = 100; //max value for object weighting
     int min_weighting = 0; //min value for object weighting
     int max_uniqueness = 100; //max value for object uniqueness
@@ -95,6 +96,20 @@ std::string context_list_loc; //full path to object context file
 std::string context_info_loc; //full path to context training info file
 
 /**
+ * influence weight I is calculated as the inverse of
+   the number of times the navigation software has been launched
+ *
+ * @param pass L: times training times (software launched)
+ */
+double calculateInfluenceWeight(int timesTrained) {
+    double influenceWeight = 1 / timesTrained;
+    if (DEBUG_calculateInfluenceWeight) {
+        cout << "Influence (I) is " << influenceWeight << endl;
+    }
+    return influenceWeight;
+}
+
+/**
  * Function to add training session info from param 'fileName' path, start assigning info from each line of file
  *
  * @param pass the path and file name to be created called 'fileName'
@@ -106,6 +121,7 @@ void listToContextInfo(std::string fileName) {
         //don't do anything if next character in file is eof
         cout << "file is empty" << endl;
         trainingInfo.times_trained = 1;
+        trainingInfo.times_trained_val = calculateInfluenceWeight(trainingInfo.times_trained);
     }
     else {
         std::string line;
@@ -116,7 +132,7 @@ void listToContextInfo(std::string fileName) {
                 int getTimesTrained = std::stoi(line);
                 trainingInfo.times_trained = getTimesTrained + 1; //add one to times trained on startup
                 if (trainingInfo.times_trained > trainingInfo.times_trained_max) { //if actual times trained is greater than max times trained
-                    trainingInfo.times_trained_val = trainingInfo.times_trained_max; //assign max times trained to calculation value
+                    trainingInfo.times_trained_val = calculateInfluenceWeight(trainingInfo.times_trained_max); //assign max times trained to calculation values
                 }
                 if (DEBUG_listToContextInfo) {
                     cout << "training session is " << trainingInfo.times_trained << endl;
