@@ -142,6 +142,7 @@ include_directories(
 add_executable(context_training src/context_training.cpp)
 add_executable(calculate_context src/calculate_context.cpp)
 add_executable(detected_objects_context src/detected_objects_context.cpp)
+add_executable(objects_context src/objects_context.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -160,6 +161,7 @@ add_executable(detected_objects_context src/detected_objects_context.cpp)
 target_link_libraries(context_training ${catkin_LIBRARIES})
 target_link_libraries(calculate_context ${catkin_LIBRARIES})
 target_link_libraries(detected_objects_context ${catkin_LIBRARIES})
+target_link_libraries(objects_context ${catkin_LIBRARIES})
 
 #############
 ## Install ##

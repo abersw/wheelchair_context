@@ -13,20 +13,19 @@
 
 using namespace std;
 
-static const int DEBUG_calculateInfluenceWeight = 1;
-static const int DEBUG_listToContextInfo = 0;
 static const int DEBUG_contextListToStruct = 0;
+static const int DEBUG_calculateInfluenceWeight = 0;
+static const int DEBUG_listToContextInfo = 0;
+static const int DEBUG_addObjectToDictionary = 0;
 static const int DEBUG_calculateObjectInstances = 0;
+static const int DEBUG_objectLocationsCallbackDictionary = 0;
 static const int DEBUG_calculateContextScore = 0;
 static const int DEBUG_publishObjectContext = 1;
 static const int DEBUG_objectLocationsCallback = 0;
-static const int DEBUG_objectLocationsCallbackDictionary = 0;
 static const int DEBUG_detectedObjectCallback = 0;
 static const int DEBUG_contextInfoToList = 0;
 static const int DEBUG_contextStructToList = 0;
 static const int DEBUG_main = 0;
-
-TofToolBox *tofToolBox;
 
 struct Objects { //struct for publishing topic
     int id; //get object id from ros msg
@@ -44,9 +43,18 @@ struct Objects { //struct for publishing topic
 };
 struct Objects objectsFileStruct[100000]; //array for storing object data
 int totalObjectsFileStruct = 0; //total objects inside struct
+
 static const int numOfPastFrames = 5;
 struct Objects objectsDetectedStruct[numOfPastFrames][1000]; //5 previous frames, 1000 potential objects
 int totalObjectsDetectedStruct[numOfPastFrames]; //size of struct for previous 5 frames
+
+//struct will store single object names and the instances inside the entire environment
+struct ObjectDictionary {
+    std::string object_name; //object name
+    int instances; //instances of object in environment
+};
+struct ObjectDictionary objectDictionary[1000]; //struct for storing data needed to calc uniqueness of objects
+int totalObjectDictionaryStruct = 0; //total list of objects used to calc uniqueness
 
 struct Context {
     int object_id; //object id
@@ -62,7 +70,6 @@ struct Context {
     int objectDetectedFlag = 0; //turns to 1 if object has been detected when driving around
 };
 //object_id,object_name,object_confidence,object_detected,object_weighting,object_uniqueness,object_instances
-
 struct Context objectContext[100000]; //struct for storing object context info
 int totalObjectContextStruct = 0; //total objects in struct
 
@@ -70,22 +77,12 @@ struct TrainingInfo {
     int times_trained; //real times trained
     int times_trained_max = 5; //value to prevent times trained val becoming too small
     double times_trained_val; //actual value used for calculating object weighting
-    int max_weighting = 1; //max value for object weighting
+    int max_weighting = 100; //max value for object weighting
     int min_weighting = 0; //min value for object weighting
     int max_uniqueness = 1; //max value for object uniqueness
     int min_uniqueness = 0; //min value for object uniqueness
 };
 struct TrainingInfo trainingInfo;
-
-//struct will store single object names and the instances inside the entire environment
-struct ObjectDictionary {
-    std::string object_name; //object name
-    int instances; //instances of object in environment
-};
-struct ObjectDictionary objectDictionary[1000]; //struct for storing data needed to calc uniqueness of objects
-int totalObjectDictionaryStruct = 0; //total list of objects used to calc uniqueness
-
-ros::Publisher *ptr_object_context;
 
 //list of file locations
 std::string wheelchair_dump_loc; //location of wheelchair_dump package
@@ -95,60 +92,9 @@ std::string context_info_name = "info.context"; //name of context training info 
 std::string context_list_loc; //full path to object context file
 std::string context_info_loc; //full path to context training info file
 
-/**
- * influence weight I is calculated as the inverse of
-   the number of times the navigation software has been launched
- *
- * @param pass L: times training times (software launched)
- */
-double calculateInfluenceWeight(int timesTrained) {
-    double influenceWeight = 1 / timesTrained;
-    if (DEBUG_calculateInfluenceWeight) {
-        cout << "Influence (I) is " << influenceWeight << endl;
-    }
-    return influenceWeight;
-}
+ros::Publisher *ptr_object_context;
 
-/**
- * Function to add training session info from param 'fileName' path, start assigning info from each line of file
- *
- * @param pass the path and file name to be created called 'fileName'
- */
-void listToContextInfo(std::string fileName) {
-	ifstream FILE_READER(fileName); //open file
-    int lineNumber = 0; //iterate on each line
-    if (FILE_READER.peek() == std::ifstream::traits_type::eof()) {
-        //don't do anything if next character in file is eof
-        cout << "file is empty" << endl;
-        trainingInfo.times_trained = 1;
-        trainingInfo.times_trained_val = calculateInfluenceWeight(trainingInfo.times_trained);
-    }
-    else {
-        std::string line;
-        while (getline(FILE_READER, line)) { //go through line by line
-            //times trained read in and assign to struct
-            if (lineNumber == 0) {
-                //line 0 contains times trained
-                int getTimesTrained = std::stoi(line);
-                trainingInfo.times_trained = getTimesTrained + 1; //add one to times trained on startup
-                if (trainingInfo.times_trained <= trainingInfo.times_trained_max) { //if times trained is less than or equal to max times trained
-                    trainingInfo.times_trained_val = calculateInfluenceWeight(trainingInfo.times_trained);
-                }
-                else if (trainingInfo.times_trained > trainingInfo.times_trained_max) { //if actual times trained is greater than max times trained
-                    trainingInfo.times_trained_val = calculateInfluenceWeight(trainingInfo.times_trained_max); //assign max times trained to calculation values
-                }
-                else { //throw error if input form context file is invalid
-                    cout << "invalid times trained from context info file" << endl;
-                }
-                if (DEBUG_listToContextInfo) {
-                    cout << "training session is " << trainingInfo.times_trained << endl;
-                    cout << "training value used is " << trainingInfo.times_trained_val << endl;
-                }
-            }
-            lineNumber++; //iterate to next line
-        }
-    }
-}
+TofToolBox *tofToolBox;
 
 /**
  * Function to add context data from param 'fileName' path, start assigning info from each line of file
@@ -161,7 +107,7 @@ void contextListToStruct(std::string fileName) {
     int objectNumber = 0; //iterate on each object
     if (FILE_READER.peek() == std::ifstream::traits_type::eof()) {
         //don't do anything if next character in file is eof
-        cout << "file is empty" << endl;
+        cout << "file is empty, struct will remain empty" << endl;
     }
     else {
         std::string line;
@@ -208,45 +154,59 @@ void contextListToStruct(std::string fileName) {
 }
 
 /**
- * Function to calculate the object context score
+ * influence weight I is calculated as the inverse of
+   the number of times the navigation software has been launched
  *
- * @param parameter 'isContext' is the current position in the array objectContext
- *        object is called from the objectLocationsCallback function
+ * @param pass L: times training times (software launched)
  */
-void calculateContextScore(int isContext) {
-    objectContext[isContext].object_score =
-    objectContext[isContext].object_weighting *
-    objectContext[isContext].object_uniqueness *
-    objectContext[isContext].object_confidence;
-
-    //print the current object context data
-    if (DEBUG_calculateContextScore) {
-        cout << "pos is " << isContext <<
-        ", object uniqueness: " << objectContext[isContext].object_uniqueness <<
-        ", object instances: " << objectContext[isContext].object_instances <<
-        ", object score: " << objectContext[isContext].object_score << endl;
+double calculateInfluenceWeight() {
+    double influenceWeight = 0;
+    if (trainingInfo.times_trained <= trainingInfo.times_trained_max) { //if times trained is less than or equal to max times trained
+        influenceWeight = 1 / trainingInfo.times_trained;
+        trainingInfo.times_trained_val = influenceWeight;
     }
+    else if (trainingInfo.times_trained > trainingInfo.times_trained_max) { //if actual times trained is greater than max times trained
+        influenceWeight = 1 / trainingInfo.times_trained_max;
+        trainingInfo.times_trained_val = influenceWeight; //assign max times trained to calculation values
+    }
+    else { //throw error if input form context file is invalid
+        cout << "invalid times trained from context info file" << endl;
+    }
+    if (DEBUG_calculateInfluenceWeight) {
+        cout << "Influence (I) is " << influenceWeight << endl;
+    }
+    return influenceWeight;
 }
 
 /**
- * Function to get all data required to calculate context, calls calculate context
+ * Function to add training session info from param 'fileName' path, start assigning info from each line of file
  *
+ * @param pass the path and file name to be created called 'fileName'
  */
-void getObjectContext() {
-    for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
-        std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from dictionary
-        int getObjDictInstances = objectDictionary[isDict].instances; //get instances from object dictionary
-        float currentObjDictUniqueness = trainingInfo.max_uniqueness / getObjDictInstances; //main calculation for uniqueness
-        for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //iterate through entire context struct
-            std::string getObjName = objectContext[isContext].object_name;
-            if (getObjDictName == getObjName) {
-                objectContext[isContext].object_uniqueness = currentObjDictUniqueness; //assign current object uniqueness
-                objectContext[isContext].object_instances = getObjDictInstances; //assign instances of objects
-                calculateContextScore(isContext); //calculate object context score
+void listToContextInfo(std::string fileName) {
+	ifstream FILE_READER(fileName); //open file
+    int lineNumber = 0; //iterate on each line
+    if (FILE_READER.peek() == std::ifstream::traits_type::eof()) {
+        //don't do anything if next character in file is eof
+        cout << "file is empty" << endl;
+        trainingInfo.times_trained = 1;
+        calculateInfluenceWeight();
+    }
+    else {
+        std::string line;
+        while (getline(FILE_READER, line)) { //go through line by line
+            //times trained read in and assign to struct
+            if (lineNumber == 0) {
+                //line 0 contains times trained
+                int getTimesTrained = std::stoi(line);
+                trainingInfo.times_trained = getTimesTrained + 1; //add one to times trained on startup
+                calculateInfluenceWeight(); //calculate if influence weighting needs to be capped at max
+                if (DEBUG_listToContextInfo) {
+                    cout << "training session is " << trainingInfo.times_trained << endl;
+                    cout << "training value used is " << trainingInfo.times_trained_val << endl;
+                }
             }
-            else {
-                //don't do anything if objects don't match
-            }
+            lineNumber++; //iterate to next line
         }
     }
 }
@@ -283,7 +243,7 @@ void addObjectToDictionary() {
         }
     }
     //print out list of objects
-    if (DEBUG_objectLocationsCallback) {
+    if (DEBUG_addObjectToDictionary) {
         tofToolBox->printSeparator(1);
         cout << "pre-instance calculations, total size of struct is " << totalObjectDictionaryStruct << endl;
         for (int isDet = 0; isDet < totalObjectDictionaryStruct; isDet++) {
@@ -327,6 +287,50 @@ void calculateObjectInstances() {
     if (DEBUG_objectLocationsCallbackDictionary) {
         for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
             cout << objectDictionary[isDict].object_name << ":" << objectDictionary[isDict].instances << endl;
+        }
+    }
+}
+
+/**
+ * Function to calculate the object context score
+ *
+ * @param parameter 'isContext' is the current position in the array objectContext
+ *        object is called from the objectLocationsCallback function
+ */
+void calculateContextScore(int isContext) {
+    objectContext[isContext].object_score =
+    objectContext[isContext].object_weighting *
+    objectContext[isContext].object_uniqueness *
+    objectContext[isContext].object_confidence;
+
+    //print the current object context data
+    if (DEBUG_calculateContextScore) {
+        cout << "pos is " << isContext <<
+        ", object uniqueness: " << objectContext[isContext].object_uniqueness <<
+        ", object instances: " << objectContext[isContext].object_instances <<
+        ", object score: " << objectContext[isContext].object_score << endl;
+    }
+}
+
+/**
+ * Function to get all data required to calculate context, calls calculate context
+ *
+ */
+void getObjectContext() {
+    for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
+        std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from dictionary
+        int getObjDictInstances = objectDictionary[isDict].instances; //get instances from object dictionary
+        double currentObjDictUniqueness = trainingInfo.max_uniqueness / getObjDictInstances; //main calculation for uniqueness
+        for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //iterate through entire context struct
+            std::string getObjName = objectContext[isContext].object_name;
+            if (getObjDictName == getObjName) {
+                objectContext[isContext].object_uniqueness = currentObjDictUniqueness; //assign current object uniqueness
+                objectContext[isContext].object_instances = getObjDictInstances; //assign instances of objects
+                calculateContextScore(isContext); //calculate object context score
+            }
+            else {
+                //don't do anything if objects don't match
+            }
         }
     }
 }
@@ -404,52 +408,6 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
 }
 
 /**
- * Function to shift data in objects detected struct from pos 'from' to 'to'
- *
- * @param parameter 'from' is the position in the objects detected struct array where data is coming from
- * @param parameter 'to' is the position in the objects detected struct array where data is going to
- */
-void shiftObjectsDetectedStructPos(int from, int to) {
-    //shift data from pos 0 to pos 1, ready for next object detection callback
-    for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[from]; detectedObject++) {
-        objectsDetectedStruct[to][detectedObject].id = objectsDetectedStruct[from][detectedObject].id; //assign object id to struct
-        objectsDetectedStruct[to][detectedObject].object_name = objectsDetectedStruct[from][detectedObject].object_name; //assign object name to struct
-        objectsDetectedStruct[to][detectedObject].object_confidence = objectsDetectedStruct[from][detectedObject].object_confidence; //assign object confidence to struct
-
-        objectsDetectedStruct[to][detectedObject].point_x = objectsDetectedStruct[from][detectedObject].point_x; //assign object vector point x to struct
-        objectsDetectedStruct[to][detectedObject].point_y = objectsDetectedStruct[from][detectedObject].point_y; //assign object vector point y to struct
-        objectsDetectedStruct[to][detectedObject].point_z = objectsDetectedStruct[from][detectedObject].point_z; //assign object vector point z to struct
-
-        objectsDetectedStruct[to][detectedObject].quat_x = objectsDetectedStruct[from][detectedObject].quat_x; //assign object quaternion x to struct
-        objectsDetectedStruct[to][detectedObject].quat_y = objectsDetectedStruct[from][detectedObject].quat_y; //assign object quaternion y to struct
-        objectsDetectedStruct[to][detectedObject].quat_z = objectsDetectedStruct[from][detectedObject].quat_z; //assign object quaternion z to struct
-        objectsDetectedStruct[to][detectedObject].quat_w = objectsDetectedStruct[from][detectedObject].quat_w; //assign object quaternion w to struct
-    }
-    totalObjectsDetectedStruct[to] = totalObjectsDetectedStruct[from]; //set total objects in detection struct to pos 1
-}
-
-/*
- * Function to print off current object info in objects detected struct
-*/
-void printObjectsDetectedStruct(int detPos, int detectedObject) {
-    if (DEBUG_detectedObjectCallback) {
-        cout <<
-        objectsDetectedStruct[detPos][detectedObject].id << "," <<
-        objectsDetectedStruct[detPos][detectedObject].object_name << "," <<
-        objectsDetectedStruct[detPos][detectedObject].object_confidence << "," <<
-
-        objectsDetectedStruct[detPos][detectedObject].point_x << "," <<
-        objectsDetectedStruct[detPos][detectedObject].point_y << "," <<
-        objectsDetectedStruct[detPos][detectedObject].point_z << "," <<
-
-        objectsDetectedStruct[detPos][detectedObject].quat_x << "," <<
-        objectsDetectedStruct[detPos][detectedObject].quat_y << "," <<
-        objectsDetectedStruct[detPos][detectedObject].quat_z << "," <<
-        objectsDetectedStruct[detPos][detectedObject].quat_w << endl;
-    }
-}
-
-/**
  * Function to assign ROS topic msg context to struct
  * @param 'detPos' is the objects detected sequence used - 0 latest, 1 previous
  * @param 'detectedObject' object position in detected array
@@ -469,8 +427,22 @@ void assignObjectsDetectedStruct(int detPos, const wheelchair_msgs::objectLocati
     objectsDetectedStruct[detPos][detectedObject].quat_z = obLoc.quat_z[detectedObject]; //assign object quaternion z to struct
     objectsDetectedStruct[detPos][detectedObject].quat_w = obLoc.quat_w[detectedObject]; //assign object quaternion w to struct
 
-    printObjectsDetectedStruct(detPos, detectedObject); //print out objects detected struct when debug enabled
     //objectsDetectedStruct[detPos][detectedObject].inLastFrame; //don't do anything yet
+    if (DEBUG_detectedObjectCallback) {
+        cout <<
+        objectsDetectedStruct[detPos][detectedObject].id << "," <<
+        objectsDetectedStruct[detPos][detectedObject].object_name << "," <<
+        objectsDetectedStruct[detPos][detectedObject].object_confidence << "," <<
+
+        objectsDetectedStruct[detPos][detectedObject].point_x << "," <<
+        objectsDetectedStruct[detPos][detectedObject].point_y << "," <<
+        objectsDetectedStruct[detPos][detectedObject].point_z << "," <<
+
+        objectsDetectedStruct[detPos][detectedObject].quat_x << "," <<
+        objectsDetectedStruct[detPos][detectedObject].quat_y << "," <<
+        objectsDetectedStruct[detPos][detectedObject].quat_z << "," <<
+        objectsDetectedStruct[detPos][detectedObject].quat_w << endl;
+    }
 }
 
 /**
@@ -499,6 +471,31 @@ void applyNewWeighting(int isContext, double isNewWeighting) {
             cout << "assigned to context struct pos " << isContext << " weighting " << objectContext[isContext].object_weighting << endl;
         }
     }
+}
+
+/**
+ * Function to shift data in objects detected struct from pos 'from' to 'to'
+ *
+ * @param parameter 'from' is the position in the objects detected struct array where data is coming from
+ * @param parameter 'to' is the position in the objects detected struct array where data is going to
+ */
+void shiftObjectsDetectedStructPos(int from, int to) {
+    //shift data from pos 0 to pos 1, ready for next object detection callback
+    for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[from]; detectedObject++) {
+        objectsDetectedStruct[to][detectedObject].id = objectsDetectedStruct[from][detectedObject].id; //assign object id to struct
+        objectsDetectedStruct[to][detectedObject].object_name = objectsDetectedStruct[from][detectedObject].object_name; //assign object name to struct
+        objectsDetectedStruct[to][detectedObject].object_confidence = objectsDetectedStruct[from][detectedObject].object_confidence; //assign object confidence to struct
+
+        objectsDetectedStruct[to][detectedObject].point_x = objectsDetectedStruct[from][detectedObject].point_x; //assign object vector point x to struct
+        objectsDetectedStruct[to][detectedObject].point_y = objectsDetectedStruct[from][detectedObject].point_y; //assign object vector point y to struct
+        objectsDetectedStruct[to][detectedObject].point_z = objectsDetectedStruct[from][detectedObject].point_z; //assign object vector point z to struct
+
+        objectsDetectedStruct[to][detectedObject].quat_x = objectsDetectedStruct[from][detectedObject].quat_x; //assign object quaternion x to struct
+        objectsDetectedStruct[to][detectedObject].quat_y = objectsDetectedStruct[from][detectedObject].quat_y; //assign object quaternion y to struct
+        objectsDetectedStruct[to][detectedObject].quat_z = objectsDetectedStruct[from][detectedObject].quat_z; //assign object quaternion z to struct
+        objectsDetectedStruct[to][detectedObject].quat_w = objectsDetectedStruct[from][detectedObject].quat_w; //assign object quaternion w to struct
+    }
+    totalObjectsDetectedStruct[to] = totalObjectsDetectedStruct[from]; //set total objects in detection struct to pos 1
 }
 
 /**
@@ -557,7 +554,7 @@ void contextWithHistory() {
                         //if new object in detected struct pos 0 is equal to object in context
                         //update object weighting and detected
                         objectContext[isContext].object_detected++; //add one to times object was detected in env
-                        objectContext[isContext].objectDetectedFlag = 1; //object has been found, assign 1 to flag
+                        //objectContext[isContext].objectDetectedFlag = 1; //object has been found, assign 1 to flag
                         double isCurrentWeighting = objectContext[isContext].object_weighting;
                         double isNewWeighting = isCurrentWeighting + trainingInfo.times_trained_val;
                         applyNewWeighting(isContext, isNewWeighting);
@@ -571,52 +568,6 @@ void contextWithHistory() {
         }
     }
     shiftObjectsDetectedStructPos(0,1); //shift detection data from struct pos 0 to 1
-}
-
-/**
- * start calculating weighting value for training session
- *
- */
-void calculateWeightingValue() {
-    if (trainingInfo.times_trained <= trainingInfo.times_trained_max) {
-        //if times trained hasn't grown out of training boundary
-        trainingInfo.times_trained_val = calculateInfluenceWeight(trainingInfo.times_trained);
-        //trainingInfo.times_trained_val = trainingInfo.max_weighting / trainingInfo.times_trained; //calculate session weighting value
-    }
-    else {
-        //times trained outside of training boundary, cap the value to max times trained
-        trainingInfo.times_trained_val = trainingInfo.max_weighting / trainingInfo.times_trained_max; //set to max training session weighting value
-        if (DEBUG_detectedObjectCallback) {
-            cout << "capped times trained to " << trainingInfo.times_trained_max << endl;
-        }
-    }
-    if (DEBUG_detectedObjectCallback) {
-        cout << "current weighting value is " << trainingInfo.times_trained_val << endl;
-    }
-}
-
-/**
- * Reduces object weighting if object has not been found
- *
- */
-void objectNotDetected() {
-    for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //run through entire object context
-        int objectDetectedFlag = objectContext[isContext].objectDetectedFlag; //return 0 if object not detected, 1 if detected
-        if (objectDetectedFlag == 1) { //if object is 1, object has already been detected in the environment
-            //object score has already been calculated
-        }
-        else if (objectDetectedFlag == 0) { //if object remains 0, object has not been detected
-            double isCurrentWeighting = objectContext[isContext].object_weighting; //get current object weighting
-            double isNewWeighting = isCurrentWeighting - trainingInfo.times_trained_val; //
-            applyNewWeighting(isContext, isNewWeighting);
-        }
-    }
-
-    //get object instances and assign to object dictionary struct
-    calculateObjectInstances();
-
-    //get data to calculate context
-    getObjectContext();
 }
 
 /**
@@ -636,8 +587,8 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
     }
     //finished adding detected data to pos 0 in 2d array
 
-    //start calculating weighting value for training session
-    calculateWeightingValue();
+    //recalculate influence weighting for training session
+    calculateInfluenceWeight();
 
     //start off with first object detections in sequence
     if (totalObjectsDetectedStruct[detPos+1] == 0) { //if number of objects in next element is 0, no history exists
@@ -656,7 +607,6 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
         }
         contextWithHistory();
     }
-    //calculate uniqueness here would probably work - doesn't need to detect an object to calculate - probably quicker too...
 }
 
 /**
@@ -708,7 +658,7 @@ int main (int argc, char **argv) {
 
     //take UID from publish_objects_location and pass it through here
     //when msg comes through with ID of object - append a room name to the object
-    ros::init(argc, argv, "detected_objects_context");
+    ros::init(argc, argv, "objects_context");
     ros::NodeHandle n;
 
     wheelchair_dump_loc = tofToolBox->doesPkgExist("wheelchair_dump");//check to see if dump package exists
