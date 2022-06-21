@@ -128,11 +128,17 @@ void listToContextInfo(std::string fileName) {
         while (getline(FILE_READER, line)) { //go through line by line
             //times trained read in and assign to struct
             if (lineNumber == 0) {
-                //if line is 0, must be times trained
+                //line 0 contains times trained
                 int getTimesTrained = std::stoi(line);
                 trainingInfo.times_trained = getTimesTrained + 1; //add one to times trained on startup
-                if (trainingInfo.times_trained > trainingInfo.times_trained_max) { //if actual times trained is greater than max times trained
+                if (trainingInfo.times_trained <= trainingInfo.times_trained_max) { //if times trained is less than or equal to max times trained
+                    trainingInfo.times_trained_val = calculateInfluenceWeight(trainingInfo.times_trained);
+                }
+                else if (trainingInfo.times_trained > trainingInfo.times_trained_max) { //if actual times trained is greater than max times trained
                     trainingInfo.times_trained_val = calculateInfluenceWeight(trainingInfo.times_trained_max); //assign max times trained to calculation values
+                }
+                else { //throw error if input form context file is invalid
+                    cout << "invalid times trained from context info file" << endl;
                 }
                 if (DEBUG_listToContextInfo) {
                     cout << "training session is " << trainingInfo.times_trained << endl;
