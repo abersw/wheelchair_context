@@ -77,7 +77,7 @@ struct TrainingInfo {
     int times_trained; //real times trained
     int times_trained_max = 5; //value to prevent times trained val becoming too small
     double times_trained_val; //actual value used for calculating object weighting
-    int max_weighting = 100; //max value for object weighting
+    int max_weighting = 1; //max value for object weighting
     int min_weighting = 0; //min value for object weighting
     int max_uniqueness = 1; //max value for object uniqueness
     int min_uniqueness = 0; //min value for object uniqueness
@@ -516,7 +516,7 @@ void contextNoHistory(int detPos) {
                 tofToolBox->printSeparator(0);
                 //update object weighting and detected
                 objectContext[isContext].object_detected++; //add one to times object was detected in env
-                objectContext[isContext].objectDetectedFlag = 1; //object has been found, assign 1 to flag
+                //objectContext[isContext].objectDetectedFlag = 1; //object has been found, assign 1 to flag
                 double isCurrentWeighting = objectContext[isContext].object_weighting;
                 double isNewWeighting = isCurrentWeighting + trainingInfo.times_trained_val;
                 applyNewWeighting(isContext, isNewWeighting);
