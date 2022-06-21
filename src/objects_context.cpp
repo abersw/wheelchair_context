@@ -19,10 +19,10 @@ static const int DEBUG_listToContextInfo = 0;
 static const int DEBUG_addObjectToDictionary = 0;
 static const int DEBUG_calculateObjectInstances = 0;
 static const int DEBUG_objectLocationsCallbackDictionary = 0;
-static const int DEBUG_calculateContextScore = 0;
-static const int DEBUG_publishObjectContext = 1;
-static const int DEBUG_objectLocationsCallback = 0;
-static const int DEBUG_detectedObjectCallback = 0;
+static const int DEBUG_calculateContextScore = 1;
+static const int DEBUG_publishObjectContext = 0;
+static const int DEBUG_objectLocationsCallback = 1;
+static const int DEBUG_detectedObjectCallback = 1;
 static const int DEBUG_contextInfoToList = 0;
 static const int DEBUG_contextStructToList = 0;
 static const int DEBUG_main = 0;
@@ -392,6 +392,10 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
         objectContext[isObject].object_id = objectsFileStruct[isObject].id; //assign object id to context struct
         objectContext[isObject].object_name = objectsFileStruct[isObject].object_name; //assign object name to context struct
         objectContext[isObject].object_confidence = objectsFileStruct[isObject].object_confidence; //assign object confidence to context struct
+
+        if (DEBUG_objectLocationsCallback) {
+            cout << objectsFileStruct[isObject].id << ":" << objectsFileStruct[isObject].object_name << endl;
+        }
     }
 
     //create and add object names to object dictionary struct
