@@ -27,6 +27,8 @@ static const int DEBUG_calculateContextScore = 0;
 static const int DEBUG_publishObjectContext = 0;
 static const int DEBUG_objectLocationsCallbackDictionary = 0;
 static const int DEBUG_objectLocationsCallback = 0;
+static const int DEBUG_assignObjectsDetectedStruct = 0;
+static const int DEBUG_detectedObjectCallback = 1;
 static const int DEBUG_main = 0;
 static const int DEBUG_fileLocations = 1;
 
@@ -46,6 +48,10 @@ struct Objects { //struct for publishing topic
 };
 struct Objects objectsFileStruct[100000]; //array for storing object data
 int totalObjectsFileStruct = 0; //total objects inside struct
+
+static const int numOfPastFrames = 5;
+struct Objects objectsDetectedStruct[numOfPastFrames][1000]; //5 previous frames, 1000 potential objects
+int totalObjectsDetectedStruct[numOfPastFrames]; //size of struct for previous 5 frames
 
 struct Context {
     int object_id; //object id
@@ -455,6 +461,44 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
 }
 
 /**
+ * Function to assign ROS topic msg context to struct
+ * @param 'detPos' is the objects detected sequence used - 0 latest, 1 previous
+ * @param 'detectedObject' object position in detected array
+ * @param 'obLoc' belongs to wheelchair_msgs::objectLocations - contains object info
+*/
+void assignObjectsDetectedStruct(int detPos, const wheelchair_msgs::objectLocations obLoc, int detectedObject) {
+    objectsDetectedStruct[detPos][detectedObject].id = obLoc.id[detectedObject]; //assign object id to struct
+    objectsDetectedStruct[detPos][detectedObject].object_name = obLoc.object_name[detectedObject]; //assign object name to struct
+    objectsDetectedStruct[detPos][detectedObject].object_confidence = obLoc.object_confidence[detectedObject]; //assign object confidence to struct
+
+    objectsDetectedStruct[detPos][detectedObject].point_x = obLoc.point_x[detectedObject]; //assign object vector point x to struct
+    objectsDetectedStruct[detPos][detectedObject].point_y = obLoc.point_y[detectedObject]; //assign object vector point y to struct
+    objectsDetectedStruct[detPos][detectedObject].point_z = obLoc.point_z[detectedObject]; //assign object vector point z to struct
+
+    objectsDetectedStruct[detPos][detectedObject].quat_x = obLoc.quat_x[detectedObject]; //assign object quaternion x to struct
+    objectsDetectedStruct[detPos][detectedObject].quat_y = obLoc.quat_y[detectedObject]; //assign object quaternion y to struct
+    objectsDetectedStruct[detPos][detectedObject].quat_z = obLoc.quat_z[detectedObject]; //assign object quaternion z to struct
+    objectsDetectedStruct[detPos][detectedObject].quat_w = obLoc.quat_w[detectedObject]; //assign object quaternion w to struct
+
+    //objectsDetectedStruct[detPos][detectedObject].inLastFrame; //don't do anything yet
+    if (DEBUG_assignObjectsDetectedStruct) {
+        cout <<
+        objectsDetectedStruct[detPos][detectedObject].id << "," <<
+        objectsDetectedStruct[detPos][detectedObject].object_name << "," <<
+        objectsDetectedStruct[detPos][detectedObject].object_confidence << "," <<
+
+        objectsDetectedStruct[detPos][detectedObject].point_x << "," <<
+        objectsDetectedStruct[detPos][detectedObject].point_y << "," <<
+        objectsDetectedStruct[detPos][detectedObject].point_z << "," <<
+
+        objectsDetectedStruct[detPos][detectedObject].quat_x << "," <<
+        objectsDetectedStruct[detPos][detectedObject].quat_y << "," <<
+        objectsDetectedStruct[detPos][detectedObject].quat_z << "," <<
+        objectsDetectedStruct[detPos][detectedObject].quat_w << endl;
+    }
+}
+
+/**
  * Main callback function triggered by detected objects in frame ROS topic
  *
  * @param parameter 'obLoc' is the array of messages from the publish_object_locations node
@@ -462,8 +506,17 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
  */
 void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
     std::this_thread::sleep_for(std::chrono::milliseconds(200)); //wait 200 milliseconds in thread for all objects to update
-    tofToolBox->printSeparator(1);
-
+    if (DEBUG_detectedObjectCallback) {
+        tofToolBox->printSeparator(1);
+    }
+    int totalObjectsInMsg = obLoc.totalObjects; //total detected objects in ROS msg
+    int detPos = 0; //'detPos' is the objects detected sequence used - 0 latest, 1 previous
+    totalObjectsDetectedStruct[detPos] = totalObjectsInMsg;
+    for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[detPos]; detectedObject++) {
+        //add to struct position [0][object number]
+        assignObjectsDetectedStruct(detPos, obLoc, detectedObject); //assign ROS topic msg to struct
+    }
+    //finished adding detected data to pos 0 in 2d array
 }
 
 /**
