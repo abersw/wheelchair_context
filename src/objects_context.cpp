@@ -19,6 +19,7 @@ static const int DEBUG_listToContextInfo = 0;
 static const int DEBUG_addObjectToDictionary = 0;
 static const int DEBUG_calculateObjectInstances = 0;
 static const int DEBUG_calculateObjectUniqueness = 0;
+static const int DEBUG_calculateContextScore = 0;
 static const int DEBUG_objectLocationsCallbackDictionary = 0;
 static const int DEBUG_objectLocationsCallback = 0;
 static const int DEBUG_main = 0;
@@ -319,6 +320,29 @@ double calculateObjectUniqueness(int isDict) {
 }
 
 /**
+ * Function to calculate the object context score
+ *
+ * @param parameter 'isContext' is the current position in the array objectContext
+ *        object is called from the objectLocationsCallback function
+ */
+void calculateContextScore(int isContext) {
+    objectContext[isContext].object_score =
+    objectContext[isContext].object_weighting *
+    objectContext[isContext].object_uniqueness *
+    objectContext[isContext].object_confidence;
+
+    //print the current object context data
+    if (DEBUG_calculateContextScore) {
+        cout << "pos is " << isContext <<
+        ", object name: " << objectContext[isContext].object_name <<
+        ", object weighting: " << objectContext[isContext].object_weighting <<
+        ", object uniqueness: " << objectContext[isContext].object_uniqueness <<
+        ", object instances: " << objectContext[isContext].object_instances <<
+        ", object score: " << objectContext[isContext].object_score << endl;
+    }
+}
+
+/**
  * Function to get all data required to calculate context, calls calculate context
  *
  */
@@ -332,7 +356,7 @@ void getObjectContext() {
             if (getObjDictName == getObjName) {
                 objectContext[isContext].object_uniqueness = currentObjDictUniqueness; //assign current object uniqueness
                 objectContext[isContext].object_instances = getObjDictInstances; //assign instances of objects
-                //calculateContextScore(isContext); //calculate object context score
+                calculateContextScore(isContext); //calculate object context score
             }
             else {
                 //don't do anything if objects don't match
@@ -423,6 +447,9 @@ int main (int argc, char **argv) {
     while(ros::ok()) {
         if (DEBUG_main) {
             cout << "spin \n";
+            for (int i = 0; i < totalObjectContextStruct; i++) { //print out context struct for debugging
+                cout << objectContext[i].object_id << ":" << objectContext[i].object_name << endl;
+            }
         }
         ros::spinOnce();
         rate.sleep();
