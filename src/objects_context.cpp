@@ -14,10 +14,28 @@
 using namespace std;
 
 static const int DEBUG_contextListToStruct = 0;
-static const int DEBUG_calculateInfluenceWeight = 1;
-static const int DEBUG_listToContextInfo = 1;
+static const int DEBUG_calculateInfluenceWeight = 0;
+static const int DEBUG_listToContextInfo = 0;
+static const int DEBUG_objectLocationsCallback = 1;
 static const int DEBUG_main = 0;
 static const int DEBUG_fileLocations = 1;
+
+struct Objects { //struct for publishing topic
+    int id; //get object id from ros msg
+    string object_name; //get object name/class
+    float object_confidence; //get object confidence
+
+    float point_x; //get transform point x
+    float point_y; //get transform point y
+    float point_z; //get transform point z
+
+    float quat_x; //get transform rotation quaternion x
+    float quat_y; //get transform rotation quaternion y
+    float quat_z; //get transform rotation quaternion z
+    float quat_w; //get transform rotation quaternion w
+};
+struct Objects objectsFileStruct[100000]; //array for storing object data
+int totalObjectsFileStruct = 0; //total objects inside struct
 
 struct Context {
     int object_id; //object id
@@ -179,6 +197,43 @@ void listToContextInfo(std::string fileName) {
 }
 
 /**
+ * Main callback function triggered by received ROS topic
+ *
+ * @param parameter 'obLoc' is the array of messages from the publish_object_locations node
+ *        message belongs to wheelchair_msgs objectLocations.msg
+ */
+void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
+    int totalObjectsInMsg = obLoc.totalObjects; //total detected objects in ROS msg
+    totalObjectsFileStruct = totalObjectsInMsg; //set message total objects to total objects in file struct
+    if (DEBUG_objectLocationsCallback) {
+        tofToolBox->printSeparator(0);
+    }
+    for (int isObject = 0; isObject < totalObjectsFileStruct; isObject++) { //iterate through entire msg topic array
+        objectsFileStruct[isObject].id = obLoc.id[isObject]; //assign object id to struct
+        objectsFileStruct[isObject].object_name = obLoc.object_name[isObject]; //assign object name to struct
+        objectsFileStruct[isObject].object_confidence = obLoc.object_confidence[isObject]; //assign object confidence to struct
+
+        objectsFileStruct[isObject].point_x = obLoc.point_x[isObject]; //assign object vector point x to struct
+        objectsFileStruct[isObject].point_y = obLoc.point_y[isObject]; //assign object vector point y to struct
+        objectsFileStruct[isObject].point_z = obLoc.point_z[isObject]; //assign object vector point z to struct
+
+        objectsFileStruct[isObject].quat_x = obLoc.quat_x[isObject]; //assign object quaternion x to struct
+        objectsFileStruct[isObject].quat_y = obLoc.quat_y[isObject]; //assign object quaternion y to struct
+        objectsFileStruct[isObject].quat_z = obLoc.quat_z[isObject]; //assign object quaternion z to struct
+        objectsFileStruct[isObject].quat_w = obLoc.quat_w[isObject]; //assign object quaternion w to struct
+
+        objectContext[isObject].object_id = objectsFileStruct[isObject].id; //assign object id to context struct
+        objectContext[isObject].object_name = objectsFileStruct[isObject].object_name; //assign object name to context struct
+        objectContext[isObject].object_confidence = objectsFileStruct[isObject].object_confidence; //assign object confidence to context struct
+
+        if (DEBUG_objectLocationsCallback) {
+            cout << objectsFileStruct[isObject].id << ":" << objectsFileStruct[isObject].object_name << endl;
+        }
+    }
+
+}
+
+/**
  * Main function that contains ROS info, subscriber callback trigger and while loop to get room name
  *
  * @param argc - number of arguments
@@ -209,6 +264,7 @@ int main (int argc, char **argv) {
     tofToolBox->createFile(context_info_loc); //check to see if file is present, if not create a new one
     listToContextInfo(context_info_loc); //set context training info to struct
 
+    ros::Subscriber objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/objects", 1000, objectLocationsCallback); //full list of objects
 
     ros::Rate rate(10.0);
     while(ros::ok()) {
