@@ -11,6 +11,10 @@
 #include "wheelchair_msgs/objectLocations.h"
 #include "wheelchair_msgs/objectContext.h"
 
+#include <ros/callback_queue.h>
+#include <thread>
+#include <chrono>
+
 using namespace std;
 
 static const int DEBUG_contextListToStruct = 0;
@@ -451,6 +455,18 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
 }
 
 /**
+ * Main callback function triggered by detected objects in frame ROS topic
+ *
+ * @param parameter 'obLoc' is the array of messages from the publish_object_locations node
+ *        message belongs to wheelchair_msgs objectLocations.msg
+ */
+void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(200)); //wait 200 milliseconds in thread for all objects to update
+    tofToolBox->printSeparator(1);
+
+}
+
+/**
  * Main function that contains ROS info, subscriber callback trigger and while loop to get room name
  *
  * @param argc - number of arguments
@@ -482,6 +498,16 @@ int main (int argc, char **argv) {
     listToContextInfo(context_info_loc); //set context training info to struct
 
     ros::Subscriber objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/objects", 1000, objectLocationsCallback); //full list of objects
+
+    //delay object detected thread by a few milliseconds, to allow the full objects list to be processed
+    ros::NodeHandle n_delayThread;
+    ros::CallbackQueue callback_queue_delayThread;
+    n_delayThread.setCallbackQueue(&callback_queue_delayThread);
+    ros::Subscriber detected_objects_sub = n_delayThread.subscribe("wheelchair_robot/dacop/publish_object_locations/detected_objects", 1000, detectedObjectCallback); //detected objects in frame
+    std::thread spinner_thread_delay([&callback_queue_delayThread]() {
+        ros::SingleThreadedSpinner spinner_delay;
+        spinner_delay.spin(&callback_queue_delayThread);
+    });
 
     ros::Publisher object_context_pub = n.advertise<wheelchair_msgs::objectContext>("/wheelchair_robot/context/objects", 1000); //publish object context info for decision making
     ptr_object_context = &object_context_pub; //pointer to publish object context
