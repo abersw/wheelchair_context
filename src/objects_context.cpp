@@ -61,10 +61,10 @@ struct TrainingInfo {
     int times_trained; //real times trained
     int times_trained_max = 5; //value to prevent times trained val becoming too small
     double times_trained_val; //actual value used for calculating object weighting
-    int max_weighting = 1; //max value for object weighting
-    int min_weighting = 0; //min value for object weighting
-    int max_uniqueness = 1; //max value for object uniqueness
-    int min_uniqueness = 0; //min value for object uniqueness
+    double max_weighting = 1.0; //max value for object weighting
+    double min_weighting = 0.0; //min value for object weighting
+    double max_uniqueness = 1.0; //max value for object uniqueness
+    double min_uniqueness = 0.0; //min value for object uniqueness
 };
 struct TrainingInfo trainingInfo;
 
@@ -287,6 +287,33 @@ void calculateObjectInstances() {
     }
 }
 
+void calculateObjectUniqueness() {
+    //do stuff
+}
+
+/**
+ * Function to get all data required to calculate context, calls calculate context
+ *
+ */
+void getObjectContext() {
+    for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
+        std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from dictionary
+        int getObjDictInstances = objectDictionary[isDict].instances; //get instances from object dictionary
+        double currentObjDictUniqueness = trainingInfo.max_uniqueness / getObjDictInstances; //main calculation for uniqueness
+        for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //iterate through entire context struct
+            std::string getObjName = objectContext[isContext].object_name;
+            if (getObjDictName == getObjName) {
+                objectContext[isContext].object_uniqueness = currentObjDictUniqueness; //assign current object uniqueness
+                objectContext[isContext].object_instances = getObjDictInstances; //assign instances of objects
+                //calculateContextScore(isContext); //calculate object context score
+            }
+            else {
+                //don't do anything if objects don't match
+            }
+        }
+    }
+}
+
 /**
  * Main callback function triggered by received ROS topic
  *
@@ -327,6 +354,9 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
 
     //get object instances and assign to object dictionary struct
     calculateObjectInstances();
+
+    //get data to calculate context
+    getObjectContext();
 }
 
 /**
