@@ -121,13 +121,19 @@ void contextListToStruct(std::string fileName) {
  * @param pass L: times training times (software launched)
  */
 double calculateInfluenceWeight() {
-    double influenceWeight = 0;
+    double influenceWeight = 0.0;
     if (trainingInfo.times_trained <= trainingInfo.times_trained_max) { //if times trained is less than or equal to max times trained
-        influenceWeight = 1 / trainingInfo.times_trained;
+        if (DEBUG_calculateInfluenceWeight) {
+            cout << "training times in range" << endl;
+        }
+        influenceWeight = 1.0 / trainingInfo.times_trained;
         trainingInfo.times_trained_val = influenceWeight;
     }
     else if (trainingInfo.times_trained > trainingInfo.times_trained_max) { //if actual times trained is greater than max times trained
-        influenceWeight = 1 / trainingInfo.times_trained_max;
+        if (DEBUG_calculateInfluenceWeight) {
+            cout << "training times out of range 5" << endl;
+        }
+        influenceWeight = 1.0 / trainingInfo.times_trained_max;
         trainingInfo.times_trained_val = influenceWeight; //assign max times trained to calculation values
     }
     else { //throw error if input form context file is invalid
