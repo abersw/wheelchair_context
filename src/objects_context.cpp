@@ -20,6 +20,7 @@ static const int DEBUG_addObjectToDictionary = 0;
 static const int DEBUG_calculateObjectInstances = 0;
 static const int DEBUG_calculateObjectUniqueness = 0;
 static const int DEBUG_calculateContextScore = 0;
+static const int DEBUG_publishObjectContext = 0;
 static const int DEBUG_objectLocationsCallbackDictionary = 0;
 static const int DEBUG_objectLocationsCallback = 0;
 static const int DEBUG_main = 0;
@@ -85,6 +86,8 @@ std::string context_list_name = "objects.context"; //name of object context file
 std::string context_info_name = "info.context"; //name of context training info file
 std::string context_list_loc; //full path to object context file
 std::string context_info_loc; //full path to context training info file
+
+ros::Publisher *ptr_object_context;
 
 TofToolBox *tofToolBox;
 
@@ -366,6 +369,40 @@ void getObjectContext() {
 }
 
 /**
+ * Publish context data as ROS msg array
+ *
+ */
+void publishObjectContext() {
+    wheelchair_msgs::objectContext objContext;
+
+    for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
+        if (DEBUG_publishObjectContext) {
+            cout <<
+            objectContext[isContext].object_id << ", " <<
+            objectContext[isContext].object_name << ", " <<
+            objectContext[isContext].object_confidence << ", " <<
+            objectContext[isContext].object_detected << ", " <<
+
+            objectContext[isContext].object_weighting << ", " <<
+            objectContext[isContext].object_uniqueness << ", " <<
+            objectContext[isContext].object_score << ", " <<
+            objectContext[isContext].object_instances << endl;
+        }
+        objContext.object_id.push_back(objectContext[isContext].object_id);
+        objContext.object_name.push_back(objectContext[isContext].object_name);
+        objContext.object_confidence.push_back(objectContext[isContext].object_confidence);
+        objContext.object_detected.push_back(objectContext[isContext].object_detected);
+
+        objContext.object_weighting.push_back(objectContext[isContext].object_weighting);
+        objContext.object_uniqueness.push_back(objectContext[isContext].object_uniqueness);
+        objContext.object_score.push_back(objectContext[isContext].object_score);
+        objContext.object_instances.push_back(objectContext[isContext].object_instances);
+    }
+    objContext.totalObjects = totalObjectContextStruct;
+    ptr_object_context->publish(objContext);
+}
+
+/**
  * Main callback function triggered by received ROS topic
  *
  * @param parameter 'obLoc' is the array of messages from the publish_object_locations node
@@ -408,6 +445,9 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
 
     //get data to calculate context
     getObjectContext();
+
+    //publish calculated context via ROS msg
+    publishObjectContext(); //publish object context data as ROS msg
 }
 
 /**
@@ -442,6 +482,9 @@ int main (int argc, char **argv) {
     listToContextInfo(context_info_loc); //set context training info to struct
 
     ros::Subscriber objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/objects", 1000, objectLocationsCallback); //full list of objects
+
+    ros::Publisher object_context_pub = n.advertise<wheelchair_msgs::objectContext>("/wheelchair_robot/context/objects", 1000); //publish object context info for decision making
+    ptr_object_context = &object_context_pub; //pointer to publish object context
 
     ros::Rate rate(10.0);
     while(ros::ok()) {
