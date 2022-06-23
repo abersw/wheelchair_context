@@ -16,7 +16,8 @@ using namespace std;
 static const int DEBUG_contextListToStruct = 0;
 static const int DEBUG_calculateInfluenceWeight = 0;
 static const int DEBUG_listToContextInfo = 0;
-static const int DEBUG_objectLocationsCallback = 1;
+static const int DEBUG_addObjectToDictionary = 1;
+static const int DEBUG_objectLocationsCallback = 0;
 static const int DEBUG_main = 0;
 static const int DEBUG_fileLocations = 1;
 
@@ -64,6 +65,14 @@ struct TrainingInfo {
     int min_uniqueness = 0; //min value for object uniqueness
 };
 struct TrainingInfo trainingInfo;
+
+//struct will store single object names and the instances inside the entire environment
+struct ObjectDictionary {
+    std::string object_name; //object name
+    int instances; //instances of object in environment
+};
+struct ObjectDictionary objectDictionary[1000]; //struct for storing data needed to calc uniqueness of objects
+int totalObjectDictionaryStruct = 0; //total list of objects used to calc uniqueness
 
 //list of file locations
 std::string wheelchair_dump_loc; //location of wheelchair_dump package
@@ -197,6 +206,48 @@ void listToContextInfo(std::string fileName) {
 }
 
 /**
+ * Function to create a dictionary of objects from the main objects array
+ *
+ */
+void addObjectToDictionary() {
+    totalObjectContextStruct = totalObjectsFileStruct; //set object context struct size to replicate size of object struct
+    for (int isObject = 0; isObject < totalObjectContextStruct; isObject++) { //run through all objects
+        int objectMatched = 0; //flag variable sets to 1 if object is already in dictionary
+        std::string getObjName = objectsFileStruct[isObject].object_name; //get object name from objectsFileStruct
+        if (totalObjectDictionaryStruct == 0) {
+            objectDictionary[0].object_name = getObjName; //set object name in first element from full objects struct
+            totalObjectDictionaryStruct++; //add 1 to total objects in dictionary
+        }
+        for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) { //iterate through dictionary struct
+            std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from objectDictionary
+            if (getObjName == getObjDictName) { //if name from objectsFileStruct and objectDictionary is the same
+                objectMatched = 1; //set to true
+            }
+            objectDictionary[isDict].instances = 0; //set objects back to 0
+        }
+        if (objectMatched) {
+            //if object is already in struct, don't add anything
+            //instances calculated in calculateObjectInstances
+        }
+        else {
+            //add object name to struct
+            objectDictionary[totalObjectDictionaryStruct].object_name = getObjName; //assign name from objectsFileStruct
+            objectDictionary[totalObjectDictionaryStruct].instances = 0; //set instances to 0
+            totalObjectDictionaryStruct++; //add for next element in array
+        }
+    }
+    //print out list of objects
+    if (DEBUG_addObjectToDictionary) {
+        tofToolBox->printSeparator(1);
+        cout << "pre-instance calculations, total size of struct is " << totalObjectDictionaryStruct << endl;
+        for (int isDet = 0; isDet < totalObjectDictionaryStruct; isDet++) {
+            cout << objectDictionary[isDet].object_name << ":" << objectDictionary[isDet].instances << endl;
+        }
+        tofToolBox->printSeparator(1);
+    }
+}
+
+/**
  * Main callback function triggered by received ROS topic
  *
  * @param parameter 'obLoc' is the array of messages from the publish_object_locations node
@@ -230,6 +281,9 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
             cout << objectsFileStruct[isObject].id << ":" << objectsFileStruct[isObject].object_name << endl;
         }
     }
+
+    //create and add object names to object dictionary struct
+    addObjectToDictionary();
 
 }
 
