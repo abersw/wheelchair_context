@@ -17,8 +17,9 @@ static const int DEBUG_contextListToStruct = 0;
 static const int DEBUG_calculateInfluenceWeight = 0;
 static const int DEBUG_listToContextInfo = 0;
 static const int DEBUG_addObjectToDictionary = 0;
-static const int DEBUG_calculateObjectInstances = 1;
-static const int DEBUG_objectLocationsCallbackDictionary = 1;
+static const int DEBUG_calculateObjectInstances = 0;
+static const int DEBUG_calculateObjectUniqueness = 0;
+static const int DEBUG_objectLocationsCallbackDictionary = 0;
 static const int DEBUG_objectLocationsCallback = 0;
 static const int DEBUG_main = 0;
 static const int DEBUG_fileLocations = 1;
@@ -287,8 +288,34 @@ void calculateObjectInstances() {
     }
 }
 
-void calculateObjectUniqueness() {
-    //do stuff
+double calculateObjectUniqueness(int isDict) {
+    double currentObjectUniqueness = 0.0;
+    double calculatedUniqueness = 1.0 / objectDictionary[isDict].instances;
+    if ((calculatedUniqueness <= trainingInfo.max_uniqueness) && (calculatedUniqueness >= trainingInfo.min_uniqueness)) {
+        currentObjectUniqueness = calculatedUniqueness;
+        if (DEBUG_calculateObjectUniqueness) {
+            cout << "object uniqueness is in range: " << currentObjectUniqueness << endl;
+        }
+    }
+    else if (calculatedUniqueness > trainingInfo.max_uniqueness) {
+        currentObjectUniqueness = trainingInfo.max_uniqueness;
+        if (DEBUG_calculateObjectUniqueness) {
+            cout << "object uniqueness is larger than range, " << calculatedUniqueness << " reverted to : " << currentObjectUniqueness << endl;
+        }
+    }
+    else if (calculatedUniqueness < trainingInfo.min_uniqueness) {
+        currentObjectUniqueness = trainingInfo.min_uniqueness;
+        if (DEBUG_calculateObjectUniqueness) {
+            cout << "object uniqueness is below range, " << calculatedUniqueness << " reverted to : " << currentObjectUniqueness << endl;
+        }
+    }
+    else { //throw error if input form context file is invalid
+        cout << "invalid times trained from context info file" << endl;
+    }
+    if (DEBUG_calculateObjectUniqueness) {
+        cout << "Uniqueness (U) is " << objectDictionary[isDict].object_name << ":" << currentObjectUniqueness << endl;
+    }
+    return currentObjectUniqueness;
 }
 
 /**
@@ -299,7 +326,7 @@ void getObjectContext() {
     for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
         std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from dictionary
         int getObjDictInstances = objectDictionary[isDict].instances; //get instances from object dictionary
-        double currentObjDictUniqueness = trainingInfo.max_uniqueness / getObjDictInstances; //main calculation for uniqueness
+        double currentObjDictUniqueness = calculateObjectUniqueness(isDict); //main calculation for uniqueness
         for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //iterate through entire context struct
             std::string getObjName = objectContext[isContext].object_name;
             if (getObjDictName == getObjName) {
