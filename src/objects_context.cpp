@@ -517,6 +517,9 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
         assignObjectsDetectedStruct(detPos, obLoc, detectedObject); //assign ROS topic msg to struct
     }
     //finished adding detected data to pos 0 in 2d array
+
+    //recalculate influence weighting for training session
+    calculateInfluenceWeight();
 }
 
 /**
