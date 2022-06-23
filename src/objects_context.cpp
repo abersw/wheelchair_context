@@ -28,7 +28,9 @@ static const int DEBUG_publishObjectContext = 0;
 static const int DEBUG_objectLocationsCallbackDictionary = 0;
 static const int DEBUG_objectLocationsCallback = 0;
 static const int DEBUG_assignObjectsDetectedStruct = 0;
-static const int DEBUG_detectedObjectCallback = 1;
+static const int DEBUG_contextNoHistory = 1;
+static const int DEBUG_contextWithHistory = 1;
+static const int DEBUG_detectedObjectCallback = 0;
 static const int DEBUG_main = 0;
 static const int DEBUG_fileLocations = 1;
 
@@ -499,6 +501,137 @@ void assignObjectsDetectedStruct(int detPos, const wheelchair_msgs::objectLocati
 }
 
 /**
+ * Apply new object context weighting to struct
+ *
+ */
+void applyNewWeighting(int isContext, double isNewWeighting) {
+    if (DEBUG_detectedObjectCallback) {
+        cout << "new weighting is " << isNewWeighting << endl;
+    }
+    if (isNewWeighting > trainingInfo.max_weighting) { //if outside of max weighting
+        objectContext[isContext].object_weighting = trainingInfo.max_weighting; //assign object weighting max weight
+        if (DEBUG_detectedObjectCallback) {
+            cout << "set weighting to max: " << trainingInfo.max_weighting << endl;
+        }
+    }
+    else if (isNewWeighting < trainingInfo.min_weighting) { //if outside of min weighting
+        objectContext[isContext].object_weighting = trainingInfo.min_weighting; //assign object weighting min weight
+        if (DEBUG_detectedObjectCallback) {
+            cout << "set weighting to min: " << trainingInfo.min_weighting << endl;
+        }
+    }
+    else { //if inside bounding weight
+        objectContext[isContext].object_weighting = isNewWeighting; //assign object weighting caluclated weight
+        if (DEBUG_detectedObjectCallback) {
+            cout << "assigned to context struct pos " << isContext << " weighting " << objectContext[isContext].object_weighting << endl;
+        }
+    }
+}
+
+/**
+ * Function to shift data in objects detected struct from pos 'from' to 'to'
+ *
+ * @param parameter 'from' is the position in the objects detected struct array where data is coming from
+ * @param parameter 'to' is the position in the objects detected struct array where data is going to
+ */
+void shiftObjectsDetectedStructPos(int from, int to) {
+    //shift data from pos 0 to pos 1, ready for next object detection callback
+    for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[from]; detectedObject++) {
+        objectsDetectedStruct[to][detectedObject].id = objectsDetectedStruct[from][detectedObject].id; //assign object id to struct
+        objectsDetectedStruct[to][detectedObject].object_name = objectsDetectedStruct[from][detectedObject].object_name; //assign object name to struct
+        objectsDetectedStruct[to][detectedObject].object_confidence = objectsDetectedStruct[from][detectedObject].object_confidence; //assign object confidence to struct
+
+        objectsDetectedStruct[to][detectedObject].point_x = objectsDetectedStruct[from][detectedObject].point_x; //assign object vector point x to struct
+        objectsDetectedStruct[to][detectedObject].point_y = objectsDetectedStruct[from][detectedObject].point_y; //assign object vector point y to struct
+        objectsDetectedStruct[to][detectedObject].point_z = objectsDetectedStruct[from][detectedObject].point_z; //assign object vector point z to struct
+
+        objectsDetectedStruct[to][detectedObject].quat_x = objectsDetectedStruct[from][detectedObject].quat_x; //assign object quaternion x to struct
+        objectsDetectedStruct[to][detectedObject].quat_y = objectsDetectedStruct[from][detectedObject].quat_y; //assign object quaternion y to struct
+        objectsDetectedStruct[to][detectedObject].quat_z = objectsDetectedStruct[from][detectedObject].quat_z; //assign object quaternion z to struct
+        objectsDetectedStruct[to][detectedObject].quat_w = objectsDetectedStruct[from][detectedObject].quat_w; //assign object quaternion w to struct
+    }
+    totalObjectsDetectedStruct[to] = totalObjectsDetectedStruct[from]; //set total objects in detection struct to pos 1
+}
+
+/**
+ * No previous history, so add to weighting
+ *
+ */
+void contextNoHistory(int detPos) {
+    for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[detPos]; detectedObject++) { //run through struct of pos 0
+        //run through each detected object
+        int getDetObjID = objectsDetectedStruct[detPos][detectedObject].id; //get id
+        std::string getDetObjName = objectsDetectedStruct[detPos][detectedObject].object_name; //get name
+
+        for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //run through entire context struct
+            int getContextID = objectContext[isContext].object_id; //get context ID
+            std::string getContextName = objectContext[isContext].object_name; //get context name
+
+            if ((getDetObjID == getContextID) && (getDetObjName == getContextName)) { //if object ID and name are equal
+                if (DEBUG_contextNoHistory) {
+                    tofToolBox->printSeparator(0);
+                    cout << "found object " << getDetObjID << " in det and context struct" << endl;
+                }
+                //update object weighting and detected
+                objectContext[isContext].object_detected++; //add one to times object was detected in env
+                //objectContext[isContext].objectDetectedFlag = 1; //object has been found, assign 1 to flag
+                double isCurrentWeighting = objectContext[isContext].object_weighting;
+                double isNewWeighting = isCurrentWeighting + trainingInfo.times_trained_val;
+                applyNewWeighting(isContext, isNewWeighting);
+            }
+
+        }
+    }
+    shiftObjectsDetectedStructPos(0,1); //shift detection data from struct pos 0 to 1
+}
+
+/**
+ * History exists, therefore compare with history to see if object was in previous frame
+ *
+ */
+void contextWithHistory() {
+    for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[0]; detectedObject++) { //run through struct of detected objects
+        int getDetObjID = objectsDetectedStruct[0][detectedObject].id; //get id
+        std::string getDetObjName = objectsDetectedStruct[0][detectedObject].object_name; //get name
+
+        for (int lastDetectedObject = 0; lastDetectedObject < totalObjectsDetectedStruct[1]; lastDetectedObject++) { //run through struct of last detected objects
+            int getLastObjID = objectsDetectedStruct[1][lastDetectedObject].id; //get id
+            std::string getLastObjName = objectsDetectedStruct[1][lastDetectedObject].object_name; //get name
+
+            if ((getDetObjID == getLastObjID) && (getDetObjName == getLastObjName)) { //if object id and name match, it can still see the same object
+                //if match found, do not recalculate weighting - because it must be the same object in the frame
+            }
+            else {
+                //run through entire context struct for returning correct object id position
+                for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
+                    int getContextID = objectContext[isContext].object_id; //get context ID
+                    std::string getContextName = objectContext[isContext].object_name; //get context name
+
+                    if ((getDetObjID == getContextID) && (getDetObjName == getContextName)) { //if object ID and name are equal
+                        if (DEBUG_contextWithHistory) {
+                            tofToolBox->printSeparator(0);
+                            cout << "found object " << getDetObjID << " in both history structs" << endl;
+                        }
+                        //if new object in detected struct pos 0 is equal to object in context
+                        //update object weighting and detected
+                        objectContext[isContext].object_detected++; //add one to times object was detected in env
+                        //objectContext[isContext].objectDetectedFlag = 1; //object has been found, assign 1 to flag
+                        double isCurrentWeighting = objectContext[isContext].object_weighting;
+                        double isNewWeighting = isCurrentWeighting + trainingInfo.times_trained_val;
+                        applyNewWeighting(isContext, isNewWeighting);
+                    }
+                    else {
+                        //skip over, don't assign anything if detected object and context don't match
+                    }
+                }
+            }
+
+        }
+    }
+    shiftObjectsDetectedStructPos(0,1); //shift detection data from struct pos 0 to 1
+}
+
+/**
  * Main callback function triggered by detected objects in frame ROS topic
  *
  * @param parameter 'obLoc' is the array of messages from the publish_object_locations node
@@ -520,6 +653,17 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
 
     //recalculate influence weighting for training session
     calculateInfluenceWeight();
+
+    //start off with first object detections in sequence
+    if (totalObjectsDetectedStruct[detPos+1] == 0) { //if number of objects in next element is 0, no history exists
+        //no history to compare with, therefore do all the calculation stuff
+        if (DEBUG_detectedObjectCallback) {
+            cout << "nothing in struct pos " << detPos+1 << endl;
+        }
+        //first work out whether to add or delete from existing weighting value
+        //no previous history, so add to weighting
+        contextNoHistory(detPos);
+    }
 }
 
 /**
