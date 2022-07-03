@@ -31,6 +31,8 @@ static const int DEBUG_assignObjectsDetectedStruct = 0;
 static const int DEBUG_contextNoHistory = 1;
 static const int DEBUG_contextWithHistory = 1;
 static const int DEBUG_detectedObjectCallback = 0;
+static const int DEBUG_contextInfoToList = 0;
+static const int DEBUG_contextStructToList = 0;
 static const int DEBUG_main = 0;
 static const int DEBUG_fileLocations = 1;
 
@@ -102,6 +104,8 @@ std::string context_info_loc; //full path to context training info file
 ros::Publisher *ptr_object_context;
 
 TofToolBox *tofToolBox;
+
+static const int saveDataToList = 0;
 
 /**
  * Function to add context data from param 'fileName' path, start assigning info from each line of file
@@ -667,6 +671,42 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
 }
 
 /**
+ * Function to save all context training info, ready for using on next startup
+ */
+void contextInfoToList() {
+    ofstream FILE_WRITER;
+	FILE_WRITER.open(context_info_loc);
+    FILE_WRITER << trainingInfo.times_trained << "\n";
+    FILE_WRITER.close();
+    if (DEBUG_contextInfoToList) {
+        cout << "finished saving context training information" << endl;
+    }
+}
+
+/**
+ * Last function to save all struct data into files, ready for using on next startup
+ */
+void contextStructToList() {
+    //object_id,object_name,object_confidence,object_detected,object_weighting,object_uniqueness,object_instances
+    ofstream FILE_WRITER;
+	FILE_WRITER.open(context_list_loc);
+    for (int isObject = 0; isObject < totalObjectContextStruct; isObject++) {
+        FILE_WRITER <<
+        objectContext[isObject].object_id << "," <<
+        objectContext[isObject].object_name << "," <<
+        objectContext[isObject].object_confidence << "," <<
+        objectContext[isObject].object_detected << "," <<
+        objectContext[isObject].object_weighting << "," <<
+        objectContext[isObject].object_uniqueness << "," <<
+        objectContext[isObject].object_instances << "\n";
+    }
+    FILE_WRITER.close();
+    if (DEBUG_contextStructToList) {
+        cout << "finished saving context struct" << endl;
+    }
+}
+
+/**
  * Main function that contains ROS info, subscriber callback trigger and while loop to get room name
  *
  * @param argc - number of arguments
@@ -723,6 +763,10 @@ int main (int argc, char **argv) {
         ros::spinOnce();
         rate.sleep();
     }
-
+    //objectNotDetected(); //call function to reduce context score
+    if (saveDataToList) {
+        contextInfoToList(); //save training info
+        contextStructToList(); //save object context
+    }
     return 0;
 }
