@@ -18,7 +18,7 @@
 using namespace std;
 
 static const int DEBUG_contextListToStruct = 0;
-static const int DEBUG_calculateInfluenceWeight = 1;
+static const int DEBUG_calculateInfluenceWeight = 0;
 static const int DEBUG_listToContextInfo = 0;
 static const int DEBUG_addObjectToDictionary = 0;
 static const int DEBUG_calculateObjectInstances = 0;
@@ -27,9 +27,9 @@ static const int DEBUG_calculateContextScore = 0;
 static const int DEBUG_publishObjectContext = 0;
 static const int DEBUG_objectLocationsCallbackDictionary = 0;
 static const int DEBUG_objectLocationsCallback = 0;
-static const int DEBUG_assignObjectsDetectedStruct = 1;
-static const int DEBUG_contextNoHistory = 1;
-static const int DEBUG_contextWithHistory = 1;
+static const int DEBUG_assignObjectsDetectedStruct = 0;
+static const int DEBUG_contextNoHistory = 0;
+static const int DEBUG_contextWithHistory = 0;
 static const int DEBUG_detectedObjectCallback = 0;
 static const int DEBUG_contextInfoToList = 0;
 static const int DEBUG_contextStructToList = 0;
@@ -105,7 +105,7 @@ ros::Publisher *ptr_object_context;
 
 TofToolBox *tofToolBox;
 
-static const int saveDataToList = 0;
+static const int saveDataToList = 1;
 
 /**
  * Function to add context data from param 'fileName' path, start assigning info from each line of file
@@ -645,6 +645,7 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
     std::this_thread::sleep_for(std::chrono::milliseconds(200)); //wait 200 milliseconds in thread for all objects to update
     if (DEBUG_detectedObjectCallback) {
         tofToolBox->printSeparator(1);
+        cout << "new objects detected message received" << endl;
     }
     int detPos = 0; //'detPos' is the objects detected sequence used - 0 latest, 1 previous
     totalObjectsDetectedStruct[detPos] = obLoc.totalObjects; //total detected objects in ROS msg
@@ -667,6 +668,14 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
         //no previous history, so add to weighting
         contextNoHistory(detPos);
     }
+    else {
+        //history exists, therefore compare with history to see if object was in previous frame
+        if (DEBUG_detectedObjectCallback) {
+            cout << "data exists in struct pos " << detPos+1 << endl;
+        }
+        contextWithHistory();
+    }
+    //calculate uniqueness here would probably work - doesn't need to detect an object to calculate - probably quicker too...
 }
 
 /**
