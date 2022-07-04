@@ -10,6 +10,7 @@
 
 #include "wheelchair_msgs/objectLocations.h"
 #include "wheelchair_msgs/objectContext.h"
+#include "wheelchair_msgs/missingObjects.h"
 
 #include <ros/callback_queue.h>
 #include <thread>
@@ -678,6 +679,12 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
     //calculate uniqueness here would probably work - doesn't need to detect an object to calculate - probably quicker too...
 }
 
+void missingObjectCallback(const wheelchair_msgs::missingObjects::ConstPtr& misObj) {
+    for (int isMissingObject = 0; isMissingObject < misObj->totalObjects; isMissingObject++) {
+        cout << "missing object detected " << misObj->id[isMissingObject] << ":" << misObj->object_name[isMissingObject] << endl;
+    }
+}
+
 /**
  * Function to save all context training info, ready for using on next startup
  */
@@ -755,6 +762,16 @@ int main (int argc, char **argv) {
     std::thread spinner_thread_delay([&callback_queue_delayThread]() {
         ros::SingleThreadedSpinner spinner_delay;
         spinner_delay.spin(&callback_queue_delayThread);
+    });
+
+    //delay object missing thread by a few milliseconds, to allow the full objects list to be processed
+    ros::NodeHandle n_missingObjectsThread;
+    ros::CallbackQueue callback_queue_missingObjectsThread;
+    n_missingObjectsThread.setCallbackQueue(&callback_queue_missingObjectsThread);
+    ros::Subscriber missing_objects_sub = n_missingObjectsThread.subscribe("wheelchair_robot/dacop/missing_objects/missing", 1000, missingObjectCallback); //detected objects in frame
+    std::thread spinner_thread_missingObjects([&callback_queue_missingObjectsThread]() {
+        ros::SingleThreadedSpinner spinner_missingObjects;
+        spinner_missingObjects.spin(&callback_queue_missingObjectsThread);
     });
 
     ros::Publisher object_context_pub = n.advertise<wheelchair_msgs::objectContext>("/wheelchair_robot/context/objects", 1000); //publish object context info for decision making
