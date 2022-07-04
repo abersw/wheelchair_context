@@ -18,7 +18,7 @@
 using namespace std;
 
 static const int DEBUG_contextListToStruct = 0;
-static const int DEBUG_calculateInfluenceWeight = 0;
+static const int DEBUG_calculateInfluenceWeight = 1;
 static const int DEBUG_listToContextInfo = 0;
 static const int DEBUG_addObjectToDictionary = 0;
 static const int DEBUG_calculateObjectInstances = 0;
@@ -27,7 +27,7 @@ static const int DEBUG_calculateContextScore = 0;
 static const int DEBUG_publishObjectContext = 0;
 static const int DEBUG_objectLocationsCallbackDictionary = 0;
 static const int DEBUG_objectLocationsCallback = 0;
-static const int DEBUG_assignObjectsDetectedStruct = 0;
+static const int DEBUG_assignObjectsDetectedStruct = 1;
 static const int DEBUG_contextNoHistory = 1;
 static const int DEBUG_contextWithHistory = 1;
 static const int DEBUG_detectedObjectCallback = 0;
@@ -646,9 +646,8 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
     if (DEBUG_detectedObjectCallback) {
         tofToolBox->printSeparator(1);
     }
-    int totalObjectsInMsg = obLoc.totalObjects; //total detected objects in ROS msg
     int detPos = 0; //'detPos' is the objects detected sequence used - 0 latest, 1 previous
-    totalObjectsDetectedStruct[detPos] = totalObjectsInMsg;
+    totalObjectsDetectedStruct[detPos] = obLoc.totalObjects; //total detected objects in ROS msg
     for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[detPos]; detectedObject++) {
         //add to struct position [0][object number]
         assignObjectsDetectedStruct(detPos, obLoc, detectedObject); //assign ROS topic msg to struct
