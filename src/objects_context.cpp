@@ -18,6 +18,7 @@
 
 using namespace std;
 
+static const int DEBUG_populateObjectsToTrack = 0;
 static const int DEBUG_contextListToStruct = 0;
 static const int DEBUG_calculateInfluenceWeight = 0;
 static const int DEBUG_listToContextInfo = 0;
@@ -107,6 +108,34 @@ struct ObjectDictionary {
 struct ObjectDictionary objectDictionary[1000]; //struct for storing data needed to calc uniqueness of objects
 int totalObjectDictionaryStruct = 0; //total list of objects used to calc uniqueness
 
+//context data to save
+struct TrackingObjects {
+    int object_id;
+    string object_name;
+    float object_confidence; //object confidence from dnn
+
+    ros::Time object_timestamp; //should be saved in seconds .toSec()
+
+    //context info
+    int times_trained; //real times trained
+    double times_trained_val; //actual value used for calculating object weighting
+
+    //context data
+    int object_detected; //times object has been detected
+
+    double object_weighting; //object weighting result
+    double object_uniqueness; //object uniqueness result
+    double object_score; //calculation of object weighting and uniqueness
+    int object_instances; //number of objects in env
+};
+static const int totalObjectsTracked = 100;
+static const long totalObjectsTrackedCaptured = 10000;
+struct TrackingObjects trackingObjects[totalObjectsTracked][totalObjectsTrackedCaptured];
+
+struct TrackingObjects trackingObjectsList[totalObjectsTracked];
+//std::map<string, string> trackingObjectsListRaw = {{"42", "refrigerator"}, {"53", "refrigerator"}};
+string trackingObjectsListRaw[] = {"42", "refrigerator", "53", "sink"};
+
 //list of file locations
 std::string wheelchair_dump_loc; //location of wheelchair_dump package
 std::string dump_context_loc = "/dump/context/"; //location of context dir in wheelchair_dump
@@ -120,6 +149,33 @@ ros::Publisher *ptr_object_context;
 TofToolBox *tofToolBox;
 
 static const int saveDataToList = 1;
+
+void populateObjectsToTrack() {
+    int trackerArraySize = *(&trackingObjectsListRaw + 1) - trackingObjectsListRaw;
+    int pos = 0;
+    int counter = 0;
+    for (int i = 0; i < trackerArraySize; i++) {
+        if (pos == 0) {
+            trackingObjectsList[counter].object_id = std::stoi(trackingObjectsListRaw[i]);
+            pos++;
+        }
+        else if (pos == 1) {
+            trackingObjectsList[counter].object_name = trackingObjectsListRaw[i];
+            pos = 0;
+            counter++;
+        }
+        else {
+            if (DEBUG_populateObjectsToTrack) {
+                cout << "something went wrong during allocation" << endl;
+            }
+        }
+    }
+    if (DEBUG_populateObjectsToTrack) {
+        for (int i = 0; i < trackerArraySize/2; i++) {
+            cout << trackingObjectsList[i].object_id << ":" << trackingObjectsList[i].object_name << endl;
+        }
+    }
+}
 
 /**
  * Function to add context data from param 'fileName' path, start assigning info from each line of file
@@ -913,6 +969,8 @@ int main (int argc, char **argv) {
     }
     tofToolBox->createFile(context_info_loc); //check to see if file is present, if not create a new one
     listToContextInfo(context_info_loc); //set context training info to struct
+
+    populateObjectsToTrack();
 
     ros::Subscriber objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/objects", 1000, objectLocationsCallback); //full list of objects
 
