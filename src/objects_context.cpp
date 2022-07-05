@@ -726,6 +726,10 @@ void missingObjectCallback(const wheelchair_msgs::missingObjects::ConstPtr& misO
         //add to struct position [0][object number]
         assignObjectsMissingStruct(detPos, misObj, isMissingObject); //assign ROS topic msg to struct
     }
+    //finished adding missing object data to pos 0 in 2d array
+
+    //recalculate influence weighting for training session
+    calculateInfluenceWeight();
 }
 
 /**
