@@ -31,7 +31,9 @@ static const int DEBUG_objectLocationsCallback = 0;
 static const int DEBUG_assignObjectsDetectedStruct = 0;
 static const int DEBUG_assignObjectsMissingStruct = 0;
 static const int DEBUG_contextNoHistory = 0;
+static const int DEBUG_contextMissingNoHistory = 0;
 static const int DEBUG_contextWithHistory = 0;
+static const int DEBUG_contextMissingWithHistory = 1;
 static const int DEBUG_detectedObjectCallback = 0;
 static const int DEBUG_missingObjectCallback = 1;
 static const int DEBUG_contextInfoToList = 0;
@@ -591,6 +593,22 @@ void shiftObjectsDetectedStructPos(int from, int to) {
 }
 
 /**
+ * Function to shift data in objects missing struct from pos 'from' to 'to'
+ *
+ * @param parameter 'from' is the position in the objects missing struct array where data is coming from
+ * @param parameter 'to' is the position in the objects missing struct array where data is going to
+ */
+void shiftObjectsMissingStructPos(int from, int to) {
+    //shift data from pos 0 to pos 1, ready for next object detection callback
+    for (int missingObject = 0; missingObject < totalObjectsDetectedStruct[from]; missingObject++) {
+        objectsMissingStruct[to][missingObject].id = objectsMissingStruct[from][missingObject].id; //assign object id to struct
+        objectsMissingStruct[to][missingObject].object_name = objectsMissingStruct[from][missingObject].object_name; //assign object name to struct
+        objectsMissingStruct[to][missingObject].totalCorrespondingPoints = objectsMissingStruct[from][missingObject].totalCorrespondingPoints; //assign total corresponding points to struct
+    }
+    totalObjectsMissingStruct[to] = totalObjectsMissingStruct[from]; //set total objects in detection struct to pos 1
+}
+
+/**
  * No previous history, so add to weighting
  *
  */
@@ -620,6 +638,39 @@ void contextNoHistory(int detPos) {
         }
     }
     shiftObjectsDetectedStructPos(0,1); //shift detection data from struct pos 0 to 1
+}
+
+/**
+ * No previous history, so subtract from weighting
+ *
+ */
+void contextMissingNoHistory(int detPos) {
+    for (int missingObject = 0; missingObject < totalObjectsMissingStruct[detPos]; missingObject++) { //run through struct of pos 0
+        //run through each detected object
+        int getDetObjID = objectsMissingStruct[detPos][missingObject].id; //get id
+        std::string getDetObjName = objectsMissingStruct[detPos][missingObject].object_name; //get name
+
+        for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //run through entire context struct
+            int getContextID = objectContext[isContext].object_id; //get context ID
+            std::string getContextName = objectContext[isContext].object_name; //get context name
+
+            if ((getDetObjID == getContextID) && (getDetObjName == getContextName)) { //if object ID and name are equal
+                if (DEBUG_contextNoHistory) {
+                    tofToolBox->printSeparator(0);
+                    cout << "missing object " << getDetObjID << " in det and context struct" << endl;
+                }
+                //update object weighting
+                //objectContext[isContext].object_detected++; //don't add to object detected if object is missing
+                //objectContext[isContext].objectDetectedFlag = 1; //object has been found, assign 1 to flag
+                double isCurrentWeighting = objectContext[isContext].object_weighting;
+                double isNewWeighting = isCurrentWeighting - trainingInfo.times_trained_val;
+                applyNewWeighting(isContext, isNewWeighting);
+                cout << "object weighting has been reduced to " << objectContext[isContext].object_weighting << endl;
+            }
+
+        }
+    }
+    shiftObjectsMissingStructPos(0,1); //shift detection data from struct pos 0 to 1
 }
 
 /**
@@ -666,6 +717,52 @@ void contextWithHistory() {
         }
     }
     shiftObjectsDetectedStructPos(0,1); //shift detection data from struct pos 0 to 1
+}
+
+/**
+ * History exists, therefore compare with history to see if object was in previous frame
+ *
+ */
+void contextMissingWithHistory() {
+    for (int missingObject = 0; missingObject < totalObjectsMissingStruct[0]; missingObject++) { //run through struct of detected objects
+        int getMisObjID = objectsMissingStruct[0][missingObject].id; //get id
+        std::string getMisObjName = objectsMissingStruct[0][missingObject].object_name; //get name
+
+        for (int lastMissingObject = 0; lastMissingObject < totalObjectsMissingStruct[1]; lastMissingObject++) { //run through struct of last detected objects
+            int getLastObjID = objectsMissingStruct[1][lastMissingObject].id; //get id
+            std::string getLastObjName = objectsMissingStruct[1][lastMissingObject].object_name; //get name
+
+            if ((getMisObjID == getLastObjID) && (getMisObjName == getLastObjName)) { //if object id and name match, it's still missing the object
+                //if match found, do not recalculate weighting - because it must be the same object missing
+            }
+            else {
+                //run through entire context struct for returning correct object id position
+                for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
+                    int getContextID = objectContext[isContext].object_id; //get context ID
+                    std::string getContextName = objectContext[isContext].object_name; //get context name
+
+                    if ((getMisObjID == getContextID) && (getMisObjName == getContextName)) { //if object ID and name are equal
+                        if (DEBUG_contextMissingWithHistory) {
+                            tofToolBox->printSeparator(0);
+                            cout << "found missing object " << getMisObjID << " in both history structs" << endl;
+                        }
+                        //if new object in detected struct pos 0 is equal to object in context
+                        //update object weighting
+                        //objectContext[isContext].object_detected++; //do not increase detected when object is missing
+                        //objectContext[isContext].objectDetectedFlag = 1; //object has been found, assign 1 to flag
+                        double isCurrentWeighting = objectContext[isContext].object_weighting;
+                        double isNewWeighting = isCurrentWeighting - trainingInfo.times_trained_val; //reduce weighting
+                        applyNewWeighting(isContext, isNewWeighting);
+                    }
+                    else {
+                        //skip over, don't assign anything if detected object and context don't match
+                    }
+                }
+            }
+
+        }
+    }
+    shiftObjectsMissingStructPos(0,1); //shift detection data from struct pos 0 to 1
 }
 
 /**
@@ -730,6 +827,24 @@ void missingObjectCallback(const wheelchair_msgs::missingObjects::ConstPtr& misO
 
     //recalculate influence weighting for training session
     calculateInfluenceWeight();
+
+    //start off with first object missing in sequence
+    if (totalObjectsMissingStruct[detPos+1] == 0) { //if number of objects in next element is 0, no history exists
+        //no history to compare with, therefore do all the calculation stuff
+        if (DEBUG_missingObjectCallback) {
+            cout << "nothing in struct pos " << detPos+1 << endl;
+        }
+        //first work out whether to add or delete from existing weighting value
+        //no previous history, so add to weighting
+        contextMissingNoHistory(detPos);
+    }
+    else {
+        //history exists, therefore compare with history to see if object was in previous frame
+        if (DEBUG_missingObjectCallback) {
+            cout << "data exists in struct pos " << detPos+1 << endl;
+        }
+        contextMissingWithHistory();
+    }
 }
 
 /**
