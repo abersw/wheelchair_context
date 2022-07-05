@@ -29,6 +29,7 @@ static const int DEBUG_publishObjectContext = 0;
 static const int DEBUG_objectLocationsCallbackDictionary = 0;
 static const int DEBUG_objectLocationsCallback = 0;
 static const int DEBUG_assignObjectsDetectedStruct = 0;
+static const int DEBUG_assignObjectsMissingStruct = 0;
 static const int DEBUG_contextNoHistory = 0;
 static const int DEBUG_contextWithHistory = 0;
 static const int DEBUG_detectedObjectCallback = 0;
@@ -516,6 +517,27 @@ void assignObjectsDetectedStruct(int detPos, const wheelchair_msgs::objectLocati
 }
 
 /**
+ * Function to assign ROS topic msg context to struct
+ * @param 'detPos' is the objects missing sequence used - 0 latest, 1 previous
+ * @param 'missingObject' object position in missing array
+ * @param 'misObj' belongs to wheelchair_msgs::missingObjects - contains object info
+*/
+void assignObjectsMissingStruct(int detPos, const wheelchair_msgs::missingObjects::ConstPtr& misObj, int missingObject) {
+    objectsMissingStruct[detPos][missingObject].id = misObj->id[missingObject]; //assign object id to struct
+    objectsMissingStruct[detPos][missingObject].object_name = misObj->object_name[missingObject]; //assign object name to struct
+    objectsMissingStruct[detPos][missingObject].totalCorrespondingPoints = misObj->totalCorrespondingPoints[missingObject]; //assign object confidence to struct
+
+
+    //objectsDetectedStruct[detPos][missingObject].inLastFrame; //don't do anything yet
+    if (DEBUG_assignObjectsMissingStruct) {
+        cout <<
+        objectsMissingStruct[detPos][missingObject].id << "," <<
+        objectsMissingStruct[detPos][missingObject].object_name << "," <<
+        objectsMissingStruct[detPos][missingObject].totalCorrespondingPoints << endl;
+    }
+}
+
+/**
  * Apply new object context weighting to struct
  *
  */
@@ -702,6 +724,7 @@ void missingObjectCallback(const wheelchair_msgs::missingObjects::ConstPtr& misO
     for (int isMissingObject = 0; isMissingObject < totalObjectsMissingStruct[detPos]; isMissingObject++) {
         //cout << "missing object detected " << misObj->id[isMissingObject] << ":" << misObj->object_name[isMissingObject] << endl;
         //add to struct position [0][object number]
+        assignObjectsMissingStruct(detPos, misObj, isMissingObject); //assign ROS topic msg to struct
     }
 }
 
