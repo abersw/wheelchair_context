@@ -32,6 +32,7 @@ static const int DEBUG_assignObjectsDetectedStruct = 0;
 static const int DEBUG_contextNoHistory = 0;
 static const int DEBUG_contextWithHistory = 0;
 static const int DEBUG_detectedObjectCallback = 0;
+static const int DEBUG_missingObjectCallback = 1;
 static const int DEBUG_contextInfoToList = 0;
 static const int DEBUG_contextStructToList = 0;
 static const int DEBUG_main = 0;
@@ -57,6 +58,15 @@ int totalObjectsFileStruct = 0; //total objects inside struct
 static const int numOfPastFrames = 5;
 struct Objects objectsDetectedStruct[numOfPastFrames][1000]; //5 previous frames, 1000 potential objects
 int totalObjectsDetectedStruct[numOfPastFrames]; //size of struct for previous 5 frames
+
+struct MissingObjects { //struct for publishing topic
+    int id; //get object id from ros msg
+    string object_name; //get object name/class
+    int totalCorrespondingPoints; //get total corresponding points from pointcloud
+};
+
+struct MissingObjects objectsMissingStruct[numOfPastFrames][1000]; //5 previous frames, 1000 potential objects
+int totalObjectsMissingStruct[numOfPastFrames]; //size of struct for previous 5 frames
 
 struct Context {
     int object_id; //object id
@@ -680,8 +690,18 @@ void detectedObjectCallback(const wheelchair_msgs::objectLocations obLoc) {
 }
 
 void missingObjectCallback(const wheelchair_msgs::missingObjects::ConstPtr& misObj) {
-    for (int isMissingObject = 0; isMissingObject < misObj->totalObjects; isMissingObject++) {
-        cout << "missing object detected " << misObj->id[isMissingObject] << ":" << misObj->object_name[isMissingObject] << endl;
+    if (DEBUG_missingObjectCallback) {
+        tofToolBox->printSeparator(1);
+        cout << "new missing objects message received" << endl;
+    }
+    int detPos = 0; //'detPos' is the missing objects message sequence used - 0 latest, 1 previous
+    totalObjectsMissingStruct[detPos] = misObj->totalObjects; //total detected objects in ROS msg
+    if (DEBUG_missingObjectCallback) {
+        cout << "total missing objects in msg are " << totalObjectsMissingStruct[detPos] << endl;
+    }
+    for (int isMissingObject = 0; isMissingObject < totalObjectsMissingStruct[detPos]; isMissingObject++) {
+        //cout << "missing object detected " << misObj->id[isMissingObject] << ":" << misObj->object_name[isMissingObject] << endl;
+        //add to struct position [0][object number]
     }
 }
 
