@@ -19,6 +19,7 @@
 using namespace std;
 
 static const int DEBUG_populateObjectsToTrack = 0;
+static const int DEBUG_trackingObjectFound = 1;
 static const int DEBUG_contextListToStruct = 0;
 static const int DEBUG_calculateInfluenceWeight = 0;
 static const int DEBUG_listToContextInfo = 0;
@@ -135,6 +136,7 @@ struct TrackingObjects trackingObjects[totalObjectsTracked][totalObjectsTrackedC
 struct TrackingObjects trackingObjectsList[totalObjectsTracked];
 //std::map<string, string> trackingObjectsListRaw = {{"42", "refrigerator"}, {"53", "refrigerator"}};
 string trackingObjectsListRaw[] = {"42", "refrigerator", "53", "sink"};
+int totalTrackingObjectsListRaw = 0;
 
 //list of file locations
 std::string wheelchair_dump_loc; //location of wheelchair_dump package
@@ -151,10 +153,10 @@ TofToolBox *tofToolBox;
 static const int saveDataToList = 1;
 
 void populateObjectsToTrack() {
-    int trackerArraySize = *(&trackingObjectsListRaw + 1) - trackingObjectsListRaw;
+    int totalTrackingObjectsListRaw = *(&trackingObjectsListRaw + 1) - trackingObjectsListRaw;
     int pos = 0;
     int counter = 0;
-    for (int i = 0; i < trackerArraySize; i++) {
+    for (int i = 0; i < totalTrackingObjectsListRaw; i++) {
         if (pos == 0) {
             trackingObjectsList[counter].object_id = std::stoi(trackingObjectsListRaw[i]);
             pos++;
@@ -171,15 +173,22 @@ void populateObjectsToTrack() {
         }
     }
     if (DEBUG_populateObjectsToTrack) {
-        for (int i = 0; i < trackerArraySize/2; i++) {
+        for (int i = 0; i < totalTrackingObjectsListRaw/2; i++) {
             cout << trackingObjectsList[i].object_id << ":" << trackingObjectsList[i].object_name << endl;
         }
     }
 }
 
-int listenForTrackingObjects() {
+int listenForTrackingObjects(int currentObjectID, string currentObjectName) {
     //loop through tracked list, return true if object
-    return 0;
+    int foundTrackedObject = 0;
+    for (int isTrackingObject = 0; isTrackingObject < totalTrackingObjectsListRaw; isTrackingObject++) {
+        if ((currentObjectID == trackingObjectsList[isTrackingObject].object_id) &&
+            (currentObjectName == trackingObjectsList[isTrackingObject].object_name)) {
+            foundTrackedObject = 1;
+        }
+    }
+    return foundTrackedObject;
 }
 
 void captureTrackingObject() {
@@ -700,6 +709,13 @@ void contextNoHistory(int detPos) {
                 applyNewWeighting(isContext, isNewWeighting);
                 //get data to calculate context
                 getObjectContext();
+                int trackingObjectFound = listenForTrackingObjects(getDetObjID, getDetObjName);
+                if (trackingObjectFound == 1) {
+                    if (DEBUG_trackingObjectFound) {
+                        cout << "tracking object " << getDetObjID << ":" << getDetObjName << " found" << endl;
+                    }
+                    captureTrackingObject();
+                }
             }
 
         }
