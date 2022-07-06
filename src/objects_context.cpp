@@ -177,6 +177,15 @@ void populateObjectsToTrack() {
     }
 }
 
+int listenForTrackingObjects() {
+    //loop through tracked list, return true if object
+    return 0;
+}
+
+void captureTrackingObject() {
+    //get all information and apply to struct
+}
+
 /**
  * Function to add context data from param 'fileName' path, start assigning info from each line of file
  *
