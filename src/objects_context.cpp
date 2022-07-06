@@ -689,6 +689,8 @@ void contextNoHistory(int detPos) {
                 double isCurrentWeighting = objectContext[isContext].object_weighting;
                 double isNewWeighting = isCurrentWeighting + trainingInfo.times_trained_val;
                 applyNewWeighting(isContext, isNewWeighting);
+                //get data to calculate context
+                getObjectContext();
             }
 
         }
@@ -721,6 +723,8 @@ void contextMissingNoHistory(int detPos) {
                 double isCurrentWeighting = objectContext[isContext].object_weighting;
                 double isNewWeighting = isCurrentWeighting - trainingInfo.times_trained_val;
                 applyNewWeighting(isContext, isNewWeighting);
+                //get data to calculate context
+                getObjectContext();
                 cout << "object weighting has been reduced to " << objectContext[isContext].object_weighting << endl;
             }
 
@@ -763,6 +767,8 @@ void contextWithHistory() {
                         double isCurrentWeighting = objectContext[isContext].object_weighting;
                         double isNewWeighting = isCurrentWeighting + trainingInfo.times_trained_val;
                         applyNewWeighting(isContext, isNewWeighting);
+                        //get data to calculate context
+                        getObjectContext();
                     }
                     else {
                         //skip over, don't assign anything if detected object and context don't match
@@ -809,6 +815,8 @@ void contextMissingWithHistory() {
                         double isCurrentWeighting = objectContext[isContext].object_weighting;
                         double isNewWeighting = isCurrentWeighting - trainingInfo.times_trained_val; //reduce weighting
                         applyNewWeighting(isContext, isNewWeighting);
+                        //get data to calculate context
+                        getObjectContext();
                     }
                     else {
                         //skip over, don't assign anything if detected object and context don't match
