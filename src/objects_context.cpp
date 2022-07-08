@@ -132,6 +132,8 @@ struct TrackingObjects {
 static const int totalObjectsTracked = 100;
 static const long totalObjectsTrackedCaptured = 10000;
 struct TrackingObjects trackingObjects[totalObjectsTracked][totalObjectsTrackedCaptured];
+int totalTrackingObjects = 0;
+int totalTrackingObjectsCaptured = 0;
 
 struct TrackingObjects trackingObjectsList[totalObjectsTracked];
 //std::map<string, string> trackingObjectsListRaw = {{"42", "refrigerator"}, {"53", "refrigerator"}};
@@ -158,11 +160,13 @@ void populateObjectsToTrack() {
     int counter = 0;
     for (int i = 0; i < totalTrackingObjectsListRaw; i++) {
         if (pos == 0) {
-            trackingObjectsList[counter].object_id = std::stoi(trackingObjectsListRaw[i]);
+            //trackingObjectsList[counter].object_id = std::stoi(trackingObjectsListRaw[i]);
+            trackingObjects[counter][0].object_id = std::stoi(trackingObjectsListRaw[i]);
             pos++;
         }
         else if (pos == 1) {
-            trackingObjectsList[counter].object_name = trackingObjectsListRaw[i];
+            //trackingObjectsList[counter].object_name = trackingObjectsListRaw[i];
+            trackingObjects[counter][0].object_name = trackingObjectsListRaw[i];
             pos = 0;
             counter++;
         }
@@ -172,6 +176,11 @@ void populateObjectsToTrack() {
             }
         }
     }
+    totalTrackingObjects = counter;
+    int totalObjectsToTrack = *(&trackingObjects + 1) - trackingObjects;
+    //int totalObjectsCaptured = *(&trackingObjects[0] + 1) - trackingObjects[0];
+    cout << "total objects to track is " << totalObjectsToTrack << endl;
+    //cout << "total finds in pos 0 is " << totalObjectsCaptured << endl;
     if (DEBUG_populateObjectsToTrack) {
         for (int i = 0; i < totalTrackingObjectsListRaw/2; i++) {
             cout << trackingObjectsList[i].object_id << ":" << trackingObjectsList[i].object_name << endl;
