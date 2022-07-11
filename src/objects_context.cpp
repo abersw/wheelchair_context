@@ -18,7 +18,7 @@
 
 using namespace std;
 
-static const int DEBUG_populateObjectsToTrack = 0;
+static const int DEBUG_populateObjectsToTrack = 1;
 static const int DEBUG_trackingObjectFound = 1;
 static const int DEBUG_contextListToStruct = 0;
 static const int DEBUG_calculateInfluenceWeight = 0;
@@ -132,13 +132,13 @@ struct TrackingObjects {
 static const int totalObjectsTracked = 100;
 static const long totalObjectsTrackedCaptured = 10000;
 struct TrackingObjects trackingObjects[totalObjectsTracked][totalObjectsTrackedCaptured];
-int totalTrackingObjects = 0;
+
 int totalTrackingObjectsCaptured = 0;
 
 struct TrackingObjects trackingObjectsList[totalObjectsTracked];
 //std::map<string, string> trackingObjectsListRaw = {{"42", "refrigerator"}, {"53", "refrigerator"}};
 string trackingObjectsListRaw[] = {"42", "refrigerator", "53", "sink"};
-int totalTrackingObjectsListRaw = 0;
+int totalTrackingObjectsList = 0;
 
 //list of file locations
 std::string wheelchair_dump_loc; //location of wheelchair_dump package
@@ -156,6 +156,9 @@ static const int saveDataToList = 1;
 
 void populateObjectsToTrack() {
     int totalTrackingObjectsListRaw = *(&trackingObjectsListRaw + 1) - trackingObjectsListRaw;
+    if (DEBUG_populateObjectsToTrack) {
+        cout << "total tracking objects list raw " << totalTrackingObjectsListRaw << endl;
+    }
     int pos = 0;
     int counter = 0;
     for (int i = 0; i < totalTrackingObjectsListRaw; i++) {
@@ -176,14 +179,11 @@ void populateObjectsToTrack() {
             }
         }
     }
-    totalTrackingObjects = counter;
-    int totalObjectsToTrack = *(&trackingObjects + 1) - trackingObjects;
-    //int totalObjectsCaptured = *(&trackingObjects[0] + 1) - trackingObjects[0];
-    cout << "total objects to track is " << totalObjectsToTrack << endl;
-    //cout << "total finds in pos 0 is " << totalObjectsCaptured << endl;
+    totalTrackingObjectsList = counter;
+
     if (DEBUG_populateObjectsToTrack) {
-        for (int i = 0; i < totalTrackingObjectsListRaw/2; i++) {
-            cout << trackingObjectsList[i].object_id << ":" << trackingObjectsList[i].object_name << endl;
+        for (int i = 0; i < totalTrackingObjectsList; i++) {
+            cout << trackingObjects[i][0].object_id << ":" << trackingObjects[i][0].object_name << endl;
         }
     }
 }
@@ -191,12 +191,12 @@ void populateObjectsToTrack() {
 int listenForTrackingObjects(int currentObjectID, string currentObjectName) {
     //loop through tracked list, return true if object
     int foundTrackedObject = 0;
-    for (int isTrackingObject = 0; isTrackingObject < totalTrackingObjectsListRaw; isTrackingObject++) {
+    /*for (int isTrackingObject = 0; isTrackingObject < totalTrackingObjectsListRaw; isTrackingObject++) {
         if ((currentObjectID == trackingObjectsList[isTrackingObject].object_id) &&
             (currentObjectName == trackingObjectsList[isTrackingObject].object_name)) {
             foundTrackedObject = 1;
         }
-    }
+    }*/
     return foundTrackedObject;
 }
 
