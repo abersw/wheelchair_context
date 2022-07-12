@@ -116,7 +116,7 @@ struct TrackingObjects {
     string object_name;
     float object_confidence; //object confidence from dnn
 
-    ros::Time object_timestamp; //should be saved in seconds .toSec()
+    double object_timestamp; //should be saved in seconds .toSec()
 
     //context info
     int times_trained; //real times trained
@@ -132,13 +132,15 @@ struct TrackingObjects {
 };
 static const int totalObjectsTracked = 100;
 static const long totalObjectsTrackedCaptured = 10000;
+//[0] contains object id and name [1] instances detected
 struct TrackingObjects trackingObjects[totalObjectsTracked][totalObjectsTrackedCaptured];
 
-int totalTrackingObjectsCaptured = 0;
+//contains instances of object found, uses order from trackingObjects
+int totalTrackingObjectsCaptured[totalObjectsTracked];
 
 struct TrackingObjects trackingObjectsList[totalObjectsTracked];
 //std::map<string, string> trackingObjectsListRaw = {{"42", "refrigerator"}, {"53", "refrigerator"}};
-string trackingObjectsListRaw[] = {"42", "refrigerator", "53", "sink"};
+string trackingObjectsListRaw[] = {"56", "refrigerator", "61", "oven"};
 int totalTrackingObjectsList = 0;
 
 double currentTimeSecs = 0.0;
@@ -191,20 +193,51 @@ void populateObjectsToTrack() {
     }
 }
 
-int listenForTrackingObjects(int currentObjectID, string currentObjectName) {
+std::pair<int , int> listenForTrackingObjects(int currentObjectID, string currentObjectName) {
     //loop through tracked list, return true if object
-    int foundTrackedObject = 0;
-    /*for (int isTrackingObject = 0; isTrackingObject < totalTrackingObjectsListRaw; isTrackingObject++) {
-        if ((currentObjectID == trackingObjectsList[isTrackingObject].object_id) &&
-            (currentObjectName == trackingObjectsList[isTrackingObject].object_name)) {
-            foundTrackedObject = 1;
+    int trackedObjectFound = 0;
+    int trackedObjectPos = 0;
+    for (int isTrackingObject = 0; isTrackingObject < totalTrackingObjectsList; isTrackingObject++) {
+        if ((currentObjectID == trackingObjects[isTrackingObject][0].object_id) &&
+            (currentObjectName == trackingObjects[isTrackingObject][0].object_name)) {
+            trackedObjectFound = 1;
+            trackedObjectPos = isTrackingObject;
+            cout << "found object in tracking " << currentObjectID << ":" << currentObjectName << endl;
         }
-    }*/
-    return foundTrackedObject;
+    }
+    return std::make_pair(trackedObjectFound, trackedObjectPos);
 }
 
-void captureTrackingObject() {
+void captureTrackingObject(int trackingObjectPos, int currentObjectID, string currentObjectName) {
     //get all information and apply to struct
+    //find position of object in context array
+    int objectContextPos = 0;
+    for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
+        if ((currentObjectID == objectContext[isContext].object_id) &&
+            (currentObjectName == objectContext[isContext].object_name)) {
+            cout << "context match found at pos" << isContext << endl;
+            objectContextPos = isContext;
+        }
+    }
+    
+    trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_id =
+    objectContext[objectContextPos].object_id;
+    trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_name =
+    objectContext[objectContextPos].object_name;
+    trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_confidence =
+    objectContext[objectContextPos].object_confidence;
+    trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_timestamp =
+    currentTimeSecs;
+    //trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_id;
+    totalTrackingObjectsCaptured[trackingObjectPos]++; //add to instances of tracking object found
+
+    for (int isTracked = 0; isTracked < totalTrackingObjectsCaptured[trackingObjectPos]; isTracked++) {
+        cout.precision(12);
+        cout << fixed << 
+        trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[isTracked]].object_timestamp << " : " <<
+        trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[isTracked]].object_id << " : " <<
+        trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[isTracked]].object_name << endl;
+    }
 }
 
 /**
@@ -721,12 +754,14 @@ void contextNoHistory(int detPos) {
                 applyNewWeighting(isContext, isNewWeighting);
                 //get data to calculate context
                 getObjectContext();
-                int trackingObjectFound = listenForTrackingObjects(getDetObjID, getDetObjName);
+                std::pair<int, int> listenForTrackingObjectsResult = listenForTrackingObjects(getDetObjID, getDetObjName);
+                int trackingObjectFound = listenForTrackingObjectsResult.first;
+                int trackingObjectPos = listenForTrackingObjectsResult.second;
                 if (trackingObjectFound == 1) {
                     if (DEBUG_trackingObjectFound) {
                         cout << "tracking object " << getDetObjID << ":" << getDetObjName << " found" << endl;
                     }
-                    captureTrackingObject();
+                    captureTrackingObject(trackingObjectPos, getDetObjID, getDetObjName);
                 }
             }
 
@@ -762,6 +797,15 @@ void contextMissingNoHistory(int detPos) {
                 applyNewWeighting(isContext, isNewWeighting);
                 //get data to calculate context
                 getObjectContext();
+                std::pair<int, int> listenForTrackingObjectsResult = listenForTrackingObjects(getDetObjID, getDetObjName);
+                int trackingObjectFound = listenForTrackingObjectsResult.first;
+                int trackingObjectPos = listenForTrackingObjectsResult.second;
+                if (trackingObjectFound == 1) {
+                    if (DEBUG_trackingObjectFound) {
+                        cout << "tracking object " << getDetObjID << ":" << getDetObjName << " found" << endl;
+                    }
+                    captureTrackingObject(trackingObjectPos, getDetObjID, getDetObjName);
+                }
                 cout << "object weighting has been reduced to " << objectContext[isContext].object_weighting << endl;
             }
 
@@ -806,6 +850,15 @@ void contextWithHistory() {
                         applyNewWeighting(isContext, isNewWeighting);
                         //get data to calculate context
                         getObjectContext();
+                        std::pair<int, int> listenForTrackingObjectsResult = listenForTrackingObjects(getDetObjID, getDetObjName);
+                        int trackingObjectFound = listenForTrackingObjectsResult.first;
+                        int trackingObjectPos = listenForTrackingObjectsResult.second;
+                        if (trackingObjectFound == 1) {
+                            if (DEBUG_trackingObjectFound) {
+                                cout << "tracking object " << getDetObjID << ":" << getDetObjName << " found" << endl;
+                            }
+                            captureTrackingObject(trackingObjectPos, getDetObjID, getDetObjName);
+                        }
                     }
                     else {
                         //skip over, don't assign anything if detected object and context don't match
@@ -854,6 +907,15 @@ void contextMissingWithHistory() {
                         applyNewWeighting(isContext, isNewWeighting);
                         //get data to calculate context
                         getObjectContext();
+                        std::pair<int, int> listenForTrackingObjectsResult = listenForTrackingObjects(getMisObjID, getMisObjName);
+                        int trackingObjectFound = listenForTrackingObjectsResult.first;
+                        int trackingObjectPos = listenForTrackingObjectsResult.second;
+                        if (trackingObjectFound == 1) {
+                            if (DEBUG_trackingObjectFound) {
+                                cout << "tracking object " << getMisObjID << ":" << getMisObjName << " found" << endl;
+                            }
+                            captureTrackingObject(trackingObjectPos, getMisObjID, getMisObjName);
+                        }
                     }
                     else {
                         //skip over, don't assign anything if detected object and context don't match
