@@ -40,6 +40,7 @@ static const int DEBUG_detectedObjectCallback = 0;
 static const int DEBUG_missingObjectCallback = 0;
 static const int DEBUG_contextInfoToList = 0;
 static const int DEBUG_contextStructToList = 0;
+static const int DEBUG_currentTime = 0;
 static const int DEBUG_main = 0;
 static const int DEBUG_fileLocations = 1;
 
@@ -139,6 +140,8 @@ struct TrackingObjects trackingObjectsList[totalObjectsTracked];
 //std::map<string, string> trackingObjectsListRaw = {{"42", "refrigerator"}, {"53", "refrigerator"}};
 string trackingObjectsListRaw[] = {"42", "refrigerator", "53", "sink"};
 int totalTrackingObjectsList = 0;
+
+double currentTimeSecs = 0.0;
 
 //list of file locations
 std::string wheelchair_dump_loc; //location of wheelchair_dump package
@@ -1046,6 +1049,11 @@ int main (int argc, char **argv) {
             for (int i = 0; i < totalObjectContextStruct; i++) { //print out context struct for debugging
                 cout << objectContext[i].object_id << ":" << objectContext[i].object_name << endl;
             }
+        }
+        currentTimeSecs = ros::Time::now().toSec();
+        if (DEBUG_currentTime) {
+            cout.precision(12);
+            cout << "current time is " << fixed << currentTimeSecs << endl;
         }
         ros::spinOnce();
         rate.sleep();
