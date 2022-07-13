@@ -140,7 +140,7 @@ int totalTrackingObjectsCaptured[totalObjectsTracked];
 
 struct TrackingObjects trackingObjectsList[totalObjectsTracked];
 //std::map<string, string> trackingObjectsListRaw = {{"42", "refrigerator"}, {"53", "refrigerator"}};
-string trackingObjectsListRaw[] = {"56", "refrigerator", "61", "oven"};
+string trackingObjectsListRaw[] = {"4", "backpack", "56", "refrigerator", "59", "oven"};
 int totalTrackingObjectsList = 0;
 
 double currentTimeSecs = 0.0;
@@ -187,6 +187,7 @@ void populateObjectsToTrack() {
     totalTrackingObjectsList = counter;
 
     if (DEBUG_populateObjectsToTrack) {
+        cout << "total objects to track is " << totalTrackingObjectsList << endl;
         for (int i = 0; i < totalTrackingObjectsList; i++) {
             cout << trackingObjects[i][0].object_id << ":" << trackingObjects[i][0].object_name << endl;
         }
@@ -202,7 +203,7 @@ std::pair<int , int> listenForTrackingObjects(int currentObjectID, string curren
             (currentObjectName == trackingObjects[isTrackingObject][0].object_name)) {
             trackedObjectFound = 1;
             trackedObjectPos = isTrackingObject;
-            cout << "found object in tracking " << currentObjectID << ":" << currentObjectName << endl;
+            cout << "found object in tracking " << currentObjectID << ":" << currentObjectName << " in pos " << isTrackingObject << endl;
         }
     }
     return std::make_pair(trackedObjectFound, trackedObjectPos);
@@ -212,6 +213,7 @@ void captureTrackingObject(int trackingObjectPos, int currentObjectID, string cu
     //get all information and apply to struct
     //find position of object in context array
     int objectContextPos = 0;
+    //cout << "total context struct is " << totalObjectContextStruct << endl;
     for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
         if ((currentObjectID == objectContext[isContext].object_id) &&
             (currentObjectName == objectContext[isContext].object_name)) {
@@ -219,27 +221,9 @@ void captureTrackingObject(int trackingObjectPos, int currentObjectID, string cu
             objectContextPos = isContext;
         }
     }
-    cout << "trackingObjectPos is " << trackingObjectPos << endl;
-    cout << "trackingObjectCaptured is " << totalTrackingObjectsCaptured[trackingObjectPos] << endl;
-    
-    trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_id =
-    objectContext[objectContextPos].object_id;
-    trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_name =
-    objectContext[objectContextPos].object_name;
-    trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_confidence =
-    objectContext[objectContextPos].object_confidence;
-    trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_timestamp =
-    currentTimeSecs;
-    //trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_id;
-    totalTrackingObjectsCaptured[trackingObjectPos]++; //add to instances of tracking object found
+    //cout << "trackingObjectPos is " << trackingObjectPos << endl;
+    //cout << "trackingObjectCaptured is " << totalTrackingObjectsCaptured[trackingObjectPos] << endl;
 
-    for (int isTracked = 0; isTracked < totalTrackingObjectsCaptured[trackingObjectPos]; isTracked++) {
-        cout.precision(12);
-        cout << fixed << 
-        trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[isTracked]].object_timestamp << " : " <<
-        trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[isTracked]].object_id << " : " <<
-        trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[isTracked]].object_name << endl;
-    }
 }
 
 /**
