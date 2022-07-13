@@ -219,6 +219,8 @@ void captureTrackingObject(int trackingObjectPos, int currentObjectID, string cu
             objectContextPos = isContext;
         }
     }
+    cout << "trackingObjectPos is " << trackingObjectPos << endl;
+    cout << "trackingObjectCaptured is " << totalTrackingObjectsCaptured[trackingObjectPos] << endl;
     
     trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_id =
     objectContext[objectContextPos].object_id;
