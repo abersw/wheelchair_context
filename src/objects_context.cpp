@@ -607,6 +607,12 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
 
     //publish calculated context via ROS msg
     publishObjectContext(); //publish object context data as ROS msg
+
+    currentTimeSecs = ros::Time::now().toSec();
+    if (DEBUG_currentTime) {
+        cout.precision(12);
+        cout << "current time is " << fixed << currentTimeSecs << endl;
+    }
 }
 
 /**
@@ -1135,11 +1141,6 @@ int main (int argc, char **argv) {
             for (int i = 0; i < totalObjectContextStruct; i++) { //print out context struct for debugging
                 cout << objectContext[i].object_id << ":" << objectContext[i].object_name << endl;
             }
-        }
-        currentTimeSecs = ros::Time::now().toSec();
-        if (DEBUG_currentTime) {
-            cout.precision(12);
-            cout << "current time is " << fixed << currentTimeSecs << endl;
         }
         ros::spinOnce();
         rate.sleep();
