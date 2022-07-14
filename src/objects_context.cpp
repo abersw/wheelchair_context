@@ -805,53 +805,60 @@ void contextMissingNoHistory(int detPos) {
  *
  */
 void contextWithHistory() {
-    for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[0]; detectedObject++) { //run through struct of detected objects
+    //run through latest stuct of detected objects
+    for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[0]; detectedObject++) {
         int getDetObjID = objectsDetectedStruct[0][detectedObject].id; //get id
         std::string getDetObjName = objectsDetectedStruct[0][detectedObject].object_name; //get name
 
-        for (int lastDetectedObject = 0; lastDetectedObject < totalObjectsDetectedStruct[1]; lastDetectedObject++) { //run through struct of last detected objects
+        int objectFoundInHistory = 0;
+        //run through previous struct of detected objects
+        for (int lastDetectedObject = 0; lastDetectedObject < totalObjectsDetectedStruct[1]; lastDetectedObject++) {
             int getLastObjID = objectsDetectedStruct[1][lastDetectedObject].id; //get id
             std::string getLastObjName = objectsDetectedStruct[1][lastDetectedObject].object_name; //get name
 
-            if ((getDetObjID == getLastObjID) && (getDetObjName == getLastObjName)) { //if object id and name match, it can still see the same object
-                //if match found, do not recalculate weighting - because it must be the same object in the frame
+            if ((getDetObjID == getLastObjID) && (getDetObjName == getLastObjName)) {
+                objectFoundInHistory = 1; //object has been detected in previous history
             }
             else {
-                //run through entire context struct for returning correct object id position
-                for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
-                    int getContextID = objectContext[isContext].object_id; //get context ID
-                    std::string getContextName = objectContext[isContext].object_name; //get context name
+                //leave objectFoundInHistory as 0
+            }
+        }
+        //finished running through history, was a match found?
+        if (objectFoundInHistory) {
+            //a match was found, do not recalculate weighting - because it must be the same object in the frame
+        }
+        else {
+            //a match was not found
+            //run through entire context struct for returning correct object id position
+            for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
+                int getContextID = objectContext[isContext].object_id; //get context ID
+                std::string getContextName = objectContext[isContext].object_name; //get context name
 
-                    if ((getDetObjID == getContextID) && (getDetObjName == getContextName)) { //if object ID and name are equal
-                        if (DEBUG_contextWithHistory) {
-                            tofToolBox->printSeparator(0);
-                            cout << "found object " << getDetObjID << " in both history structs" << endl;
-                        }
-                        //if new object in detected struct pos 0 is equal to object in context
-                        //update object weighting and detected
-                        objectContext[isContext].object_detected++; //add one to times object was detected in env
-                        //objectContext[isContext].objectDetectedFlag = 1; //object has been found, assign 1 to flag
-                        double isCurrentWeighting = objectContext[isContext].object_weighting;
-                        double isNewWeighting = isCurrentWeighting + trainingInfo.times_trained_val;
-                        applyNewWeighting(isContext, isNewWeighting);
-                        //get data to calculate context
-                        getObjectContext();
-                        std::pair<int, int> listenForTrackingObjectsResult = listenForTrackingObjects(getDetObjID, getDetObjName);
-                        int trackingObjectFound = listenForTrackingObjectsResult.first;
-                        int trackingObjectPos = listenForTrackingObjectsResult.second;
-                        if (trackingObjectFound == 1) {
-                            if (DEBUG_trackingObjectFound) {
-                                cout << "tracking object " << getDetObjID << ":" << getDetObjName << " found" << endl;
-                            }
-                            captureTrackingObject(trackingObjectPos, getDetObjID, getDetObjName);
-                        }
+                //if object ID and name are equal
+                if ((getDetObjID == getContextID) && (getDetObjName == getContextName)) {
+                    if (DEBUG_contextWithHistory) {
+                        tofToolBox->printSeparator(0);
+                        cout << "found object " << getDetObjID << " in both history structs" << endl;
                     }
-                    else {
-                        //skip over, don't assign anything if detected object and context don't match
+                    //if new object in detected struct pos 0 is equal to object in context
+                    //update object weighting and detected
+                    objectContext[isContext].object_detected++; //add one to times object was detected in env
+                    double isCurrentWeighting = objectContext[isContext].object_weighting;
+                    double isNewWeighting = isCurrentWeighting + trainingInfo.times_trained_val;
+                    applyNewWeighting(isContext, isNewWeighting);
+                    //get data to calculate context
+                    getObjectContext();
+                    std::pair<int, int> listenForTrackingObjectsResult = listenForTrackingObjects(getDetObjID, getDetObjName);
+                    int trackingObjectFound = listenForTrackingObjectsResult.first;
+                    int trackingObjectPos = listenForTrackingObjectsResult.second;
+                    if (trackingObjectFound == 1) {
+                        if (DEBUG_trackingObjectFound) {
+                            cout << "tracking object " << getDetObjID << ":" << getDetObjName << " found" << endl;
+                        }
+                        captureTrackingObject(trackingObjectPos, getDetObjID, getDetObjName);
                     }
                 }
             }
-
         }
     }
     shiftObjectsDetectedStructPos(0,1); //shift detection data from struct pos 0 to 1
