@@ -869,53 +869,60 @@ void contextWithHistory() {
  *
  */
 void contextMissingWithHistory() {
+    //run through latest stuct of detected objects
     for (int missingObject = 0; missingObject < totalObjectsMissingStruct[0]; missingObject++) { //run through struct of detected objects
         int getMisObjID = objectsMissingStruct[0][missingObject].id; //get id
         std::string getMisObjName = objectsMissingStruct[0][missingObject].object_name; //get name
 
-        for (int lastMissingObject = 0; lastMissingObject < totalObjectsMissingStruct[1]; lastMissingObject++) { //run through struct of last detected objects
+        int objectFoundInHistory = 0;
+        //run through previous struct of detected objects
+        for (int lastMissingObject = 0; lastMissingObject < totalObjectsMissingStruct[1]; lastMissingObject++) {
             int getLastObjID = objectsMissingStruct[1][lastMissingObject].id; //get id
             std::string getLastObjName = objectsMissingStruct[1][lastMissingObject].object_name; //get name
 
-            if ((getMisObjID == getLastObjID) && (getMisObjName == getLastObjName)) { //if object id and name match, it's still missing the object
-                //if match found, do not recalculate weighting - because it must be the same object missing
+            if ((getMisObjID == getLastObjID) && (getMisObjName == getLastObjName)) {
+                objectFoundInHistory = 1; //object has been detected in previous history
             }
             else {
-                //run through entire context struct for returning correct object id position
-                for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
-                    int getContextID = objectContext[isContext].object_id; //get context ID
-                    std::string getContextName = objectContext[isContext].object_name; //get context name
+                //leave objectFoundInHistory as 0
+            }
+        }
+        //finished running through history, was a match found?
+        if (objectFoundInHistory) {
+            //a match was found, do not recalculate weighting - because it must be the same object in the frame
+        }
+        else {
+            //a match was not found
+            //run through entire context struct for returning correct object id position
+            for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
+                int getContextID = objectContext[isContext].object_id; //get context ID
+                std::string getContextName = objectContext[isContext].object_name; //get context name
 
-                    if ((getMisObjID == getContextID) && (getMisObjName == getContextName)) { //if object ID and name are equal
-                        if (DEBUG_contextMissingWithHistory) {
-                            tofToolBox->printSeparator(0);
-                            cout << "found missing object " << getMisObjID << " in both history structs" << endl;
-                        }
-                        //if new object in detected struct pos 0 is equal to object in context
-                        //update object weighting
-                        //objectContext[isContext].object_detected++; //do not increase detected when object is missing
-                        //objectContext[isContext].objectDetectedFlag = 1; //object has been found, assign 1 to flag
-                        double isCurrentWeighting = objectContext[isContext].object_weighting;
-                        double isNewWeighting = isCurrentWeighting - trainingInfo.times_trained_val; //reduce weighting
-                        applyNewWeighting(isContext, isNewWeighting);
-                        //get data to calculate context
-                        getObjectContext();
-                        std::pair<int, int> listenForTrackingObjectsResult = listenForTrackingObjects(getMisObjID, getMisObjName);
-                        int trackingObjectFound = listenForTrackingObjectsResult.first;
-                        int trackingObjectPos = listenForTrackingObjectsResult.second;
-                        if (trackingObjectFound == 1) {
-                            if (DEBUG_trackingObjectFound) {
-                                cout << "tracking object " << getMisObjID << ":" << getMisObjName << " found" << endl;
-                            }
-                            captureTrackingObject(trackingObjectPos, getMisObjID, getMisObjName);
-                        }
+                //if object ID and name are equal
+                if ((getMisObjID == getContextID) && (getMisObjName == getContextName)) {
+                    if (DEBUG_contextMissingWithHistory) {
+                        tofToolBox->printSeparator(0);
+                        cout << "found object " << getMisObjID << " in both history structs" << endl;
                     }
-                    else {
-                        //skip over, don't assign anything if detected object and context don't match
+                    //if missing object struct pos 0 is equal to object in context
+                    //update object weighting and detected
+                    double isCurrentWeighting = objectContext[isContext].object_weighting;
+                    double isNewWeighting = isCurrentWeighting - trainingInfo.times_trained_val; //reduce weighting
+                    applyNewWeighting(isContext, isNewWeighting);
+                    //get data to calculate context
+                    getObjectContext();
+
+                    std::pair<int, int> listenForTrackingObjectsResult = listenForTrackingObjects(getMisObjID, getMisObjName);
+                    int trackingObjectFound = listenForTrackingObjectsResult.first;
+                    int trackingObjectPos = listenForTrackingObjectsResult.second;
+                    if (trackingObjectFound == 1) {
+                        if (DEBUG_trackingObjectFound) {
+                            cout << "tracking object " << getMisObjID << ":" << getMisObjName << " found" << endl;
+                        }
+                        captureTrackingObject(trackingObjectPos, getMisObjID, getMisObjName);
                     }
                 }
             }
-
         }
     }
     shiftObjectsMissingStructPos(0,1); //shift detection data from struct pos 0 to 1
