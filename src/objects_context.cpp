@@ -18,7 +18,7 @@
 
 using namespace std;
 
-static const int DEBUG_populateObjectsToTrack = 1;
+static const int DEBUG_populateObjectsToTrack = 0;
 static const int DEBUG_trackingObjectFound = 1;
 static const int DEBUG_contextListToStruct = 0;
 static const int DEBUG_calculateInfluenceWeight = 0;
@@ -34,7 +34,7 @@ static const int DEBUG_assignObjectsDetectedStruct = 0;
 static const int DEBUG_assignObjectsMissingStruct = 0;
 static const int DEBUG_contextNoHistory = 0;
 static const int DEBUG_contextMissingNoHistory = 0;
-static const int DEBUG_contextWithHistory = 0;
+static const int DEBUG_contextWithHistory = 1;
 static const int DEBUG_contextMissingWithHistory = 0;
 static const int DEBUG_detectedObjectCallback = 0;
 static const int DEBUG_missingObjectCallback = 0;
@@ -203,7 +203,7 @@ std::pair<int , int> listenForTrackingObjects(int currentObjectID, string curren
             (currentObjectName == trackingObjects[isTrackingObject][0].object_name)) {
             trackedObjectFound = 1;
             trackedObjectPos = isTrackingObject;
-            cout << "found object in tracking " << currentObjectID << ":" << currentObjectName << " in pos " << isTrackingObject << endl;
+            //cout << "found object in tracking " << currentObjectID << ":" << currentObjectName << " in pos " << isTrackingObject << endl;
         }
     }
     return std::make_pair(trackedObjectFound, trackedObjectPos);
@@ -217,7 +217,7 @@ void captureTrackingObject(int trackingObjectPos, int currentObjectID, string cu
     for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
         if ((currentObjectID == objectContext[isContext].object_id) &&
             (currentObjectName == objectContext[isContext].object_name)) {
-            cout << "context match found at pos" << isContext << endl;
+            //cout << "context match found at pos" << isContext << endl;
             objectContextPos = isContext;
         }
     }
