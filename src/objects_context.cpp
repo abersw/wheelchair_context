@@ -178,6 +178,7 @@ void populateObjectsToTrack() {
             //trackingObjectsList[counter].object_name = trackingObjectsListRaw[i];
             trackingObjects[counter][0].object_name = trackingObjectsListRaw[i];
             pos = 0;
+            totalTrackingObjectsCaptured[counter] = 0;
             counter++;
         }
         else {
