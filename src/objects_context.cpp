@@ -771,15 +771,16 @@ void contextNoHistory(int detPos) {
                 applyNewWeighting(isContext, isNewWeighting);
                 //get data to calculate context
                 getObjectContext();
-                /*std::pair<int, int> listenForTrackingObjectsResult = listenForTrackingObjects(getDetObjID, getDetObjName);
+                std::pair<int, int> listenForTrackingObjectsResult = listenForTrackingObjects(getDetObjID, getDetObjName);
                 int trackingObjectFound = listenForTrackingObjectsResult.first;
                 int trackingObjectPos = listenForTrackingObjectsResult.second;
                 if (trackingObjectFound == 1) {
                     if (DEBUG_trackingObjectFound) {
+                        cout << "contextNoHistory" << endl;
                         cout << "tracking object " << getDetObjID << ":" << getDetObjName << " found" << endl;
                     }
                     captureTrackingObject(trackingObjectPos, getDetObjID, getDetObjName);
-                }*/
+                }
             }
 
         }
@@ -814,15 +815,16 @@ void contextMissingNoHistory(int detPos) {
                 applyNewWeighting(isContext, isNewWeighting);
                 //get data to calculate context
                 getObjectContext();
-                /*std::pair<int, int> listenForTrackingObjectsResult = listenForTrackingObjects(getDetObjID, getDetObjName);
+                std::pair<int, int> listenForTrackingObjectsResult = listenForTrackingObjects(getDetObjID, getDetObjName);
                 int trackingObjectFound = listenForTrackingObjectsResult.first;
                 int trackingObjectPos = listenForTrackingObjectsResult.second;
                 if (trackingObjectFound == 1) {
                     if (DEBUG_trackingObjectFound) {
+                        cout << "contextMissingNoHistory" << endl;
                         cout << "tracking object " << getDetObjID << ":" << getDetObjName << " found" << endl;
                     }
                     captureTrackingObject(trackingObjectPos, getDetObjID, getDetObjName);
-                }*/
+                }
                 cout << "object weighting has been reduced to " << objectContext[isContext].object_weighting << endl;
             }
 
@@ -884,6 +886,7 @@ void contextWithHistory() {
                     int trackingObjectPos = listenForTrackingObjectsResult.second;
                     if (trackingObjectFound == 1) {
                         if (DEBUG_trackingObjectFound) {
+                            cout << "contextWithHistory" << endl;
                             cout << "tracking object " << getDetObjID << ":" << getDetObjName << " found" << endl;
                         }
                         captureTrackingObject(trackingObjectPos, getDetObjID, getDetObjName);
@@ -943,15 +946,16 @@ void contextMissingWithHistory() {
                     //get data to calculate context
                     getObjectContext();
 
-                    /*std::pair<int, int> listenForTrackingObjectsResult = listenForTrackingObjects(getMisObjID, getMisObjName);
+                    std::pair<int, int> listenForTrackingObjectsResult = listenForTrackingObjects(getMisObjID, getMisObjName);
                     int trackingObjectFound = listenForTrackingObjectsResult.first;
                     int trackingObjectPos = listenForTrackingObjectsResult.second;
                     if (trackingObjectFound == 1) {
                         if (DEBUG_trackingObjectFound) {
+                            cout << "contextMissingWithHistory" << endl;
                             cout << "tracking object " << getMisObjID << ":" << getMisObjName << " found" << endl;
                         }
                         captureTrackingObject(trackingObjectPos, getMisObjID, getMisObjName);
-                    }*/
+                    }
                 }
             }
         }
