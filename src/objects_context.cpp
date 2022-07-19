@@ -236,6 +236,8 @@ void captureTrackingObject(int trackingObjectPos, int currentObjectID, string cu
     objectContext[objectContextPos].object_name;
     trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_confidence =
     objectContext[objectContextPos].object_confidence;
+    trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_score =
+    objectContext[objectContextPos].object_score;
     trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_timestamp =
     currentTimeSecs;
     //trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_id;
