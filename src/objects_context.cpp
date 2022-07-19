@@ -245,7 +245,8 @@ void captureTrackingObject(int trackingObjectPos, int currentObjectID, string cu
         cout << fixed << 
         trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[isTracked]].object_timestamp << " : " <<
         trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[isTracked]].object_id << " : " <<
-        trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[isTracked]].object_name << endl;
+        trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[isTracked]].object_name <<  " : " <<
+        trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[isTracked]].object_score << endl;
     }
 
     totalTrackingObjectsCaptured[trackingObjectPos]++; //add to instances of tracking object found
