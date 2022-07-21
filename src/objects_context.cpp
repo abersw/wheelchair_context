@@ -21,8 +21,8 @@ using namespace std;
 
 static const int DEBUG_populateObjectsToTrack = 0;
 static const int DEBUG_listenForTrackingObjects = 0;
-static const int DEBUG_captureTrackingObject = 1;
-static const int DEBUG_trackingObjectFound = 1;
+static const int DEBUG_captureTrackingObject = 0;
+static const int DEBUG_trackingObjectFound = 0;
 static const int DEBUG_contextListToStruct = 0;
 static const int DEBUG_calculateInfluenceWeight = 0;
 static const int DEBUG_listToContextInfo = 0;
@@ -1141,6 +1141,10 @@ int main (int argc, char **argv) {
 
     ros::Publisher object_context_pub = n.advertise<wheelchair_msgs::objectContext>("/wheelchair_robot/context/objects", 1000); //publish object context info for decision making
     ptr_object_context = &object_context_pub; //pointer to publish object context
+
+    //publish tracked objects context info
+    ros::Publisher tracking_object_pub = n.advertise<wheelchair_msgs::trackingContext>("/wheelchair_robot/context/tracking", 1000);
+    ptr_tracking_context = &tracking_object_pub;
 
     ros::Rate rate(10.0);
     while(ros::ok()) {
