@@ -11,6 +11,7 @@
 #include "wheelchair_msgs/objectLocations.h"
 #include "wheelchair_msgs/objectContext.h"
 #include "wheelchair_msgs/missingObjects.h"
+#include "wheelchair_msgs/trackingContext.h"
 
 #include <ros/callback_queue.h>
 #include <thread>
@@ -156,8 +157,12 @@ std::string context_list_loc; //full path to object context file
 std::string context_info_loc; //full path to context training info file
 
 ros::Publisher *ptr_object_context;
+ros::Publisher *ptr_tracking_context;
 
 TofToolBox *tofToolBox;
+
+int isContextDetected = 1;
+int isContextMissing = 0;
 
 static const int saveDataToList = 1;
 
@@ -214,7 +219,7 @@ std::pair<int , int> listenForTrackingObjects(int currentObjectID, string curren
     return std::make_pair(trackedObjectFound, trackedObjectPos);
 }
 
-void captureTrackingObject(int trackingObjectPos, int currentObjectID, string currentObjectName) {
+void captureTrackingObject(int isDetectedObject, int trackingObjectPos, int currentObjectID, string currentObjectName) {
     //get all information and apply to struct
     //find position of object in context array
     int objectContextPos = 0;
@@ -782,7 +787,7 @@ void contextNoHistory(int detPos) {
                         cout << "contextNoHistory" << endl;
                         cout << "tracking object " << getDetObjID << ":" << getDetObjName << " found" << endl;
                     }
-                    captureTrackingObject(trackingObjectPos, getDetObjID, getDetObjName);
+                    captureTrackingObject(isContextDetected, trackingObjectPos, getDetObjID, getDetObjName);
                 }
             }
 
@@ -826,7 +831,7 @@ void contextMissingNoHistory(int detPos) {
                         cout << "contextMissingNoHistory" << endl;
                         cout << "tracking object " << getDetObjID << ":" << getDetObjName << " found" << endl;
                     }
-                    captureTrackingObject(trackingObjectPos, getDetObjID, getDetObjName);
+                    captureTrackingObject(isContextMissing, trackingObjectPos, getDetObjID, getDetObjName);
                 }
                 cout << "object weighting has been reduced to " << objectContext[isContext].object_weighting << endl;
             }
@@ -892,7 +897,7 @@ void contextWithHistory() {
                             cout << "contextWithHistory" << endl;
                             cout << "tracking object " << getDetObjID << ":" << getDetObjName << " found" << endl;
                         }
-                        captureTrackingObject(trackingObjectPos, getDetObjID, getDetObjName);
+                        captureTrackingObject(isContextDetected, trackingObjectPos, getDetObjID, getDetObjName);
                     }
                 }
             }
@@ -957,7 +962,7 @@ void contextMissingWithHistory() {
                             cout << "contextMissingWithHistory" << endl;
                             cout << "tracking object " << getMisObjID << ":" << getMisObjName << " found" << endl;
                         }
-                        captureTrackingObject(trackingObjectPos, getMisObjID, getMisObjName);
+                        captureTrackingObject(isContextMissing, trackingObjectPos, getMisObjID, getMisObjName);
                     }
                 }
             }
