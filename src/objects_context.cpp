@@ -235,28 +235,23 @@ void captureTrackingObject(int isDetectedObject, int trackingObjectPos, int curr
         cout << "trackingObjectPos is " << trackingObjectPos << endl;
         cout << "trackingObjectCaptured is " << totalTrackingObjectsCaptured[trackingObjectPos] << endl;
     }
-    trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_id =
-    objectContext[objectContextPos].object_id;
-    trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_name =
-    objectContext[objectContextPos].object_name;
-    trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_confidence =
-    objectContext[objectContextPos].object_confidence;
-    trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_score =
-    objectContext[objectContextPos].object_score;
-    trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_timestamp =
-    currentTimeSecs;
-    //trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[trackingObjectPos]].object_id;
 
-    for (int isTracked = 0; isTracked < totalTrackingObjectsCaptured[trackingObjectPos]; isTracked++) {
-        cout.precision(12);
-        cout << fixed << 
-        trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[isTracked]].object_timestamp << " : " <<
-        trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[isTracked]].object_id << " : " <<
-        trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[isTracked]].object_name <<  " : " <<
-        trackingObjects[trackingObjectPos][totalTrackingObjectsCaptured[isTracked]].object_score << endl;
-    }
+    wheelchair_msgs::trackingContext trackObj; //initialise ros message type
+    trackObj.header.stamp = ros::Time::now();
+    trackObj.object_id = objectContext[objectContextPos].object_id;
+    trackObj.object_name = objectContext[objectContextPos].object_name;
+    trackObj.object_confidence = objectContext[objectContextPos].object_confidence;
 
-    totalTrackingObjectsCaptured[trackingObjectPos]++; //add to instances of tracking object found
+    trackObj.object_weighting = objectContext[objectContextPos].object_weighting;
+    trackObj.object_uniqueness = objectContext[objectContextPos].object_uniqueness;
+    trackObj.object_score = objectContext[objectContextPos].object_score;
+    trackObj.object_instances = objectContext[objectContextPos].object_instances;
+
+    trackObj.object_timestamp = currentTimeSecs;
+
+    trackObj.detected_or_missing = isDetectedObject;
+
+    ptr_tracking_context->publish(trackObj);
 }
 
 /**
