@@ -1,5 +1,5 @@
 /*
- * detected_objects_context.cpp
+ * objects_context.cpp
  * wheelchair_context
  * version: 0.1.0 Majestic Maidenhair
  * Status: Beta
