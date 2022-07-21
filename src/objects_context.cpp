@@ -161,8 +161,8 @@ ros::Publisher *ptr_tracking_context;
 
 TofToolBox *tofToolBox;
 
-int isContextDetected = 1;
-int isContextMissing = 0;
+int contextIsDetected = 1;
+int contextIsMissing = 0;
 
 static const int saveDataToList = 1;
 
@@ -787,7 +787,7 @@ void contextNoHistory(int detPos) {
                         cout << "contextNoHistory" << endl;
                         cout << "tracking object " << getDetObjID << ":" << getDetObjName << " found" << endl;
                     }
-                    captureTrackingObject(isContextDetected, trackingObjectPos, getDetObjID, getDetObjName);
+                    captureTrackingObject(contextIsDetected, trackingObjectPos, getDetObjID, getDetObjName);
                 }
             }
 
@@ -831,7 +831,7 @@ void contextMissingNoHistory(int detPos) {
                         cout << "contextMissingNoHistory" << endl;
                         cout << "tracking object " << getDetObjID << ":" << getDetObjName << " found" << endl;
                     }
-                    captureTrackingObject(isContextMissing, trackingObjectPos, getDetObjID, getDetObjName);
+                    captureTrackingObject(contextIsMissing, trackingObjectPos, getDetObjID, getDetObjName);
                 }
                 cout << "object weighting has been reduced to " << objectContext[isContext].object_weighting << endl;
             }
@@ -897,7 +897,7 @@ void contextWithHistory() {
                             cout << "contextWithHistory" << endl;
                             cout << "tracking object " << getDetObjID << ":" << getDetObjName << " found" << endl;
                         }
-                        captureTrackingObject(isContextDetected, trackingObjectPos, getDetObjID, getDetObjName);
+                        captureTrackingObject(contextIsDetected, trackingObjectPos, getDetObjID, getDetObjName);
                     }
                 }
             }
@@ -962,7 +962,7 @@ void contextMissingWithHistory() {
                             cout << "contextMissingWithHistory" << endl;
                             cout << "tracking object " << getMisObjID << ":" << getMisObjName << " found" << endl;
                         }
-                        captureTrackingObject(isContextMissing, trackingObjectPos, getMisObjID, getMisObjName);
+                        captureTrackingObject(contextIsMissing, trackingObjectPos, getMisObjID, getMisObjName);
                     }
                 }
             }
