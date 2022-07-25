@@ -16,7 +16,7 @@ using namespace std;
 static const int DEBUG_main = 0;
 static const int DEBUG_fileLocations = 1;
 static const int DEBUG_printTrackingMsg = 1;
-static const int DEBUG_trackingCallback = 0;
+static const int DEBUG_trackingCallback = 1;
 
 //context data to save
 struct TrackingObjects {
@@ -24,6 +24,7 @@ struct TrackingObjects {
     int object_id;
     string object_name;
     float object_confidence; //object confidence from dnn
+    int object_detected; //times object has been detected
 
     double object_weighting; //object weighting result
     double object_uniqueness; //object uniqueness result
@@ -37,6 +38,7 @@ struct TrackingObjects trackingObjects[totalObjectsTracked][totalObjectsTrackedC
 
 //contains instances of object found, uses order from trackingObjects
 int totalTrackingObjectsCaptured[totalObjectsTracked];
+static int totalObjectsToTrack = 0;
 
 struct TrainingInfo {
     int times_trained; //real times trained
@@ -79,6 +81,82 @@ void printTrackingMsg(const wheelchair_msgs::trackingContext objTrack) {
 void trackingCallback(const wheelchair_msgs::trackingContext objTrack) {
     if (DEBUG_printTrackingMsg) {
         printTrackingMsg(objTrack);
+    }
+    int currentObjID = objTrack.object_id;
+    std::string currentObjName = objTrack.object_name;
+
+    //if no objects have been tracked, at first element to array
+    if (totalObjectsToTrack == 0) {
+        if (DEBUG_trackingCallback) {
+            cout << "starting tracking, add to first element in struct" << endl;
+        }
+        trackingObjects[0][0].object_timestamp = objTrack.object_timestamp;
+        trackingObjects[0][0].object_id = objTrack.object_id;
+        trackingObjects[0][0].object_name = objTrack.object_name;
+        trackingObjects[0][0].object_confidence = objTrack.object_confidence;
+        trackingObjects[0][0].object_detected = objTrack.object_detected;
+
+        trackingObjects[0][0].object_weighting = objTrack.object_weighting;
+        trackingObjects[0][0].object_uniqueness = objTrack.object_uniqueness;
+        trackingObjects[0][0].object_score = objTrack.object_score;
+        trackingObjects[0][0].object_instances = objTrack.object_instances;
+
+        totalTrackingObjectsCaptured[0] = 1; //add to number of times object has been tracked
+        totalObjectsToTrack++; //add to number of individual objects to track
+    }
+    //if objects have already been tracked
+    else {
+        //run through list of individual tracked objects
+        int trackedObjListPos = -1;
+        for (int isTrackedObjList = 0; isTrackedObjList < totalObjectsToTrack; isTrackedObjList++) {
+            int currentTrackedObjID = trackingObjects[isTrackedObjList][0].object_id;
+            std::string currentTrackedObjName = trackingObjects[isTrackedObjList][0].object_name;
+            //if ros msg object is the same as tracked object list
+            if ((currentObjID == currentTrackedObjID) && (currentObjName == currentTrackedObjName)) {
+                trackedObjListPos = isTrackedObjList; //retrieve position of object in tracking struct
+            }
+        }
+        if (trackedObjListPos != -1) {
+            //found object in tracking list, add to end of array
+            if (DEBUG_trackingCallback) {
+                cout << "found object in tracking struct, adding to next position in struct";
+            }
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_timestamp = objTrack.object_timestamp;
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_id = objTrack.object_id;
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_name = objTrack.object_name;
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_confidence = objTrack.object_confidence;
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_detected = objTrack.object_detected;
+
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_weighting = objTrack.object_weighting;
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_uniqueness = objTrack.object_uniqueness;
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_score = objTrack.object_score;
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_instances = objTrack.object_instances;
+
+            totalTrackingObjectsCaptured[trackedObjListPos]++; //add to number of times object has been tracked
+        }
+        else {
+            //object not found in tracking list, add object to list
+            //set index to 0 on new tracking object
+            if (DEBUG_trackingCallback) {
+                cout << "object not detected in tracking struct, adding new object" << endl;
+            }
+            totalTrackingObjectsCaptured[totalObjectsToTrack] = 0;
+            trackedObjListPos = totalObjectsToTrack; //set tracked object positon to next element in array
+
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_timestamp = objTrack.object_timestamp;
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_id = objTrack.object_id;
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_name = objTrack.object_name;
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_confidence = objTrack.object_confidence;
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_detected = objTrack.object_detected;
+
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_weighting = objTrack.object_weighting;
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_uniqueness = objTrack.object_uniqueness;
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_score = objTrack.object_score;
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_instances = objTrack.object_instances;
+
+            totalTrackingObjectsCaptured[trackedObjListPos] = 1; //add to number of times object has been tracked
+            totalObjectsToTrack++; //add to number of individual objects to track
+        }
     }
 }
 
