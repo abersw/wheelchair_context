@@ -1,8 +1,8 @@
 /*
  * tracking_context.cpp
  * wheelchair_context
- * version: 0.1.0 Majestic Maidenhair
- * Status: Beta
+ * version: 0.0.1 Majestic Maidenhair
+ * Status: Alpha
  * 
 */
 
@@ -15,23 +15,22 @@ using namespace std;
 
 static const int DEBUG_main = 0;
 static const int DEBUG_fileLocations = 1;
+static const int DEBUG_printTrackingMsg = 1;
+static const int DEBUG_trackingCallback = 0;
 
-struct Context {
-    int object_id; //object id
-    string object_name; //object name
+//context data to save
+struct TrackingObjects {
+    double object_timestamp; //should be saved in seconds .toSec()
+    int object_id;
+    string object_name;
     float object_confidence; //object confidence from dnn
-    int object_detected; //times object has been detected
 
     double object_weighting; //object weighting result
     double object_uniqueness; //object uniqueness result
     double object_score; //calculation of object weighting and uniqueness
     int object_instances; //number of objects in env
-
-    int objectDetectedFlag = 0; //turns to 1 if object has been detected when driving around
 };
-//object_id,object_name,object_confidence,object_detected,object_weighting,object_uniqueness,object_instances
-struct Context objectContext[100000]; //struct for storing object context info
-int totalObjectContextStruct = 0; //total objects in struct
+struct TrackingObjects trackingObjects[10000];
 
 struct TrainingInfo {
     int times_trained; //real times trained
@@ -44,19 +43,37 @@ struct TrainingInfo {
 };
 struct TrainingInfo trainingInfo;
 
-//struct will store single object names and the instances inside the entire environment
-struct ObjectDictionary {
-    std::string object_name; //object name
-    int instances; //instances of object in environment
-};
-struct ObjectDictionary objectDictionary[1000]; //struct for storing data needed to calc uniqueness of objects
-int totalObjectDictionaryStruct = 0; //total list of objects used to calc uniqueness
-
 //list of file locations
 std::string wheelchair_dump_loc; //location of wheelchair_dump package
 const static std::string dump_experiments_loc = "/dump/experiments/"; //location of experiments dir in wheelchair_dump
 
 TofToolBox *tofToolBox;
+
+void printTrackingMsg(const wheelchair_msgs::trackingContext objTrack) {
+    tofToolBox->printSeparator(0);
+    cout << objTrack.object_timestamp << " : " <<
+            objTrack.object_id << " : " <<
+            objTrack.object_name << " : " <<
+            objTrack.object_confidence << " : " <<
+            objTrack.object_detected << " : " <<
+            objTrack.object_weighting << " : " <<
+            objTrack.object_uniqueness << " : " <<
+            objTrack.object_score << " : " <<
+            objTrack.object_instances << " : " <<
+            objTrack.detected_or_missing << endl;
+}
+
+/**
+ * Main callback function triggered by tracking objects detected or expected but missing
+ *
+ * @param parameter 'obLoc' is the array of messages from the publish_object_locations node
+ *        message belongs to wheelchair_msgs objectLocations.msg
+ */
+void trackingCallback(const wheelchair_msgs::trackingContext objTrack) {
+    if (DEBUG_printTrackingMsg) {
+        printTrackingMsg(objTrack);
+    }
+}
 
 /**
  * Main function that contains ROS info, subscriber callback trigger and while loop to get room name
@@ -77,7 +94,7 @@ int main (int argc, char **argv) {
     wheelchair_dump_loc = tofToolBox->doesPkgExist("wheelchair_dump");//check to see if dump package exists
     std::string wheelchair_experiments_loc = wheelchair_dump_loc + dump_experiments_loc;
 
-    //ros::Subscriber objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/objects", 1000, objectLocationsCallback); //full list of objects
+    ros::Subscriber tracking_sub = n.subscribe("/wheelchair_robot/context/tracking", 1000, trackingCallback); //tracked object
 
 
     ros::Rate rate(10.0);
