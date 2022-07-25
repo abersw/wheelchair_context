@@ -241,6 +241,7 @@ void captureTrackingObject(int isDetectedObject, int trackingObjectPos, int curr
     trackObj.object_id = objectContext[objectContextPos].object_id;
     trackObj.object_name = objectContext[objectContextPos].object_name;
     trackObj.object_confidence = objectContext[objectContextPos].object_confidence;
+    trackObj.object_detected = objectContext[objectContextPos].object_detected;
 
     trackObj.object_weighting = objectContext[objectContextPos].object_weighting;
     trackObj.object_uniqueness = objectContext[objectContextPos].object_uniqueness;
