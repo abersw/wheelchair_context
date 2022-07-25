@@ -30,14 +30,16 @@ struct TrackingObjects {
     double object_uniqueness; //object uniqueness result
     double object_score; //calculation of object weighting and uniqueness
     int object_instances; //number of objects in env
+
+    int detected_or_missing; //flag if object was detected or expected but missing
 };
-static const int totalObjectsTracked = 100;
-static const long totalObjectsTrackedCaptured = 10000;
+static const int memTotalObjectsTracked = 100;
+static const long memTotalObjectsTrackedCaptured = 10000;
 //[0] contains object id and name [1] instances detected
-struct TrackingObjects trackingObjects[totalObjectsTracked][totalObjectsTrackedCaptured];
+struct TrackingObjects trackingObjects[memTotalObjectsTracked][memTotalObjectsTrackedCaptured];
 
 //contains instances of object found, uses order from trackingObjects
-int totalTrackingObjectsCaptured[totalObjectsTracked];
+int totalTrackingObjectsCaptured[memTotalObjectsTracked];
 static int totalObjectsToTrack = 0;
 
 struct TrainingInfo {
@@ -190,6 +192,23 @@ int main (int argc, char **argv) {
         ros::spinOnce();
         rate.sleep();
     }
-
+    //print tracking struct
+    cout << "saving context struct" << endl;
+    for (int isTrackingList = 0; isTrackingList < totalObjectsToTrack; isTrackingList++) {
+        tofToolBox->printSeparator(0);
+        for (int isTrackingObject = 0; isTrackingObject < totalTrackingObjectsCaptured[isTrackingList]; isTrackingObject++) {
+            cout.precision(12);
+            cout << fixed << trackingObjects[isTrackingList][isTrackingObject].object_timestamp << " : ";
+            cout << trackingObjects[isTrackingList][isTrackingObject].object_id << " : " <<
+                    trackingObjects[isTrackingList][isTrackingObject].object_name << " : " <<
+                    trackingObjects[isTrackingList][isTrackingObject].object_confidence << " : " <<
+                    trackingObjects[isTrackingList][isTrackingObject].object_detected << " : " <<
+                    trackingObjects[isTrackingList][isTrackingObject].object_weighting << " : " <<
+                    trackingObjects[isTrackingList][isTrackingObject].object_uniqueness << " : " <<
+                    trackingObjects[isTrackingList][isTrackingObject].object_score << " : " <<
+                    trackingObjects[isTrackingList][isTrackingObject].object_instances << " : " <<
+                    trackingObjects[isTrackingList][isTrackingObject].detected_or_missing << endl;
+        }
+    }
     return 0;
 }
