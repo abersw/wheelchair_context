@@ -30,7 +30,13 @@ struct TrackingObjects {
     double object_score; //calculation of object weighting and uniqueness
     int object_instances; //number of objects in env
 };
-struct TrackingObjects trackingObjects[10000];
+static const int totalObjectsTracked = 100;
+static const long totalObjectsTrackedCaptured = 10000;
+//[0] contains object id and name [1] instances detected
+struct TrackingObjects trackingObjects[totalObjectsTracked][totalObjectsTrackedCaptured];
+
+//contains instances of object found, uses order from trackingObjects
+int totalTrackingObjectsCaptured[totalObjectsTracked];
 
 struct TrainingInfo {
     int times_trained; //real times trained
@@ -52,8 +58,8 @@ TofToolBox *tofToolBox;
 void printTrackingMsg(const wheelchair_msgs::trackingContext objTrack) {
     tofToolBox->printSeparator(0);
     cout.precision(12);
-    cout << fixed << objTrack.object_timestamp << " : " <<
-            objTrack.object_id << " : " <<
+    cout << fixed << objTrack.object_timestamp <<" : ";
+    cout << objTrack.object_id << " : " <<
             objTrack.object_name << " : " <<
             "c: " << objTrack.object_confidence << " : " <<
             "d: " << objTrack.object_detected << " : " <<
