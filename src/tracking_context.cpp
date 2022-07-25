@@ -52,7 +52,7 @@ TofToolBox *tofToolBox;
 void printTrackingMsg(const wheelchair_msgs::trackingContext objTrack) {
     tofToolBox->printSeparator(0);
     cout.precision(12);
-    cout << ofixed << bjTrack.object_timestamp << " : " <<
+    cout << fixed << objTrack.object_timestamp << " : " <<
             objTrack.object_id << " : " <<
             objTrack.object_name << " : " <<
             "c: " << objTrack.object_confidence << " : " <<
