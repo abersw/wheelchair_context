@@ -1,0 +1,5 @@
+<launch>
+<!--add valgrind -v to launch prefix-->
+<!--node to calculate context for detected objects-->
+<node pkg="wheelchair_context" name="objects_context" type="objects_context" output="screen" launch-prefix=""></node>
+</launch>

@@ -1,0 +1,4 @@
+<launch>
+<include file="$(find wheelchair_context)/launch/objects_context.launch" />
+<include file="$(find wheelchair_context)/launch/tracking_context.launch" />
+</launch>
