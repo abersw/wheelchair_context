@@ -17,6 +17,7 @@ static const int DEBUG_main = 0;
 static const int DEBUG_fileLocations = 1;
 static const int DEBUG_printTrackingMsg = 1;
 static const int DEBUG_printAllTrackedObjects = 1;
+static const int DEBUG_saveTrackingObjects = 1;
 static const int DEBUG_trackingCallback = 1;
 
 //context data to save
@@ -57,6 +58,7 @@ struct TrainingInfo trainingInfo;
 //list of file locations
 std::string wheelchair_dump_loc; //location of wheelchair_dump package
 const static std::string dump_experiments_loc = "/dump/experiments/"; //location of experiments dir in wheelchair_dump
+std::string wheelchair_experiments_loc;
 
 TofToolBox *tofToolBox;
 
@@ -99,6 +101,29 @@ void printAllTrackedObjects() {
             cout << trackingObjects[isTrackingList][isTrackingObject].object_instances << endl;
             cout << trackingObjects[isTrackingList][isTrackingObject].detected_or_missing << endl;
         }
+    }
+}
+
+void saveTrackingObjects() {
+    std::ofstream fileOut;
+    std::string fileName;
+
+    for (int isObject = 0; isObject < totalObjectsToTrack; isObject++) {
+        fileName = wheelchair_experiments_loc + to_string(trackingObjects[isObject][0].object_id) + "-" + trackingObjects[isObject][0].object_name;
+        if (DEBUG_saveTrackingObjects) {
+            cout << "file name is " << fileName << endl;
+        }
+        fileOut.open (fileName);
+        fileOut << "time,context score\n";
+        std::string buildLine;
+        for (int isTracked = 0; isTracked < totalTrackingObjectsCaptured[isObject]; isTracked++) {
+            buildLine = to_string(trackingObjects[isObject][isTracked].object_timestamp) + "," + to_string(trackingObjects[isObject][isTracked].object_score) + "\n";
+            if (DEBUG_saveTrackingObjects) {
+                cout << "csv line out is " << buildLine;
+            }
+            fileOut << buildLine;
+        }
+        fileOut.close();
     }
 }
 
@@ -207,7 +232,7 @@ int main (int argc, char **argv) {
     ros::NodeHandle n;
 
     wheelchair_dump_loc = tofToolBox->doesPkgExist("wheelchair_dump");//check to see if dump package exists
-    std::string wheelchair_experiments_loc = wheelchair_dump_loc + dump_experiments_loc;
+    wheelchair_experiments_loc = wheelchair_dump_loc + dump_experiments_loc;
 
     ros::Subscriber tracking_sub = n.subscribe("/wheelchair_robot/context/tracking", 1000, trackingCallback); //tracked object
 
@@ -222,6 +247,9 @@ int main (int argc, char **argv) {
     }
     if (DEBUG_printAllTrackedObjects) {
         printAllTrackedObjects();
+    }
+    if (DEBUG_saveTrackingObjects) {
+        saveTrackingObjects();
     }
     return 0;
 }
