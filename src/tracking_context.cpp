@@ -16,6 +16,7 @@ using namespace std;
 static const int DEBUG_main = 0;
 static const int DEBUG_fileLocations = 1;
 static const int DEBUG_printTrackingMsg = 1;
+static const int DEBUG_printAllTrackedObjects = 1;
 static const int DEBUG_trackingCallback = 1;
 
 //context data to save
@@ -59,6 +60,9 @@ const static std::string dump_experiments_loc = "/dump/experiments/"; //location
 
 TofToolBox *tofToolBox;
 
+/**
+ * Print all incoming ROS msgs
+ */
 void printTrackingMsg(const wheelchair_msgs::trackingContext objTrack) {
     tofToolBox->printSeparator(0);
     cout.precision(12);
@@ -72,6 +76,30 @@ void printTrackingMsg(const wheelchair_msgs::trackingContext objTrack) {
             "s: " << objTrack.object_score << " : " <<
             "i: " << objTrack.object_instances << " : " <<
             objTrack.detected_or_missing << endl;
+}
+
+/**
+ * Print all objects that have been tracked when the ROS node is closing
+ */
+void printAllTrackedObjects() {
+    cout << "saving context struct" << endl;
+    for (int isTrackingList = 0; isTrackingList < totalObjectsToTrack; isTrackingList++) {
+        tofToolBox->printSeparator(1);
+        for (int isTrackingObject = 0; isTrackingObject < totalTrackingObjectsCaptured[isTrackingList]; isTrackingObject++) {
+            tofToolBox->printSeparator(0);
+            cout.precision(12);
+            cout << "timestamp " << fixed << trackingObjects[isTrackingList][isTrackingObject].object_timestamp << endl;
+            cout << trackingObjects[isTrackingList][isTrackingObject].object_id << endl;
+            cout << trackingObjects[isTrackingList][isTrackingObject].object_name << endl;
+            cout << trackingObjects[isTrackingList][isTrackingObject].object_confidence << endl;
+            cout << trackingObjects[isTrackingList][isTrackingObject].object_detected << endl;
+            cout << trackingObjects[isTrackingList][isTrackingObject].object_weighting << endl;
+            cout << trackingObjects[isTrackingList][isTrackingObject].object_uniqueness << endl;
+            cout << trackingObjects[isTrackingList][isTrackingObject].object_score << endl;
+            cout << trackingObjects[isTrackingList][isTrackingObject].object_instances << endl;
+            cout << trackingObjects[isTrackingList][isTrackingObject].detected_or_missing << endl;
+        }
+    }
 }
 
 /**
@@ -192,23 +220,8 @@ int main (int argc, char **argv) {
         ros::spinOnce();
         rate.sleep();
     }
-    //print tracking struct
-    cout << "saving context struct" << endl;
-    for (int isTrackingList = 0; isTrackingList < totalObjectsToTrack; isTrackingList++) {
-        tofToolBox->printSeparator(0);
-        for (int isTrackingObject = 0; isTrackingObject < totalTrackingObjectsCaptured[isTrackingList]; isTrackingObject++) {
-            cout.precision(12);
-            cout << fixed << trackingObjects[isTrackingList][isTrackingObject].object_timestamp << " : ";
-            cout << trackingObjects[isTrackingList][isTrackingObject].object_id << " : " <<
-                    trackingObjects[isTrackingList][isTrackingObject].object_name << " : " <<
-                    trackingObjects[isTrackingList][isTrackingObject].object_confidence << " : " <<
-                    trackingObjects[isTrackingList][isTrackingObject].object_detected << " : " <<
-                    trackingObjects[isTrackingList][isTrackingObject].object_weighting << " : " <<
-                    trackingObjects[isTrackingList][isTrackingObject].object_uniqueness << " : " <<
-                    trackingObjects[isTrackingList][isTrackingObject].object_score << " : " <<
-                    trackingObjects[isTrackingList][isTrackingObject].object_instances << " : " <<
-                    trackingObjects[isTrackingList][isTrackingObject].detected_or_missing << endl;
-        }
+    if (DEBUG_printAllTrackedObjects) {
+        printAllTrackedObjects();
     }
     return 0;
 }
