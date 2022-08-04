@@ -159,7 +159,7 @@ std::string context_info_loc; //full path to context training info file
 
 std::string wheelchair_experiments_loc; //location of wheelchair_dump package
 std::string experiments_loc = "/docs/objects-to-track/"; //location of list of objects to tack
-std::string trackFilesList[10] = {"1DLF.txt"};
+std::string experiments_loc_file;
 
 ros::Publisher *ptr_object_context;
 ros::Publisher *ptr_tracking_context;
@@ -170,6 +170,32 @@ int contextIsDetected = 1;
 int contextIsMissing = 0;
 
 static const int saveDataToList = 1;
+
+int objectsToTrack = 0;
+
+void trackingFileToArray() {
+    int counter = 0;
+    std::ifstream file(experiments_loc_file);
+    if (file.is_open()) {
+        std::string line;
+        while (std::getline(file, line)) {
+            // using printf() in all tests for consistency
+            cout << line <<endl;
+            size_t colon_pos = line.find(':');
+            string str1 = line.substr(0, colon_pos);
+            string str2 = line.substr(colon_pos+1);
+            trackingObjectsListRaw[counter] = str1;
+            counter++;
+            trackingObjectsListRaw[counter] = str2;
+            counter++;
+        }
+        file.close();
+    }
+    for (int i = 0; i < counter; i++) {
+        cout << trackingObjectsListRaw[i] << endl;
+    }
+
+}
 
 void populateObjectsToTrack() {
     int totalTrackingObjectsListRaw = *(&trackingObjectsListRaw + 1) - trackingObjectsListRaw;
@@ -1122,8 +1148,18 @@ int main (int argc, char **argv) {
     listToContextInfo(context_info_loc); //set context training info to struct
 
     wheelchair_experiments_loc = tofToolBox->doesPkgExist("wheelchair_experiments");//check to see if dump package exists
-
-    populateObjectsToTrack();
+    std::string PARAM_dataset_name;
+    if (n.getParam("/wheelchair_robot/context/track_name", PARAM_dataset_name)) {
+        ROS_INFO("Got param: %s", PARAM_dataset_name.c_str());
+        experiments_loc_file = wheelchair_experiments_loc + experiments_loc + PARAM_dataset_name;
+        trackingFileToArray();
+        populateObjectsToTrack();
+        objectsToTrack = 1;
+    }
+    else {
+        ROS_ERROR("Failed to get param '/wheelchair_robot/context/track_name'");
+        objectsToTrack = 0;
+    }
 
     ros::Subscriber objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/objects", 1000, objectLocationsCallback); //full list of objects
 
