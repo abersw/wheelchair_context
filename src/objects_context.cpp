@@ -143,7 +143,8 @@ int totalTrackingObjectsCaptured[totalObjectsTracked];
 
 struct TrackingObjects trackingObjectsList[totalObjectsTracked];
 //std::map<string, string> trackingObjectsListRaw = {{"42", "refrigerator"}, {"53", "refrigerator"}};
-string trackingObjectsListRaw[] = {"4", "backpack", "56", "refrigerator", "59", "oven"};
+//string trackingObjectsListRaw[] = {"4", "backpack", "56", "refrigerator", "59", "oven"};
+string trackingObjectsListRaw[10000];
 int totalTrackingObjectsList = 0;
 
 double currentTimeSecs = 0.0;
@@ -155,6 +156,10 @@ std::string context_list_name = "objects.context"; //name of object context file
 std::string context_info_name = "info.context"; //name of context training info file
 std::string context_list_loc; //full path to object context file
 std::string context_info_loc; //full path to context training info file
+
+std::string wheelchair_experiments_loc; //location of wheelchair_dump package
+std::string experiments_loc = "/docs/objects-to-track/"; //location of list of objects to tack
+std::string trackFilesList[10] = {"1DLF.txt"};
 
 ros::Publisher *ptr_object_context;
 ros::Publisher *ptr_tracking_context;
@@ -1115,6 +1120,8 @@ int main (int argc, char **argv) {
     }
     tofToolBox->createFile(context_info_loc); //check to see if file is present, if not create a new one
     listToContextInfo(context_info_loc); //set context training info to struct
+
+    wheelchair_experiments_loc = tofToolBox->doesPkgExist("wheelchair_experiments");//check to see if dump package exists
 
     populateObjectsToTrack();
 
