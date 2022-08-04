@@ -19,6 +19,7 @@
 
 using namespace std;
 
+static const int DEBUG_trackingFileToArray = 0;
 static const int DEBUG_populateObjectsToTrack = 0;
 static const int DEBUG_listenForTrackingObjects = 0;
 static const int DEBUG_captureTrackingObject = 0;
@@ -145,6 +146,7 @@ struct TrackingObjects trackingObjectsList[totalObjectsTracked];
 //std::map<string, string> trackingObjectsListRaw = {{"42", "refrigerator"}, {"53", "refrigerator"}};
 //string trackingObjectsListRaw[] = {"4", "backpack", "56", "refrigerator", "59", "oven"};
 string trackingObjectsListRaw[10000];
+int totalTrackingObjectsListRaw = 0;
 int totalTrackingObjectsList = 0;
 
 double currentTimeSecs = 0.0;
@@ -180,7 +182,9 @@ void trackingFileToArray() {
         std::string line;
         while (std::getline(file, line)) {
             // using printf() in all tests for consistency
-            cout << line <<endl;
+            if (DEBUG_trackingFileToArray) {
+                cout << "complete line from file is " << line << endl;
+            }
             size_t colon_pos = line.find(':');
             string str1 = line.substr(0, colon_pos);
             string str2 = line.substr(colon_pos+1);
@@ -191,14 +195,18 @@ void trackingFileToArray() {
         }
         file.close();
     }
-    for (int i = 0; i < counter; i++) {
-        cout << trackingObjectsListRaw[i] << endl;
+    else {
+        cout << "something went wrong opening the file" << endl;
     }
-
+    totalTrackingObjectsListRaw = counter;
+    if (DEBUG_trackingFileToArray) {
+        for (int i = 0; i < counter; i++) {
+            cout << trackingObjectsListRaw[i] << endl;
+        }
+    }
 }
 
 void populateObjectsToTrack() {
-    int totalTrackingObjectsListRaw = *(&trackingObjectsListRaw + 1) - trackingObjectsListRaw;
     if (DEBUG_populateObjectsToTrack) {
         cout << "total tracking objects list raw " << totalTrackingObjectsListRaw << endl;
     }
@@ -1151,7 +1159,8 @@ int main (int argc, char **argv) {
     std::string PARAM_dataset_name;
     if (n.getParam("/wheelchair_robot/context/track_name", PARAM_dataset_name)) {
         ROS_INFO("Got param: %s", PARAM_dataset_name.c_str());
-        experiments_loc_file = wheelchair_experiments_loc + experiments_loc + PARAM_dataset_name;
+        experiments_loc_file = wheelchair_experiments_loc + experiments_loc + PARAM_dataset_name + ".txt";
+        cout << "experiments file is located at " << experiments_loc_file << endl;
         trackingFileToArray();
         populateObjectsToTrack();
         objectsToTrack = 1;
