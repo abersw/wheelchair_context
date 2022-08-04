@@ -174,7 +174,7 @@ void trackingCallback(const wheelchair_msgs::trackingContext objTrack) {
         if (trackedObjListPos != -1) {
             //found object in tracking list, add to end of array
             if (DEBUG_trackingCallback) {
-                cout << "found object in tracking struct, adding to next position in struct";
+                cout << "found object in tracking struct, adding to next position in struct" << endl;
             }
             trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_timestamp = objTrack.object_timestamp;
             trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_id = objTrack.object_id;
