@@ -109,7 +109,7 @@ void saveTrackingObjects() {
     std::string fileName;
 
     for (int isObject = 0; isObject < totalObjectsToTrack; isObject++) {
-        fileName = wheelchair_experiments_loc + to_string(trackingObjects[isObject][0].object_id) + "-" + trackingObjects[isObject][0].object_name;
+        fileName = wheelchair_experiments_loc + to_string(trackingObjects[isObject][0].object_id) + "-" + trackingObjects[isObject][0].object_name + ".csv";
         if (DEBUG_saveTrackingObjects) {
             cout << "file name is " << fileName << endl;
         }
