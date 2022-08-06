@@ -114,10 +114,18 @@ void saveTrackingObjects() {
             cout << "file name is " << fileName << endl;
         }
         fileOut.open (fileName);
-        fileOut << "time,context score\n";
+        fileOut << "time,object name,object confidence,object detected,object weighting,object uniqueness,context score,object instances,detected or missing\n";
         std::string buildLine;
         for (int isTracked = 0; isTracked < totalTrackingObjectsCaptured[isObject]; isTracked++) {
-            buildLine = to_string(trackingObjects[isObject][isTracked].object_timestamp) + "," + to_string(trackingObjects[isObject][isTracked].object_score) + "\n";
+            buildLine = to_string(trackingObjects[isObject][isTracked].object_timestamp) + "," +
+                        trackingObjects[isObject][isTracked].object_name + "," +
+                        to_string(trackingObjects[isObject][isTracked].object_confidence) + "," +
+                        to_string(trackingObjects[isObject][isTracked].object_detected) + "," +
+                        to_string(trackingObjects[isObject][isTracked].object_weighting) + "," +
+                        to_string(trackingObjects[isObject][isTracked].object_uniqueness) + "," +
+                        to_string(trackingObjects[isObject][isTracked].object_score) + "," +
+                        to_string(trackingObjects[isObject][isTracked].object_instances) + "," +
+                        to_string(trackingObjects[isObject][isTracked].detected_or_missing) + "\n";
             if (DEBUG_saveTrackingObjects) {
                 cout << "csv line out is " << buildLine;
             }
