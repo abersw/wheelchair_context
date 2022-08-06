@@ -164,6 +164,8 @@ void trackingCallback(const wheelchair_msgs::trackingContext objTrack) {
         trackingObjects[0][0].object_score = objTrack.object_score;
         trackingObjects[0][0].object_instances = objTrack.object_instances;
 
+        trackingObjects[0][0].detected_or_missing = objTrack.detected_or_missing;
+
         totalTrackingObjectsCaptured[0] = 1; //add to number of times object has been tracked
         totalObjectsToTrack++; //add to number of individual objects to track
     }
@@ -195,6 +197,8 @@ void trackingCallback(const wheelchair_msgs::trackingContext objTrack) {
             trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_score = objTrack.object_score;
             trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_instances = objTrack.object_instances;
 
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].detected_or_missing = objTrack.detected_or_missing;
+
             totalTrackingObjectsCaptured[trackedObjListPos]++; //add to number of times object has been tracked
         }
         else {
@@ -216,6 +220,8 @@ void trackingCallback(const wheelchair_msgs::trackingContext objTrack) {
             trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_uniqueness = objTrack.object_uniqueness;
             trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_score = objTrack.object_score;
             trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_instances = objTrack.object_instances;
+
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].detected_or_missing = objTrack.detected_or_missing;
 
             totalTrackingObjectsCaptured[trackedObjListPos] = 1; //add to number of times object has been tracked
             totalObjectsToTrack++; //add to number of individual objects to track
