@@ -150,6 +150,7 @@ int totalTrackingObjectsListRaw = 0;
 int totalTrackingObjectsList = 0;
 
 double currentTimeSecs = 0.0;
+double PARAM_add_to_duration = 0.0;
 
 //list of file locations
 std::string wheelchair_dump_loc; //location of wheelchair_dump package
@@ -174,6 +175,9 @@ int contextIsMissing = 0;
 static const int saveDataToList = 1;
 
 int objectsToTrack = 0;
+
+double beginTime = 0.0;
+
 
 void trackingFileToArray() {
     int counter = 0;
@@ -288,6 +292,8 @@ void captureTrackingObject(int isDetectedObject, int trackingObjectPos, int curr
     trackObj.object_instances = objectContext[objectContextPos].object_instances;
 
     trackObj.object_timestamp = currentTimeSecs;
+
+    trackObj.duration = (currentTimeSecs - beginTime) + PARAM_add_to_duration;
 
     trackObj.detected_or_missing = isDetectedObject;
 
@@ -1200,12 +1206,20 @@ int main (int argc, char **argv) {
     ptr_tracking_context = &tracking_object_pub;
 
     ros::Rate rate(10.0);
+
+    int checkTimeOnStartup = 0;
+
     while(ros::ok()) {
         if (DEBUG_main) {
             cout << "spin \n";
             for (int i = 0; i < totalObjectContextStruct; i++) { //print out context struct for debugging
                 cout << objectContext[i].object_id << ":" << objectContext[i].object_name << endl;
             }
+        }
+        if (checkTimeOnStartup == 0) {
+            beginTime = ros::Time::now().toSec();
+            n.setParam("/wheelchair_robot/context/tracking/begin_time", beginTime);
+            checkTimeOnStartup = 1;
         }
         ros::spinOnce();
         rate.sleep();
