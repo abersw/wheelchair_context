@@ -121,6 +121,7 @@ struct TrackingObjects {
     float object_confidence; //object confidence from dnn
 
     double object_timestamp; //should be saved in seconds .toSec()
+    double duration; //duration from start of node launch
 
     //context info
     int times_trained; //real times trained
@@ -1219,6 +1220,7 @@ int main (int argc, char **argv) {
         if (checkTimeOnStartup == 0) {
             beginTime = ros::Time::now().toSec();
             n.setParam("/wheelchair_robot/context/tracking/begin_time", beginTime);
+            cout << "start time is " << beginTime << endl;
             checkTimeOnStartup = 1;
         }
         ros::spinOnce();

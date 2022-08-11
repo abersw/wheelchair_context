@@ -23,6 +23,7 @@ static const int DEBUG_trackingCallback = 1;
 //context data to save
 struct TrackingObjects {
     double object_timestamp; //should be saved in seconds .toSec()
+    double duration; //duration from start of ROS launch
     int object_id;
     string object_name;
     float object_confidence; //object confidence from dnn
@@ -68,8 +69,9 @@ TofToolBox *tofToolBox;
 void printTrackingMsg(const wheelchair_msgs::trackingContext objTrack) {
     tofToolBox->printSeparator(0);
     cout.precision(12);
-    cout << fixed << objTrack.object_timestamp <<" : ";
-    cout << objTrack.object_id << " : " <<
+    cout << fixed << objTrack.object_timestamp << " : ";
+    cout << objTrack.duration << " : " <<
+            objTrack.object_id << " : " <<
             objTrack.object_name << " : " <<
             "c: " << objTrack.object_confidence << " : " <<
             "d: " << objTrack.object_detected << " : " <<
@@ -91,6 +93,7 @@ void printAllTrackedObjects() {
             tofToolBox->printSeparator(0);
             cout.precision(12);
             cout << "timestamp " << fixed << trackingObjects[isTrackingList][isTrackingObject].object_timestamp << endl;
+            cout << trackingObjects[isTrackingList][isTrackingObject].duration << endl;
             cout << trackingObjects[isTrackingList][isTrackingObject].object_id << endl;
             cout << trackingObjects[isTrackingList][isTrackingObject].object_name << endl;
             cout << trackingObjects[isTrackingList][isTrackingObject].object_confidence << endl;
@@ -114,10 +117,11 @@ void saveTrackingObjects() {
             cout << "file name is " << fileName << endl;
         }
         fileOut.open (fileName);
-        fileOut << "time,object name,object confidence,object detected,object weighting,object uniqueness,context score,object instances,detected or missing\n";
+        fileOut << "time,duration,object name,object confidence,object detected,object weighting,object uniqueness,context score,object instances,detected or missing\n";
         std::string buildLine;
         for (int isTracked = 0; isTracked < totalTrackingObjectsCaptured[isObject]; isTracked++) {
             buildLine = to_string(trackingObjects[isObject][isTracked].object_timestamp) + "," +
+                        to_string(trackingObjects[isObject][isTracked].duration) + "," +
                         trackingObjects[isObject][isTracked].object_name + "," +
                         to_string(trackingObjects[isObject][isTracked].object_confidence) + "," +
                         to_string(trackingObjects[isObject][isTracked].object_detected) + "," +
@@ -154,6 +158,7 @@ void trackingCallback(const wheelchair_msgs::trackingContext objTrack) {
             cout << "starting tracking, add to first element in struct" << endl;
         }
         trackingObjects[0][0].object_timestamp = objTrack.object_timestamp;
+        trackingObjects[0][0].duration = objTrack.duration;
         trackingObjects[0][0].object_id = objTrack.object_id;
         trackingObjects[0][0].object_name = objTrack.object_name;
         trackingObjects[0][0].object_confidence = objTrack.object_confidence;
@@ -187,6 +192,7 @@ void trackingCallback(const wheelchair_msgs::trackingContext objTrack) {
                 cout << "found object in tracking struct, adding to next position in struct" << endl;
             }
             trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_timestamp = objTrack.object_timestamp;
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].duration = objTrack.duration;
             trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_id = objTrack.object_id;
             trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_name = objTrack.object_name;
             trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_confidence = objTrack.object_confidence;
@@ -211,6 +217,7 @@ void trackingCallback(const wheelchair_msgs::trackingContext objTrack) {
             trackedObjListPos = totalObjectsToTrack; //set tracked object positon to next element in array
 
             trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_timestamp = objTrack.object_timestamp;
+            trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].duration = objTrack.duration;
             trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_id = objTrack.object_id;
             trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_name = objTrack.object_name;
             trackingObjects[trackedObjListPos][totalTrackingObjectsCaptured[trackedObjListPos]].object_confidence = objTrack.object_confidence;
