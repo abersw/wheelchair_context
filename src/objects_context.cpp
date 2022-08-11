@@ -153,6 +153,8 @@ int totalTrackingObjectsList = 0;
 double currentTimeSecs = 0.0;
 double PARAM_add_to_duration = 0.0;
 
+int checkTimeOnStartup = 0;
+
 //list of file locations
 std::string wheelchair_dump_loc; //location of wheelchair_dump package
 std::string dump_context_loc = "/dump/context/"; //location of context dir in wheelchair_dump
@@ -619,6 +621,13 @@ void publishObjectContext() {
  *        message belongs to wheelchair_msgs objectLocations.msg
  */
 void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
+    if (checkTimeOnStartup == 0) {
+        beginTime = ros::Time::now().toSec();
+        //n.setParam("/wheelchair_robot/context/tracking/begin_time", beginTime);
+        cout << "start time is " << beginTime << endl;
+        checkTimeOnStartup = 1;
+    }
+    
     int totalObjectsInMsg = obLoc.totalObjects; //total detected objects in ROS msg
     totalObjectsFileStruct = totalObjectsInMsg; //set message total objects to total objects in file struct
     if (DEBUG_objectLocationsCallback) {
@@ -1208,7 +1217,6 @@ int main (int argc, char **argv) {
 
     ros::Rate rate(10.0);
 
-    int checkTimeOnStartup = 0;
 
     while(ros::ok()) {
         if (DEBUG_main) {
@@ -1216,12 +1224,6 @@ int main (int argc, char **argv) {
             for (int i = 0; i < totalObjectContextStruct; i++) { //print out context struct for debugging
                 cout << objectContext[i].object_id << ":" << objectContext[i].object_name << endl;
             }
-        }
-        if (checkTimeOnStartup == 0) {
-            beginTime = ros::Time::now().toSec();
-            n.setParam("/wheelchair_robot/context/tracking/begin_time", beginTime);
-            cout << "start time is " << beginTime << endl;
-            checkTimeOnStartup = 1;
         }
         ros::spinOnce();
         rate.sleep();
