@@ -1186,6 +1186,16 @@ int main (int argc, char **argv) {
         objectsToTrack = 0;
     }
 
+    //get param to add duration from previous run
+    if (n.getParam("/wheelchair_robot/context/add_to_duration", PARAM_add_to_duration)) {
+        ROS_INFO("Got param: %s", PARAM_dataset_name.c_str());
+        cout << "add_to_duration is " << PARAM_add_to_duration << endl;
+    }
+    else {
+        ROS_ERROR("Failed to get param, add_to_duration remains at 0.0");
+        PARAM_add_to_duration = 0.0;
+    }
+
     ros::Subscriber objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/objects", 1000, objectLocationsCallback); //full list of objects
 
     //delay object detected thread by a few milliseconds, to allow the full objects list to be processed
