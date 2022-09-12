@@ -135,7 +135,7 @@ struct TrackingObjects {
     double object_score; //calculation of object weighting and uniqueness
     int object_instances; //number of objects in env
 };
-static const int totalObjectsTracked = 100;
+static const int totalObjectsTracked = 1000;
 static const long totalObjectsTrackedCaptured = 10000;
 //[0] contains object id and name [1] instances detected
 struct TrackingObjects trackingObjects[totalObjectsTracked][totalObjectsTrackedCaptured];
@@ -149,6 +149,7 @@ struct TrackingObjects trackingObjectsList[totalObjectsTracked];
 string trackingObjectsListRaw[10000];
 int totalTrackingObjectsListRaw = 0;
 int totalTrackingObjectsList = 0;
+static const int TRACKING_ID_RANGE = 3;
 
 double currentTimeSecs = 0.0;
 double PARAM_add_to_duration = 0.0;
@@ -219,18 +220,36 @@ void populateObjectsToTrack() {
     }
     int pos = 0;
     int counter = 0;
+
+    int targetObjectID = -1;
+    std::string targetObjectName = "";
+
     for (int i = 0; i < totalTrackingObjectsListRaw; i++) {
         if (pos == 0) {
-            //trackingObjectsList[counter].object_id = std::stoi(trackingObjectsListRaw[i]);
-            trackingObjects[counter][0].object_id = std::stoi(trackingObjectsListRaw[i]);
+            targetObjectID = std::stoi(trackingObjectsListRaw[i]);
             pos++;
         }
         else if (pos == 1) {
-            //trackingObjectsList[counter].object_name = trackingObjectsListRaw[i];
-            trackingObjects[counter][0].object_name = trackingObjectsListRaw[i];
-            pos = 0;
-            totalTrackingObjectsCaptured[counter] = 0;
-            counter++;
+            targetObjectName = trackingObjectsListRaw[i];
+            pos = 0; //next element in list will be id
+
+            //track object IDs within specified range
+            //run from min range of object ID
+            for (int iterateObjectID = (targetObjectID - TRACKING_ID_RANGE); iterateObjectID < targetObjectID; iterateObjectID++) {
+                //std::cout << "run less " << iterateObjectID << std::endl;
+                trackingObjects[counter][0].object_id = iterateObjectID;
+                trackingObjects[counter][0].object_name = targetObjectName;
+                totalTrackingObjectsCaptured[counter] = 0;
+                counter++;
+            }
+            //run from object id to max range
+            for (int iterateObjectID = targetObjectID; iterateObjectID <= (targetObjectID + TRACKING_ID_RANGE); iterateObjectID++) {
+                //std::cout << "run more " << iterateObjectID << std::endl;
+                trackingObjects[counter][0].object_id = iterateObjectID;
+                trackingObjects[counter][0].object_name = targetObjectName;
+                totalTrackingObjectsCaptured[counter] = 0;
+                counter++;
+            }
         }
         else {
             if (DEBUG_populateObjectsToTrack) {
