@@ -300,6 +300,9 @@ void captureTrackingObject(int isDetectedObject, int trackingObjectPos, int curr
         cout << "trackingObjectPos is " << trackingObjectPos << endl;
         cout << "trackingObjectCaptured is " << totalTrackingObjectsCaptured[trackingObjectPos] << endl;
     }
+    if (objectContext[objectContextPos].object_instances == 0) {
+        ROS_ERROR_STREAM("something has gone very wrong, detected 0 instances");
+    }
 
     wheelchair_msgs::trackingContext trackObj; //initialise ros message type
     trackObj.header.stamp = ros::Time::now();
