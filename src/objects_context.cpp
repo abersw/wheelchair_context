@@ -370,7 +370,7 @@ void contextListToStruct(std::string fileName) {
                 }
                 lineSection++; //move to next element in line
             }
-            objectContext[objectNumber].object_instances = std::stod(line); //set object instances
+            objectContext[objectNumber].object_instances = std::stoi(line); //set object instances
             if (DEBUG_contextListToStruct) { //print off debug lines
                 cout << "sections in line " << lineSection << endl;
                 cout << objectContext[objectNumber].object_id << "," << objectContext[objectNumber].object_name << ", " << objectContext[objectNumber].object_confidence << endl;
