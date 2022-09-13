@@ -301,6 +301,7 @@ void captureTrackingObject(int isDetectedObject, int trackingObjectPos, int curr
         cout << "trackingObjectCaptured is " << totalTrackingObjectsCaptured[trackingObjectPos] << endl;
     }
     if (objectContext[objectContextPos].object_instances == 0) {
+        ROS_ERROR_STREAM(to_string(objectContext[objectContextPos].object_id) + objectContext[objectContextPos].object_name);
         ROS_ERROR_STREAM("something has gone very wrong, detected 0 instances");
     }
 
