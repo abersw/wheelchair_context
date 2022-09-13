@@ -475,6 +475,7 @@ void addObjectToDictionary() {
             //add object name to struct
             objectDictionary[totalObjectDictionaryStruct].object_name = getObjName; //assign name from objectsFileStruct
             objectDictionary[totalObjectDictionaryStruct].instances = 0; //set instances to 0
+            cout << "DEBUG: adding zero" << endl;
             totalObjectDictionaryStruct++; //add for next element in array
         }
     }
