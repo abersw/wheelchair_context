@@ -24,7 +24,7 @@ static const int DEBUG_populateObjectsToTrack = 0;
 static const int DEBUG_listenForTrackingObjects = 0;
 static const int DEBUG_captureTrackingObject = 0;
 static const int DEBUG_trackingObjectFound = 0;
-static const int DEBUG_contextListToStruct = 0;
+static const int DEBUG_contextListToStruct = 1;
 static const int DEBUG_calculateInfluenceWeight = 0;
 static const int DEBUG_listToContextInfo = 0;
 static const int DEBUG_addObjectToDictionary = 0;
@@ -465,7 +465,7 @@ void addObjectToDictionary() {
             if (getObjName == getObjDictName) { //if name from objectsFileStruct and objectDictionary is the same
                 objectMatched = 1; //set to true
             }
-            //objectDictionary[isDict].instances = 0; //set objects back to 0
+            objectDictionary[isDict].instances = 0; //set objects back to 0
             //cout << "DEBUG: adding zero for " << getObjName << endl;
         }
         if (objectMatched) {
