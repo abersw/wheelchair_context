@@ -109,7 +109,7 @@ struct TrainingInfo trainingInfo;
 //struct will store single object names and the instances inside the entire environment
 struct ObjectDictionary {
     std::string object_name; //object name
-    int instances; //instances of object in environment
+    int instances = 0; //instances of object in environment
 };
 struct ObjectDictionary objectDictionary[1000]; //struct for storing data needed to calc uniqueness of objects
 int totalObjectDictionaryStruct = 0; //total list of objects used to calc uniqueness
@@ -465,7 +465,7 @@ void addObjectToDictionary() {
             if (getObjName == getObjDictName) { //if name from objectsFileStruct and objectDictionary is the same
                 objectMatched = 1; //set to true
             }
-            //objectDictionary[isDict].instances = 0; //set objects back to 0
+            objectDictionary[isDict].instances = 0; //set objects back to 0
             //cout << "DEBUG: adding zero for " << getObjName << endl;
         }
         if (objectMatched) {
