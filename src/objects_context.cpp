@@ -484,7 +484,10 @@ void addObjectToDictionary() {
         tofToolBox->printSeparator(1);
         cout << "pre-instance calculations, total size of struct is " << totalObjectDictionaryStruct << endl;
         for (int isDet = 0; isDet < totalObjectDictionaryStruct; isDet++) {
-            cout << objectDictionary[isDet].object_name << ":" << objectDictionary[isDet].instances << endl;
+            if (objectDictionary[isDet].instances == 0) {
+                ROS_ERROR("One of a number of many things has gone terribly wrong...");
+                cout << objectDictionary[isDet].object_name << ":" << objectDictionary[isDet].instances << endl;
+            }
         }
         tofToolBox->printSeparator(1);
     }
