@@ -465,8 +465,8 @@ void addObjectToDictionary() {
             if (getObjName == getObjDictName) { //if name from objectsFileStruct and objectDictionary is the same
                 objectMatched = 1; //set to true
             }
-            objectDictionary[isDict].instances = 0; //set objects back to 0
-            cout << "DEBUG: adding zero for " << getObjName << endl;
+            //objectDictionary[isDict].instances = 0; //set objects back to 0
+            //cout << "DEBUG: adding zero for " << getObjName << endl;
         }
         if (objectMatched) {
             //if object is already in struct, don't add anything
