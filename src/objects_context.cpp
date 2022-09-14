@@ -523,7 +523,7 @@ void calculateObjectInstances() {
     //print out list and instances of objects
     if (DEBUG_objectLocationsCallbackDictionary) {
         for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
-            if (objectDictionary[isDet].instances == 0) {
+            if (objectDictionary[isDict].instances == 0) {
                 ROS_ERROR("One of a number of many things has gone terribly wrong...");
                 cout << objectDictionary[isDict].object_name << ":" << objectDictionary[isDict].instances << endl;
             }
