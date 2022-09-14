@@ -466,6 +466,7 @@ void addObjectToDictionary() {
                 objectMatched = 1; //set to true
             }
             objectDictionary[isDict].instances = 0; //set objects back to 0
+            cout << "DEBUG: adding zero for " << getObjName << endl;
         }
         if (objectMatched) {
             //if object is already in struct, don't add anything
@@ -475,7 +476,6 @@ void addObjectToDictionary() {
             //add object name to struct
             objectDictionary[totalObjectDictionaryStruct].object_name = getObjName; //assign name from objectsFileStruct
             objectDictionary[totalObjectDictionaryStruct].instances = 0; //set instances to 0
-            cout << "DEBUG: adding zero for " << getObjName << endl;
             totalObjectDictionaryStruct++; //add for next element in array
         }
     }
