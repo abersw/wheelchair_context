@@ -27,12 +27,12 @@ static const int DEBUG_trackingObjectFound = 0;
 static const int DEBUG_contextListToStruct = 1;
 static const int DEBUG_calculateInfluenceWeight = 0;
 static const int DEBUG_listToContextInfo = 0;
-static const int DEBUG_addObjectToDictionary = 1;
+static const int DEBUG_addObjectToDictionary = 0;
 static const int DEBUG_calculateObjectInstances = 0;
 static const int DEBUG_calculateObjectUniqueness = 0;
 static const int DEBUG_calculateContextScore = 0;
 static const int DEBUG_publishObjectContext = 0;
-static const int DEBUG_objectLocationsCallbackDictionary = 0;
+static const int DEBUG_objectLocationsCallbackDictionary = 1;
 static const int DEBUG_objectLocationsCallback = 0;
 static const int DEBUG_assignObjectsDetectedStruct = 0;
 static const int DEBUG_assignObjectsMissingStruct = 0;
@@ -483,11 +483,8 @@ void addObjectToDictionary() {
     if (DEBUG_addObjectToDictionary) {
         tofToolBox->printSeparator(1);
         cout << "pre-instance calculations, total size of struct is " << totalObjectDictionaryStruct << endl;
-        for (int isDet = 0; isDet < totalObjectDictionaryStruct; isDet++) {
-            if (objectDictionary[isDet].instances == 0) {
-                ROS_ERROR("One of a number of many things has gone terribly wrong...");
-                cout << objectDictionary[isDet].object_name << ":" << objectDictionary[isDet].instances << endl;
-            }
+        for (int isDet = 0; isDet < totalObjectDictionaryStruct; isDet++) {            
+            cout << objectDictionary[isDet].object_name << ":" << objectDictionary[isDet].instances << endl;
         }
         tofToolBox->printSeparator(1);
     }
@@ -526,7 +523,10 @@ void calculateObjectInstances() {
     //print out list and instances of objects
     if (DEBUG_objectLocationsCallbackDictionary) {
         for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
-            cout << objectDictionary[isDict].object_name << ":" << objectDictionary[isDict].instances << endl;
+            if (objectDictionary[isDet].instances == 0) {
+                ROS_ERROR("One of a number of many things has gone terribly wrong...");
+                cout << objectDictionary[isDict].object_name << ":" << objectDictionary[isDict].instances << endl;
+            }
         }
     }
 }
