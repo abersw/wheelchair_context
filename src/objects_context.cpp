@@ -113,6 +113,9 @@ struct ObjectDictionary {
 };
 struct ObjectDictionary objectDictionary[1000]; //struct for storing data needed to calc uniqueness of objects
 int totalObjectDictionaryStruct = 0; //total list of objects used to calc uniqueness
+struct ObjectDictionary objectDictionaryTmp[1000]; //struct for storing data needed to calc uniqueness of objects
+int totalObjectDictionaryStructTmp = 0; //total list of objects used to calc uniqueness
+
 
 //context data to save
 struct TrackingObjects {
@@ -447,94 +450,55 @@ void listToContextInfo(std::string fileName) {
     }
 }
 
-/**
- * Function to create a dictionary of objects from the main objects array
- *
- */
-void addObjectToDictionary() {
-    totalObjectContextStruct = totalObjectsFileStruct; //set object context struct size to replicate size of object struct
-    for (int isObject = 0; isObject < totalObjectContextStruct; isObject++) { //run through all objects
-        int objectMatched = 0; //flag variable sets to 1 if object is already in dictionary
-        std::string getObjName = objectsFileStruct[isObject].object_name; //get object name from objectsFileStruct
-        if (totalObjectDictionaryStruct == 0) {
-            objectDictionary[0].object_name = getObjName; //set object name in first element from full objects struct
-            totalObjectDictionaryStruct++; //add 1 to total objects in dictionary
-        }
-        for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) { //iterate through dictionary struct
-            std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from objectDictionary
-            if (getObjName == getObjDictName) { //if name from objectsFileStruct and objectDictionary is the same
-                objectMatched = 1; //set to true
-            }
-            objectDictionary[isDict].instances = 0; //set objects back to 0
-            //cout << "DEBUG: adding zero for " << getObjName << endl;
-        }
-        if (objectMatched) {
-            //if object is already in struct, don't add anything
-            //instances calculated in calculateObjectInstances
-        }
-        else {
-            //add object name to struct
-            objectDictionary[totalObjectDictionaryStruct].object_name = getObjName; //assign name from objectsFileStruct
-            objectDictionary[totalObjectDictionaryStruct].instances = 0; //set instances to 0
-            totalObjectDictionaryStruct++; //add for next element in array
-        }
-    }
-    //print out list of objects
-    if (DEBUG_addObjectToDictionary) {
-        tofToolBox->printSeparator(1);
-        cout << "pre-instance calculations, total size of struct is " << totalObjectDictionaryStruct << endl;
-        for (int isDet = 0; isDet < totalObjectDictionaryStruct; isDet++) {            
-            cout << objectDictionary[isDet].object_name << ":" << objectDictionary[isDet].instances << endl;
-        }
-        tofToolBox->printSeparator(1);
-    }
-}
-
-/**
- * Function to calculate object instances from dictionary of objects
- *
- */
 void calculateObjectInstances() {
-    for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) { //iterate through object dictionary
-        std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from dictionary
-        if (DEBUG_calculateObjectInstances) {
-            tofToolBox->printSeparator(1);
-            cout << "total objects in dictionary is " << totalObjectDictionaryStruct << endl;
-            cout << "object from dict is " << getObjDictName << endl;
-        }
-        for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //iterate through object struct
-            std::string getObjName = objectContext[isContext].object_name; //get object name from main struct
-            if (DEBUG_calculateObjectInstances) {
-                cout << "total objects in context is " << totalObjectContextStruct << endl;
-                cout << "total objects in struct is " << totalObjectsFileStruct << endl;
-                cout << "object from context is " << getObjName << endl;
-            }
-            if (getObjDictName == getObjName) { //if object name in dictionary and main struct are equal
-                if (DEBUG_calculateObjectInstances) {
-                    cout << "found instance" << endl;
-                }
-                objectDictionary[isDict].instances++; //add 1 to object instances
-            }
-            else {
-                //don't do anything if match not found between dictionary and main object struct
-            }
-        }
+    if (totalObjectDictionaryStructTmp == 0) {
+        //dictionary has not been created yet, start building it
+        //probably need to create it on startup
+        //set object name in first element from full objects struct
+        std::string getObjName = objectContext[0].object_name;
+        objectDictionaryTmp[0].object_name = getObjName;
+        //add 1 to total objects in dictionary
+        totalObjectDictionaryStructTmp = 1;
+        totalObjectDictionaryStruct = totalObjectDictionaryStructTmp;
     }
-    //print out list and instances of objects
-    if (DEBUG_objectLocationsCallbackDictionary) {
-        for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
-            if (objectDictionary[isDict].instances == 0) {
-                ROS_ERROR("One of a number of many things has gone terribly wrong...");
-                cout << objectDictionary[isDict].object_name << ":" << objectDictionary[isDict].instances << endl;
-            }
+    else {
+        //run throug dictionary and set back to 0
+        for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
+            objectDictionaryTmp[isDict].instances = 0;
         }
-    }
-}
+        //objects set back to 0 for new calculation
+        for (int isContextObj = 0; isContextObj < totalObjectContextStruct; isContextObj++) {
+            std::string getContextObjName = objectContext[isContextObj].object_name;
 
-//new function to fix random zero bug
-void calculateObjectInstances2() {
-    for (int isObject = 0; isObject < totalObjectContextStruct; isObject++) { //run through all objects
-        //do stuff
+            int foundMatch = -1;
+            int matchPos = -1;
+            for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
+                std::string getDictObjName = objectDictionaryTmp[isDict].object_name;
+                if (getContextObjName == getDictObjName) {
+                    foundMatch = 1;
+                    matchPos = isDict;
+                }
+                else {
+                    //not found match, so add object to dictionary
+                    foundMatch = 0;
+                }
+            }
+            if (foundMatch == 1) {
+                //add instance to dictionary
+                objectDictionaryTmp[matchPos].instances++;
+            }
+            else if (foundMatch == 0) {
+                //match not found, add object to dictionary and add instance
+                objectDictionaryTmp[totalObjectDictionaryStructTmp].object_name = getContextObjName;
+                objectDictionaryTmp[totalObjectDictionaryStructTmp].instances = 1;
+            }
+        }
+
+        //match arrays to overwrite instances
+        for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
+            objectDictionary[isDict].object_name = objectDictionaryTmp[isDict].object_name;
+            objectDictionary[isDict].instances = objectDictionaryTmp[isDict].instances;
+        }
     }
 }
 
@@ -691,14 +655,8 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     }
     totalObjectContextStruct = totalObjectsFileStruct; //set object context struct size to replicate size of object struct
 
-    //create and add object names to object dictionary struct
-    //addObjectToDictionary();
-
     //get object instances and assign to object dictionary struct
-    //calculateObjectInstances();
-
-    //run fixed version of calculate instances
-    calculateObjectInstances2();
+    calculateObjectInstances();
 
     //get data to calculate context
     getObjectContext();
