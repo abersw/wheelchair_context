@@ -496,8 +496,14 @@ void calculateObjectInstances() {
 
         //match arrays to overwrite instances
         for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
+            
             objectDictionary[isDict].object_name = objectDictionaryTmp[isDict].object_name;
-            objectDictionary[isDict].instances = objectDictionaryTmp[isDict].instances;
+            if (objectDictionaryTmp[isDict].instances != 0) {
+                objectDictionary[isDict].instances = objectDictionaryTmp[isDict].instances;
+            }
+            else {
+                ROS_ERROR_STREAM("one of a number of many things has gone wrong...");
+            }
         }
     }
 }
