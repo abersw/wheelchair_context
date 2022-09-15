@@ -87,7 +87,7 @@ struct Context {
     double object_weighting; //object weighting result
     double object_uniqueness; //object uniqueness result
     double object_score; //calculation of object weighting and uniqueness
-    int object_instances; //number of objects in env
+    int object_instances = 0; //number of objects in env
 
     int objectDetectedFlag = 0; //turns to 1 if object has been detected when driving around
 };
@@ -531,6 +531,13 @@ void calculateObjectInstances() {
     }
 }
 
+//new function to fix random zero bug
+void calculateObjectInstances2() {
+    for (int isObject = 0; isObject < totalObjectContextStruct; isObject++) { //run through all objects
+        //do stuff
+    }
+}
+
 double calculateObjectUniqueness(int isDict) {
     double currentObjectUniqueness = 0.0;
     double calculatedUniqueness = 1.0 / objectDictionary[isDict].instances;
@@ -682,12 +689,16 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
             cout << objectsFileStruct[isObject].id << ":" << objectsFileStruct[isObject].object_name << endl;
         }
     }
+    totalObjectContextStruct = totalObjectsFileStruct; //set object context struct size to replicate size of object struct
 
     //create and add object names to object dictionary struct
-    addObjectToDictionary();
+    //addObjectToDictionary();
 
     //get object instances and assign to object dictionary struct
-    calculateObjectInstances();
+    //calculateObjectInstances();
+
+    //run fixed version of calculate instances
+    calculateObjectInstances2();
 
     //get data to calculate context
     getObjectContext();
