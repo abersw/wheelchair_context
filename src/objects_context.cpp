@@ -467,11 +467,12 @@ void calculateObjectInstances() {
             objectDictionaryTmp[isDict].instances = 0;
         }
         //objects set back to 0 for new calculation
+        int foundMatch = -1;
+        int matchPos = -1;
+        std::string getContextObjName;
         for (int isContextObj = 0; isContextObj < totalObjectContextStruct; isContextObj++) {
-            std::string getContextObjName = objectContext[isContextObj].object_name;
+            getContextObjName = objectContext[isContextObj].object_name;
 
-            int foundMatch = -1;
-            int matchPos = -1;
             for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
                 std::string getDictObjName = objectDictionaryTmp[isDict].object_name;
                 if (getContextObjName == getDictObjName) {
@@ -483,7 +484,8 @@ void calculateObjectInstances() {
                     foundMatch = 0;
                 }
             }
-            if (foundMatch == 1) {
+        }
+        if (foundMatch == 1) {
                 //add instance to dictionary
                 objectDictionaryTmp[matchPos].instances++;
             }
@@ -494,7 +496,6 @@ void calculateObjectInstances() {
                 totalObjectDictionaryStructTmp++;
                 totalObjectDictionaryStruct = totalObjectDictionaryStructTmp;
             }
-        }
 
         //match arrays to overwrite instances
         for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
