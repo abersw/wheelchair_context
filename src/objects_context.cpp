@@ -491,12 +491,13 @@ void calculateObjectInstances() {
                 //match not found, add object to dictionary and add instance
                 objectDictionaryTmp[totalObjectDictionaryStructTmp].object_name = getContextObjName;
                 objectDictionaryTmp[totalObjectDictionaryStructTmp].instances = 1;
+                totalObjectDictionaryStructTmp++;
+                totalObjectDictionaryStruct = totalObjectDictionaryStructTmp;
             }
         }
 
         //match arrays to overwrite instances
         for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
-            
             objectDictionary[isDict].object_name = objectDictionaryTmp[isDict].object_name;
             if (objectDictionaryTmp[isDict].instances != 0) {
                 objectDictionary[isDict].instances = objectDictionaryTmp[isDict].instances;
@@ -574,6 +575,9 @@ void getObjectContext() {
             std::string getObjName = objectContext[isContext].object_name;
             if (getObjDictName == getObjName) {
                 objectContext[isContext].object_uniqueness = currentObjDictUniqueness; //assign current object uniqueness
+                if (getObjDictInstances == 0) {
+                    ROS_ERROR_STREAM("one of a number of many things has gone wrong...");
+                }
                 objectContext[isContext].object_instances = getObjDictInstances; //assign instances of objects
                 calculateContextScore(isContext); //calculate object context score
             }
