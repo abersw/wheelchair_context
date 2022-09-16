@@ -561,38 +561,44 @@ void calculateObjectInstances2() {
                 if (getContextObjName.compare(getDictObjName) == 0) {  //change compare
                     foundMatch = 1;
                     matchPos = isDict;
+                    break;
                 }
                 else {
                     //not found match, so add object to dictionary
                     //foundMatch = 0;
                 }
             }
-        }
-        if (foundMatch == 1) {
-            //add instance to dictionary
-            objectDictionaryTmp[matchPos].instances++;
-            cout << "added instance to " << getContextObjName << endl;
-        }
-        else if (foundMatch == -1) {
-            //match not found, add object to dictionary and add instance
-            objectDictionaryTmp[totalObjectDictionaryStructTmp].object_name = getContextObjName;
-            objectDictionaryTmp[totalObjectDictionaryStructTmp].instances = 1;
-            totalObjectDictionaryStructTmp++;
-            //totalObjectDictionaryStruct = totalObjectDictionaryStructTmp;
+            if (foundMatch == 1) {
+                //add instance to dictionary
+                objectDictionaryTmp[matchPos].instances++;
+                cout << "added instance to " << getContextObjName << endl;
+            }
+            else if (foundMatch == -1) {
+                //match not found, add object to dictionary and add instance
+                objectDictionaryTmp[totalObjectDictionaryStructTmp].object_name = getContextObjName;
+                objectDictionaryTmp[totalObjectDictionaryStructTmp].instances = 1;
+                totalObjectDictionaryStructTmp++;
+                //totalObjectDictionaryStruct = totalObjectDictionaryStructTmp;
+            }
+            foundMatch = -1;
+            matchPos = -1;
         }
     }
     totalObjectDictionaryStruct = totalObjectDictionaryStructTmp;
     //match arrays to overwrite instances
+    int foundNoZero = 0;
     for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
         objectDictionary[isDict].object_name = objectDictionaryTmp[isDict].object_name;
         objectDictionary[isDict].instances = objectDictionaryTmp[isDict].instances;
         if (objectDictionary[isDict].instances != 0) {
-            //cout << "everything is fine" << endl;
+            //cout << "everything is awesome!" << endl;
         }
         else {
+            foundNoZero++;
             ROS_ERROR_STREAM("one of a number of many things has gone wrong...");
         }
     }
+    ROS_ERROR_STREAM("No zeros should be found in instances, found " + std::to_string(foundNoZero));
 }
 
 double calculateObjectUniqueness(int isDict) {
