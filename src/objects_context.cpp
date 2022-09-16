@@ -500,8 +500,9 @@ void calculateObjectInstances() {
         //match arrays to overwrite instances
         for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
             objectDictionary[isDict].object_name = objectDictionaryTmp[isDict].object_name;
-            if (objectDictionaryTmp[isDict].instances != 0) {
-                objectDictionary[isDict].instances = objectDictionaryTmp[isDict].instances;
+            objectDictionary[isDict].instances = objectDictionaryTmp[isDict].instances;
+            if (objectDictionary[isDict].instances != 0) {
+                cout << "everything is fine" << endl;
             }
             else {
                 ROS_ERROR_STREAM("one of a number of many things has gone wrong...");
