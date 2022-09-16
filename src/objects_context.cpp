@@ -571,6 +571,7 @@ void calculateObjectInstances2() {
         if (foundMatch == 1) {
             //add instance to dictionary
             objectDictionaryTmp[matchPos].instances++;
+            cout << "added instance to " << getContextObjName << endl;
         }
         else if (foundMatch == -1) {
             //match not found, add object to dictionary and add instance
@@ -586,7 +587,7 @@ void calculateObjectInstances2() {
         objectDictionary[isDict].object_name = objectDictionaryTmp[isDict].object_name;
         objectDictionary[isDict].instances = objectDictionaryTmp[isDict].instances;
         if (objectDictionary[isDict].instances != 0) {
-            cout << "everything is fine" << endl;
+            //cout << "everything is fine" << endl;
         }
         else {
             ROS_ERROR_STREAM("one of a number of many things has gone wrong...");
