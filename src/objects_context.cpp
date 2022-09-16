@@ -550,7 +550,7 @@ void calculateObjectInstances2() {
             objectDictionaryTmp[isDict].instances = 0;
         }
         //objects set back to 0 for new calculation
-        int foundMatch = -1;
+        int foundMatch = 0;
         int matchPos = -1;
         std::string getContextObjName;
         for (int isContextObj = 0; isContextObj < totalObjectContextStruct; isContextObj++) {
@@ -561,7 +561,6 @@ void calculateObjectInstances2() {
                 if (getContextObjName.compare(getDictObjName) == 0) {  //change compare
                     foundMatch = 1;
                     matchPos = isDict;
-                    break;
                 }
                 else {
                     //not found match, so add object to dictionary
@@ -573,7 +572,7 @@ void calculateObjectInstances2() {
                 objectDictionaryTmp[matchPos].instances++;
                 //cout << "added instance to " << getContextObjName << endl;
             }
-            else if (foundMatch == -1) {
+            else {
                 //match not found, add object to dictionary and add instance
                 objectDictionaryTmp[totalObjectDictionaryStructTmp].object_name = getContextObjName;
                 objectDictionaryTmp[totalObjectDictionaryStructTmp].instances = 1;
@@ -581,7 +580,7 @@ void calculateObjectInstances2() {
                 cout << "added new object and instance " << objectDictionaryTmp[totalObjectDictionaryStructTmp].object_name << endl;
                 //totalObjectDictionaryStruct = totalObjectDictionaryStructTmp;
             }
-            foundMatch = -1;
+            foundMatch = 0;
             matchPos = -1;
         }
     }
@@ -603,7 +602,7 @@ void calculateObjectInstances2() {
         ROS_ERROR_STREAM("No zeros should be found in instances, found " + std::to_string(foundNoZero));
     }
     else {
-        cout << "everything is awesome!" << endl;
+        //cout << "everything is awesome!" << endl;
     }
 }
 
