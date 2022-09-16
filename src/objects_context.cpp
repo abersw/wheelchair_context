@@ -571,13 +571,14 @@ void calculateObjectInstances2() {
             if (foundMatch == 1) {
                 //add instance to dictionary
                 objectDictionaryTmp[matchPos].instances++;
-                cout << "added instance to " << getContextObjName << endl;
+                //cout << "added instance to " << getContextObjName << endl;
             }
             else if (foundMatch == -1) {
                 //match not found, add object to dictionary and add instance
                 objectDictionaryTmp[totalObjectDictionaryStructTmp].object_name = getContextObjName;
                 objectDictionaryTmp[totalObjectDictionaryStructTmp].instances = 1;
                 totalObjectDictionaryStructTmp++;
+                cout << "added new object and instance " << objectDictionaryTmp[totalObjectDictionaryStructTmp].object_name << endl;
                 //totalObjectDictionaryStruct = totalObjectDictionaryStructTmp;
             }
             foundMatch = -1;
@@ -598,7 +599,12 @@ void calculateObjectInstances2() {
             ROS_ERROR_STREAM("one of a number of many things has gone wrong...");
         }
     }
-    ROS_ERROR_STREAM("No zeros should be found in instances, found " + std::to_string(foundNoZero));
+    if (foundNoZero > 0) {
+        ROS_ERROR_STREAM("No zeros should be found in instances, found " + std::to_string(foundNoZero));
+    }
+    else {
+        cout << "everything is awesome!" << endl;
+    }
 }
 
 double calculateObjectUniqueness(int isDict) {
@@ -908,7 +914,7 @@ void shiftObjectsMissingStructPos(int from, int to) {
 void contextNoHistory(int detPos) {
     for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[detPos]; detectedObject++) { //run through struct of pos 0
         //run through each detected object
-        int getDetObjID = objectsDetectedStruct[detPos][detectedObject].id; //get id
+        int getDetObjID = objectsDetectedStruct[detPos][detectedObject].id; //get iobjectLocationsCallbackd
         std::string getDetObjName = objectsDetectedStruct[detPos][detectedObject].object_name; //get name
 
         for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //run through entire context struct
