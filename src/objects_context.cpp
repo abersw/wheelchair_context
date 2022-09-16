@@ -113,6 +113,8 @@ struct ObjectDictionary {
 };
 struct ObjectDictionary objectDictionary[1000]; //struct for storing data needed to calc uniqueness of objects
 int totalObjectDictionaryStruct = 0; //total list of objects used to calc uniqueness
+struct ObjectDictionary objectDictionaryTmp[1000]; //struct for storing data needed to calc uniqueness of objects
+int totalObjectDictionaryStructTmp = 0; //total list of objects used to calc uniqueness
 
 //context data to save
 struct TrackingObjects {
@@ -462,7 +464,7 @@ void addObjectToDictionary() {
         }
         for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) { //iterate through dictionary struct
             std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from objectDictionary
-            if (getObjName == getObjDictName) { //if name from objectsFileStruct and objectDictionary is the same
+            if (getObjName == getObjDictName) { //if name from objectsFileStruct and objectDictionary is the same   ##change to compare
                 objectMatched = 1; //set to true
             }
             objectDictionary[isDict].instances = 0; //set objects back to 0
@@ -509,7 +511,7 @@ void calculateObjectInstances() {
                 cout << "total objects in struct is " << totalObjectsFileStruct << endl;
                 cout << "object from context is " << getObjName << endl;
             }
-            if (getObjDictName == getObjName) { //if object name in dictionary and main struct are equal
+            if (getObjDictName == getObjName) { //if object name in dictionary and main struct are equal  ##change to compare
                 if (DEBUG_calculateObjectInstances) {
                     cout << "found instance" << endl;
                 }
@@ -527,6 +529,67 @@ void calculateObjectInstances() {
                 ROS_ERROR("One of a number of many things has gone terribly wrong...");
                 cout << objectDictionary[isDict].object_name << ":" << objectDictionary[isDict].instances << endl;
             }
+        }
+    }
+}
+
+void calculateObjectInstances2() {
+    if (totalObjectDictionaryStructTmp == 0) {
+        //dictionary has not been created yet, start building it
+        //probably need to create it on startup
+        //set object name in first element from full objects struct
+        std::string getObjName = objectContext[0].object_name;
+        objectDictionaryTmp[0].object_name = getObjName;
+        //add 1 to total objects in dictionary
+        totalObjectDictionaryStructTmp = 1;
+        //totalObjectDictionaryStruct = totalObjectDictionaryStructTmp;
+    }
+    else {
+        //run throug dictionary and set back to 0
+        for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
+            objectDictionaryTmp[isDict].instances = 0;
+        }
+        //objects set back to 0 for new calculation
+        int foundMatch = -1;
+        int matchPos = -1;
+        std::string getContextObjName;
+        for (int isContextObj = 0; isContextObj < totalObjectContextStruct; isContextObj++) {
+            getContextObjName = objectContext[isContextObj].object_name;
+
+            for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
+                std::string getDictObjName = objectDictionaryTmp[isDict].object_name;
+                if (getContextObjName.compare(getDictObjName) == 0) {  //change compare
+                    foundMatch = 1;
+                    matchPos = isDict;
+                }
+                else {
+                    //not found match, so add object to dictionary
+                    //foundMatch = 0;
+                }
+            }
+        }
+        if (foundMatch == 1) {
+            //add instance to dictionary
+            objectDictionaryTmp[matchPos].instances++;
+        }
+        else if (foundMatch == -1) {
+            //match not found, add object to dictionary and add instance
+            objectDictionaryTmp[totalObjectDictionaryStructTmp].object_name = getContextObjName;
+            objectDictionaryTmp[totalObjectDictionaryStructTmp].instances = 1;
+            totalObjectDictionaryStructTmp++;
+            //totalObjectDictionaryStruct = totalObjectDictionaryStructTmp;
+        }
+    }
+    totalObjectDictionaryStruct = totalObjectDictionaryStructTmp;
+    //match arrays to overwrite instances
+    for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
+        objectDictionary[isDict].object_name = objectDictionaryTmp[isDict].object_name;
+        objectDictionary[isDict].instances = objectDictionaryTmp[isDict].instances;
+        if (objectDictionary[isDict].instances != 0) {
+            cout << "everything is fine" << endl;
+        }
+        else {
+            ROS_ERROR_STREAM("one of a number of many things has gone wrong...");
         }
     }
 }
@@ -684,10 +747,11 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     }
 
     //create and add object names to object dictionary struct
-    addObjectToDictionary();
+    //addObjectToDictionary();
 
     //get object instances and assign to object dictionary struct
-    calculateObjectInstances();
+    //calculateObjectInstances();
+    calculateObjectInstances2();
 
     //get data to calculate context
     getObjectContext();
