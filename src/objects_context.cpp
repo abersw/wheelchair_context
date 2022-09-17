@@ -793,6 +793,7 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
             cout << objectsFileStruct[isObject].id << ":" << objectsFileStruct[isObject].object_name << endl;
         }
     }
+    totalObjectContextStruct = totalObjectsFileStruct; //set object context struct size to replicate size of object struct
 
     //create and add object names to object dictionary struct
     //addObjectToDictionary();
