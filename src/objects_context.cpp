@@ -619,7 +619,7 @@ void calculateObjectInstances2() {
             }
         }
     }
-    totalObjectDictionaryStruct = totalObjectDictionaryStructTmp;
+
     //match arrays to overwrite instances
     int foundNoZero = 0;
     for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
@@ -633,6 +633,7 @@ void calculateObjectInstances2() {
             ROS_ERROR_STREAM("one of a number of many things has gone wrong...");
         }
     }
+    totalObjectDictionaryStruct = totalObjectDictionaryStructTmp;
     if (foundNoZero > 0) {
         ROS_ERROR_STREAM("No zeros should be found in instances, found " + std::to_string(foundNoZero));
     }
