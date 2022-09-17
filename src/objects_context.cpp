@@ -555,7 +555,7 @@ void calculateObjectInstances2() {
         //get object name from objectsFileStruct
         std::string getObjName = objectsFileStruct[isObject].object_name;
         //iterate through dictionary struct
-        for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
+        for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
             //get object name from objectDictionary
             std::string getObjDictName = objectDictionaryTmp[isDict].object_name;
             //if name from objectsFileStruct and objectDictionary is the same   ##change to compare
