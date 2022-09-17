@@ -27,7 +27,7 @@ static const int DEBUG_trackingObjectFound = 0;
 static const int DEBUG_contextListToStruct = 1;
 static const int DEBUG_calculateInfluenceWeight = 0;
 static const int DEBUG_listToContextInfo = 0;
-static const int DEBUG_addObjectToDictionary = 0;
+static const int DEBUG_addObjectToDictionary = 1;
 static const int DEBUG_calculateObjectInstances = 0;
 static const int DEBUG_calculateObjectUniqueness = 0;
 static const int DEBUG_calculateContextScore = 0;
@@ -534,75 +534,56 @@ void calculateObjectInstances() {
 }
 
 void calculateObjectInstances2() {
+    //check if tmp struct total is 0
     if (totalObjectDictionaryStructTmp == 0) {
-        //dictionary has not been created yet, start building it
-        //probably need to create it on startup
-        //set object name in first element from full objects struct
+        //add first object in context array to dictionary
         std::string getObjName = objectContext[0].object_name;
+        //set instance to 1
         objectDictionaryTmp[0].object_name = getObjName;
-        //add 1 to total objects in dictionary
+        objectDictionaryTmp[0].instances = 0;
+        //set total objects in tmp dictionary to 1
         totalObjectDictionaryStructTmp = 1;
-        //totalObjectDictionaryStruct = totalObjectDictionaryStructTmp;
     }
-    else {
-        //run throug dictionary and set back to 0
-        for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
-            objectDictionaryTmp[isDict].instances = 0;
-        }
-        //objects set back to 0 for new calculation
-        int foundMatch = 0;
-        int matchPos = -1;
-        std::string getContextObjName;
-        for (int isContextObj = 0; isContextObj < totalObjectContextStruct; isContextObj++) {
-            getContextObjName = objectContext[isContextObj].object_name;
-
-            for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
-                std::string getDictObjName = objectDictionaryTmp[isDict].object_name;
-                if (getContextObjName.compare(getDictObjName) == 0) {  //change compare
-                    foundMatch = 1;
-                    matchPos = isDict;
-                }
-                else {
-                    //not found match, so add object to dictionary
-                    //foundMatch = 0;
-                }
-            }
-            if (foundMatch == 1) {
-                //add instance to dictionary
-                objectDictionaryTmp[matchPos].instances++;
-                //cout << "added instance to " << getContextObjName << endl;
-            }
-            else {
-                //match not found, add object to dictionary and add instance
-                objectDictionaryTmp[totalObjectDictionaryStructTmp].object_name = getContextObjName;
-                objectDictionaryTmp[totalObjectDictionaryStructTmp].instances = 1;
-                totalObjectDictionaryStructTmp++;
-                cout << "added new object and instance " << objectDictionaryTmp[totalObjectDictionaryStructTmp].object_name << endl;
-                //totalObjectDictionaryStruct = totalObjectDictionaryStructTmp;
-            }
-            foundMatch = 0;
-            matchPos = -1;
-        }
-    }
-    totalObjectDictionaryStruct = totalObjectDictionaryStructTmp;
-    //match arrays to overwrite instances
-    int foundNoZero = 0;
+    //run through tmp dictionary and set instances to 0
     for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
-        objectDictionary[isDict].object_name = objectDictionaryTmp[isDict].object_name;
-        objectDictionary[isDict].instances = objectDictionaryTmp[isDict].instances;
-        if (objectDictionary[isDict].instances != 0) {
-            //cout << "everything is awesome!" << endl;
+        objectDictionaryTmp[isDict].instances = 0;
+    }
+    //run through all objects and find new objects that aren't in the dictionary
+    for (int isObject = 0; isObject < totalObjectContextStruct; isObject++) {
+        //flag variable sets to 1 if object is already in dictionary
+        int objectMatched = 0;
+        //get object name from objectsFileStruct
+        std::string getObjName = objectsFileStruct[isObject].object_name;
+        //iterate through dictionary struct
+        for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
+            //get object name from objectDictionary
+            std::string getObjDictName = objectDictionaryTmp[isDict].object_name;
+            //if name from objectsFileStruct and objectDictionary is the same   ##change to compare
+            if (getObjName.compare(getObjDictName) == 0) {
+                //set to true
+                objectMatched = 1;
+            }
+        }
+        if (objectMatched) {
+            //if object is already in struct, don't add anything
+            //instances calculated in calculateObjectInstances
         }
         else {
-            foundNoZero++;
-            ROS_ERROR_STREAM("one of a number of many things has gone wrong...");
+            //add object name to struct
+            objectDictionaryTmp[totalObjectDictionaryStructTmp].object_name = getObjName; //assign name from objectsFileStruct
+            objectDictionaryTmp[totalObjectDictionaryStructTmp].instances = 0; //set instances to 0
+            totalObjectDictionaryStructTmp++; //add for next element in array
+            cout << "added object to dictionary" << endl;
         }
     }
-    if (foundNoZero > 0) {
-        ROS_ERROR_STREAM("No zeros should be found in instances, found " + std::to_string(foundNoZero));
-    }
-    else {
-        //cout << "everything is awesome!" << endl;
+    //print out list of objects
+    if (DEBUG_addObjectToDictionary) {
+        tofToolBox->printSeparator(1);
+        cout << "pre-instance calculations, total size of struct is " << totalObjectDictionaryStruct << endl;
+        for (int isDet = 0; isDet < totalObjectDictionaryStructTmp; isDet++) {            
+            cout << objectDictionaryTmp[isDet].object_name << ":" << objectDictionaryTmp[isDet].instances << endl;
+        }
+        tofToolBox->printSeparator(1);
     }
 }
 
