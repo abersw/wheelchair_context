@@ -27,7 +27,7 @@ static const int DEBUG_trackingObjectFound = 0;
 static const int DEBUG_contextListToStruct = 1;
 static const int DEBUG_calculateInfluenceWeight = 0;
 static const int DEBUG_listToContextInfo = 0;
-static const int DEBUG_addObjectToDictionary = 1;
+static const int DEBUG_addObjectToDictionary = 0;
 static const int DEBUG_calculateObjectInstances = 0;
 static const int DEBUG_calculateObjectUniqueness = 0;
 static const int DEBUG_calculateContextScore = 0;
@@ -570,9 +570,12 @@ void calculateObjectInstances2() {
         }
         else {
             //add object name to struct
-            objectDictionaryTmp[totalObjectDictionaryStructTmp].object_name = getObjName; //assign name from objectsFileStruct
-            objectDictionaryTmp[totalObjectDictionaryStructTmp].instances = 0; //set instances to 0
-            totalObjectDictionaryStructTmp++; //add for next element in array
+            //assign name from objectsFileStruct
+            objectDictionaryTmp[totalObjectDictionaryStructTmp].object_name = getObjName;
+            //set instances to 0
+            objectDictionaryTmp[totalObjectDictionaryStructTmp].instances = 0;
+            //add for next element in array
+            totalObjectDictionaryStructTmp++;
             cout << "added object to dictionary" << endl;
         }
     }
@@ -584,6 +587,57 @@ void calculateObjectInstances2() {
             cout << objectDictionaryTmp[isDet].object_name << ":" << objectDictionaryTmp[isDet].instances << endl;
         }
         tofToolBox->printSeparator(1);
+    }
+    //second stage - calculate instances of all objects in dictionary
+    //iterate through object dictionary
+    for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
+        //get object name from dictionary
+        std::string getObjDictName = objectDictionaryTmp[isDict].object_name;
+        if (DEBUG_calculateObjectInstances) {
+            tofToolBox->printSeparator(1);
+            cout << "total objects in dictionary is " << totalObjectDictionaryStruct << endl;
+            cout << "object from dict is " << getObjDictName << endl;
+        }
+        //iterate through object struct
+        for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
+            //get object name from main struct
+            std::string getObjName = objectContext[isContext].object_name;
+            if (DEBUG_calculateObjectInstances) {
+                cout << "total objects in context is " << totalObjectContextStruct << endl;
+                cout << "total objects in struct is " << totalObjectsFileStruct << endl;
+                cout << "object from context is " << getObjName << endl;
+            }
+            //if object name in dictionary and main struct are equal  ##change to compare
+            if (getObjDictName.compare(getObjName) == 0) {
+                if (DEBUG_calculateObjectInstances) {
+                    cout << "found instance" << endl;
+                }
+                objectDictionaryTmp[isDict].instances++; //add 1 to object instances
+            }
+            else {
+                //don't do anything if match not found between dictionary and main object struct
+            }
+        }
+    }
+    totalObjectDictionaryStruct = totalObjectDictionaryStructTmp;
+    //match arrays to overwrite instances
+    int foundNoZero = 0;
+    for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
+        objectDictionary[isDict].object_name = objectDictionaryTmp[isDict].object_name;
+        objectDictionary[isDict].instances = objectDictionaryTmp[isDict].instances;
+        if (objectDictionary[isDict].instances != 0) {
+            //cout << "everything is awesome!" << endl;
+        }
+        else {
+            foundNoZero++;
+            ROS_ERROR_STREAM("one of a number of many things has gone wrong...");
+        }
+    }
+    if (foundNoZero > 0) {
+        ROS_ERROR_STREAM("No zeros should be found in instances, found " + std::to_string(foundNoZero));
+    }
+    else {
+        //cout << "everything is awesome!" << endl;
     }
 }
 
