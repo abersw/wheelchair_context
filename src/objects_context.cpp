@@ -275,7 +275,7 @@ std::pair<int , int> listenForTrackingObjects(int currentObjectID, string curren
     int trackedObjectPos = 0;
     for (int isTrackingObject = 0; isTrackingObject < totalTrackingObjectsList; isTrackingObject++) {
         if ((currentObjectID == trackingObjects[isTrackingObject][0].object_id) &&
-            (currentObjectName == trackingObjects[isTrackingObject][0].object_name)) {
+            (currentObjectName.compare(trackingObjects[isTrackingObject][0].object_name) == 0)) {
             trackedObjectFound = 1;
             trackedObjectPos = isTrackingObject;
             if (DEBUG_listenForTrackingObjects) {
@@ -293,7 +293,7 @@ void captureTrackingObject(int isDetectedObject, int trackingObjectPos, int curr
     //cout << "total context struct is " << totalObjectContextStruct << endl;
     for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
         if ((currentObjectID == objectContext[isContext].object_id) &&
-            (currentObjectName == objectContext[isContext].object_name)) {
+            (currentObjectName.compare(objectContext[isContext].object_name) == 0)) {
             //cout << "context match found at pos" << isContext << endl;
             objectContextPos = isContext;
         }
@@ -582,7 +582,7 @@ void calculateObjectInstances2() {
     //print out list of objects
     if (DEBUG_addObjectToDictionary) {
         tofToolBox->printSeparator(1);
-        cout << "pre-instance calculations, total size of struct is " << totalObjectDictionaryStruct << endl;
+        cout << "pre-instance calculations, total size of struct is " << totalObjectDictionaryStructTmp << endl;
         for (int isDet = 0; isDet < totalObjectDictionaryStructTmp; isDet++) {            
             cout << objectDictionaryTmp[isDet].object_name << ":" << objectDictionaryTmp[isDet].instances << endl;
         }
@@ -706,7 +706,7 @@ void getObjectContext() {
         double currentObjDictUniqueness = calculateObjectUniqueness(isDict); //main calculation for uniqueness
         for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //iterate through entire context struct
             std::string getObjName = objectContext[isContext].object_name;
-            if (getObjDictName == getObjName) {
+            if (getObjDictName.compare(getObjName) == 0) {
                 objectContext[isContext].object_uniqueness = currentObjDictUniqueness; //assign current object uniqueness
                 objectContext[isContext].object_instances = getObjDictInstances; //assign instances of objects
                 calculateContextScore(isContext); //calculate object context score
@@ -957,7 +957,7 @@ void contextNoHistory(int detPos) {
             int getContextID = objectContext[isContext].object_id; //get context ID
             std::string getContextName = objectContext[isContext].object_name; //get context name
 
-            if ((getDetObjID == getContextID) && (getDetObjName == getContextName)) { //if object ID and name are equal
+            if ((getDetObjID == getContextID) && (getDetObjName.compare(getContextName) == 0)) { //if object ID and name are equal
                 if (DEBUG_contextNoHistory) {
                     tofToolBox->printSeparator(0);
                     cout << "found object " << getDetObjID << " in det and context struct" << endl;
@@ -1001,7 +1001,7 @@ void contextMissingNoHistory(int detPos) {
             int getContextID = objectContext[isContext].object_id; //get context ID
             std::string getContextName = objectContext[isContext].object_name; //get context name
 
-            if ((getDetObjID == getContextID) && (getDetObjName == getContextName)) { //if object ID and name are equal
+            if ((getDetObjID == getContextID) && (getDetObjName.compare(getContextName) == 0)) { //if object ID and name are equal
                 if (DEBUG_contextNoHistory) {
                     tofToolBox->printSeparator(0);
                     cout << "missing object " << getDetObjID << " in det and context struct" << endl;
@@ -1048,7 +1048,7 @@ void contextWithHistory() {
             int getLastObjID = objectsDetectedStruct[1][lastDetectedObject].id; //get id
             std::string getLastObjName = objectsDetectedStruct[1][lastDetectedObject].object_name; //get name
 
-            if ((getDetObjID == getLastObjID) && (getDetObjName == getLastObjName)) {
+            if ((getDetObjID == getLastObjID) && (getDetObjName.compare(getLastObjName) == 0)) {
                 objectFoundInHistory = 1; //object has been detected in previous history
             }
             else {
@@ -1067,7 +1067,7 @@ void contextWithHistory() {
                 std::string getContextName = objectContext[isContext].object_name; //get context name
 
                 //if object ID and name are equal
-                if ((getDetObjID == getContextID) && (getDetObjName == getContextName)) {
+                if ((getDetObjID == getContextID) && (getDetObjName.compare(getContextName) == 0)) {
                     if (DEBUG_contextWithHistory) {
                         tofToolBox->printSeparator(0);
                         cout << "found object " << getDetObjID << " in both history structs" << endl;
@@ -1113,7 +1113,7 @@ void contextMissingWithHistory() {
             int getLastObjID = objectsMissingStruct[1][lastMissingObject].id; //get id
             std::string getLastObjName = objectsMissingStruct[1][lastMissingObject].object_name; //get name
 
-            if ((getMisObjID == getLastObjID) && (getMisObjName == getLastObjName)) {
+            if ((getMisObjID == getLastObjID) && (getMisObjName.compare(getLastObjName) == 0)) {
                 objectFoundInHistory = 1; //object has been detected in previous history
             }
             else {
@@ -1132,7 +1132,7 @@ void contextMissingWithHistory() {
                 std::string getContextName = objectContext[isContext].object_name; //get context name
 
                 //if object ID and name are equal
-                if ((getMisObjID == getContextID) && (getMisObjName == getContextName)) {
+                if ((getMisObjID == getContextID) && (getMisObjName.compare(getContextName) == 0)) {
                     if (DEBUG_contextMissingWithHistory) {
                         tofToolBox->printSeparator(0);
                         cout << "found object " << getMisObjID << " in both history structs" << endl;
