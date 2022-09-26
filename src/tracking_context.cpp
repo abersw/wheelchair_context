@@ -36,7 +36,7 @@ struct TrackingObjects {
 
     int detected_or_missing; //flag if object was detected or expected but missing
 };
-static const int memTotalObjectsTracked = 100;
+static const int memTotalObjectsTracked = 1000;
 static const long memTotalObjectsTrackedCaptured = 10000;
 //[0] contains object id and name [1] instances detected
 struct TrackingObjects trackingObjects[memTotalObjectsTracked][memTotalObjectsTrackedCaptured];
