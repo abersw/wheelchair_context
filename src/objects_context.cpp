@@ -575,7 +575,7 @@ void calculateObjectInstances2() {
             objectDictionaryTmp[totalObjectDictionaryStructTmp].instances = 0;
             //add for next element in array
             totalObjectDictionaryStructTmp++;
-            cout << "added object to dictionary" << endl;
+            //cout << "added object to dictionary" << endl;
         }
     }
     //print out list of objects
