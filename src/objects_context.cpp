@@ -536,7 +536,7 @@ void calculateObjectInstances2() {
     //check if tmp struct total is 0
     if (totalObjectDictionaryStructTmp == 0) {
         //add first object in context array to dictionary
-        std::string getObjName = objectDictionary[0].object_name;
+        std::string getObjName = objectsFileStruct[0].object_name;
         cout << "debug calc instance 2, object name from context is " << getObjName << endl;
         //set instance to 1
         objectDictionaryTmp[0].object_name = getObjName;
