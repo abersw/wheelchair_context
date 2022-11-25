@@ -33,7 +33,7 @@ static const int DEBUG_calculateObjectUniqueness = 0;
 static const int DEBUG_calculateContextScore = 0;
 static const int DEBUG_publishObjectContext = 0;
 static const int DEBUG_objectLocationsCallbackDictionary = 1;
-static const int DEBUG_objectLocationsCallback = 1;
+static const int DEBUG_objectLocationsCallback = 0;
 static const int DEBUG_assignObjectsDetectedStruct = 0;
 static const int DEBUG_assignObjectsMissingStruct = 0;
 static const int DEBUG_contextNoHistory = 0;
@@ -776,6 +776,12 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
     
     int totalObjectsInMsg = obLoc.totalObjects; //total detected objects in ROS msg
     totalObjectsFileStruct = totalObjectsInMsg; //set message total objects to total objects in file struct
+
+    //on training session, full objects list publishes blank messages...
+    //filter these out until an object appears in the data
+    if (obLoc.object_name[0].compare("")) {
+        ROS_ERROR_STREAM("blank message detected!");
+    }
     if (DEBUG_objectLocationsCallback) {
         tofToolBox->printSeparator(0);
     }
