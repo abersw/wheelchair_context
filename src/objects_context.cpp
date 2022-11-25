@@ -779,7 +779,7 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
 
     //on training session, full objects list publishes blank messages...
     //filter these out until an object appears in the data
-    cout << "first item is " << obLoc.object_name[0] << endl;
+
     if (DEBUG_objectLocationsCallback) {
         tofToolBox->printSeparator(0);
     }
