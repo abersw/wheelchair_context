@@ -779,7 +779,7 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
 
     //on training session, full objects list publishes blank messages...
     //filter these out until an object appears in the data
-    if (obLoc.object_name[0].compare("")) {
+    if (obLoc.object_name[0] == "") {
         ROS_ERROR_STREAM("blank message detected!");
     }
     if (DEBUG_objectLocationsCallback) {
