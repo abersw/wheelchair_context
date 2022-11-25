@@ -543,9 +543,6 @@ void calculateObjectInstances2() {
         objectDictionaryTmp[0].instances = 0;
         //set total objects in tmp dictionary to 1
         totalObjectDictionaryStructTmp = 1;
-        if (getObjName.compare("") == 0) {
-            ROS_ERROR_STREAM("UHH OHHHHH!");
-        }
     }
     //run through tmp dictionary and set instances to 0
     for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
