@@ -537,6 +537,7 @@ void calculateObjectInstances2() {
     if (totalObjectDictionaryStructTmp == 0) {
         //add first object in context array to dictionary
         std::string getObjName = objectContext[0].object_name;
+        cout << "debug calc instance 2, object name from context is " << getObjName << endl;
         //set instance to 1
         objectDictionaryTmp[0].object_name = getObjName;
         objectDictionaryTmp[0].instances = 0;
