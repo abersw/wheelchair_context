@@ -631,12 +631,12 @@ void calculateObjectInstances2() {
         }
         else {
             foundNoZero++;
-            ROS_ERROR_STREAM("one of a number of many things has gone wrong...");
+            std::cout << "one of a number of many things has gone wrong...";
         }
     }
     totalObjectDictionaryStruct = totalObjectDictionaryStructTmp;
     if (foundNoZero > 0) {
-        ROS_ERROR_STREAM("No zeros should be found in instances, found " + std::to_string(foundNoZero));
+        std::cout << "No zeros should be found in instances, found " << std::to_string(foundNoZero) << endl;
     }
     else {
         //cout << "everything is awesome!" << endl;
