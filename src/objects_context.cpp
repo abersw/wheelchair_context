@@ -621,6 +621,10 @@ void calculateObjectInstances2() {
         }
     }
 
+    for (int i = 0; i < totalObjectDictionaryStructTmp; i++) {
+        cout << "index is " << i << ":" << objectDictionaryTmp[i].object_name << ":" << objectDictionaryTmp[i].instances << endl;
+    }
+
     //match arrays to overwrite instances
     int foundNoZero = 0;
     for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
@@ -631,12 +635,12 @@ void calculateObjectInstances2() {
         }
         else {
             foundNoZero++;
-            std::cout << "one of a number of many things has gone wrong...";
+            ROS_ERROR_STREAM("one of a number of many things has gone wrong...");
         }
     }
     totalObjectDictionaryStruct = totalObjectDictionaryStructTmp;
     if (foundNoZero > 0) {
-        std::cout << "No zeros should be found in instances, found " << std::to_string(foundNoZero) << endl;
+        ROS_ERROR_STREAM("No zeros should be found in instances, found " + std::to_string(foundNoZero));
     }
     else {
         //cout << "everything is awesome!" << endl;
