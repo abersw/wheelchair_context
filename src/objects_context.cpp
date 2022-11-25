@@ -537,7 +537,7 @@ void calculateObjectInstances2() {
     if (totalObjectDictionaryStructTmp == 0) {
         //add first object in context array to dictionary
         std::string getObjName = objectsFileStruct[0].object_name;
-        cout << "debug calc instance 2, object name from context is " << getObjName << endl;
+        cout << "tmp dict is 0 " << getObjName << endl;
         //set instance to 1
         objectDictionaryTmp[0].object_name = getObjName;
         objectDictionaryTmp[0].instances = 0;
@@ -554,6 +554,7 @@ void calculateObjectInstances2() {
         int objectMatched = 0;
         //get object name from objectsFileStruct
         std::string getObjName = objectsFileStruct[isObject].object_name;
+        cout << "tmp dict is more than 0 " << getObjName << endl;
         //iterate through dictionary struct
         for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
             //get object name from objectDictionary
