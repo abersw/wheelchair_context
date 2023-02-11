@@ -1356,14 +1356,15 @@ int main (int argc, char **argv) {
     });
 
     //delay object missing thread by a few milliseconds, to allow the full objects list to be processed
-    ros::NodeHandle n_missingObjectsThread;
+    //comment the 
+    /*ros::NodeHandle n_missingObjectsThread;
     ros::CallbackQueue callback_queue_missingObjectsThread;
     n_missingObjectsThread.setCallbackQueue(&callback_queue_missingObjectsThread);
     ros::Subscriber missing_objects_sub = n_missingObjectsThread.subscribe("wheelchair_robot/dacop/missing_objects/missing", 1000, missingObjectCallback); //detected objects in frame
     std::thread spinner_thread_missingObjects([&callback_queue_missingObjectsThread]() {
         ros::SingleThreadedSpinner spinner_missingObjects;
         spinner_missingObjects.spin(&callback_queue_missingObjectsThread);
-    });
+    });*/
 
     ros::Publisher object_context_pub = n.advertise<wheelchair_msgs::objectContext>("/wheelchair_robot/context/objects", 1000); //publish object context info for decision making
     ptr_object_context = &object_context_pub; //pointer to publish object context
