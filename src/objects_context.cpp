@@ -1324,8 +1324,8 @@ int main (int argc, char **argv) {
         ROS_INFO("Got param: %s", PARAM_dataset_name.c_str());
         experiments_loc_file = wheelchair_experiments_loc + experiments_loc + PARAM_dataset_name + ".txt";
         cout << "experiments file is located at " << experiments_loc_file << endl;
-        trackingFileToArray();
-        populateObjectsToTrack();
+        //trackingFileToArray();
+        //populateObjectsToTrack();
         objectsToTrack = 1;
     }
     else {
