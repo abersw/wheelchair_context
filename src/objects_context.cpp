@@ -396,27 +396,34 @@ void contextListToStruct(std::string fileName) {
  */
 double calculateInfluenceWeight() {
     double influenceWeight = 0.0;
-    if (trainingInfo.times_trained <= trainingInfo.times_trained_max) { //if times trained is less than or equal to max times trained
-        if (DEBUG_calculateInfluenceWeight) {
-            cout << "training times in range" << endl;
+    if (experiment3_uncapped_weighting == 0) {
+        if (trainingInfo.times_trained <= trainingInfo.times_trained_max) { //if times trained is less than or equal to max times trained
+            if (DEBUG_calculateInfluenceWeight) {
+                cout << "training times in range" << endl;
+            }
+            influenceWeight = 1.0 / trainingInfo.times_trained;
+            trainingInfo.times_trained_val = influenceWeight;
         }
-        influenceWeight = 1.0 / trainingInfo.times_trained;
-        trainingInfo.times_trained_val = influenceWeight;
+        else if (trainingInfo.times_trained > trainingInfo.times_trained_max) { //if actual times trained is greater than max times trained
+            if (DEBUG_calculateInfluenceWeight) {
+                cout << "training times out of range 5" << endl;
+            }
+            influenceWeight = 1.0 / trainingInfo.times_trained_max;
+            trainingInfo.times_trained_val = influenceWeight; //assign max times trained to calculation values
+        }
+        else { //throw error if input form context file is invalid
+            cout << "invalid times trained from context info file" << endl;
+        }
+        if (DEBUG_calculateInfluenceWeight) {
+            cout << "Influence (I) is " << influenceWeight << endl;
+        }
+        return influenceWeight;
     }
-    else if (trainingInfo.times_trained > trainingInfo.times_trained_max) { //if actual times trained is greater than max times trained
-        if (DEBUG_calculateInfluenceWeight) {
-            cout << "training times out of range 5" << endl;
-        }
+    else if (experiment3_uncapped_weighting == 1) {
         influenceWeight = 1.0 / trainingInfo.times_trained_max;
         trainingInfo.times_trained_val = influenceWeight; //assign max times trained to calculation values
+        return influenceWeight;
     }
-    else { //throw error if input form context file is invalid
-        cout << "invalid times trained from context info file" << endl;
-    }
-    if (DEBUG_calculateInfluenceWeight) {
-        cout << "Influence (I) is " << influenceWeight << endl;
-    }
-    return influenceWeight;
 }
 
 /**
