@@ -21,7 +21,7 @@ using namespace std;
 
 static const int experiment1_missing_objects = 0;
 static const int experiment2_detections_only = 1;
-static const int experiment3_uncapped_weighting = 1;
+static const int experiment3_uncapped_weighting = 0;
 
 static const int DEBUG_trackingFileToArray = 0;
 static const int DEBUG_populateObjectsToTrack = 0;
