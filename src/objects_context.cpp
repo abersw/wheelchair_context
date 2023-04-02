@@ -1,5 +1,5 @@
 /*
- * detected_objects_context.cpp
+ * objects_context.cpp
  * wheelchair_context
  * version: 0.1.0 Majestic Maidenhair
  * Status: Beta
@@ -11,6 +11,7 @@
 #include "wheelchair_msgs/objectLocations.h"
 #include "wheelchair_msgs/objectContext.h"
 #include "wheelchair_msgs/missingObjects.h"
+#include "wheelchair_msgs/trackingContext.h"
 
 #include <ros/callback_queue.h>
 #include <thread>
@@ -18,9 +19,16 @@
 
 using namespace std;
 
+static const int experiment1_missing_objects = 0;
+static const int experiment2_detections_only = 0;
+static const int experiment3_uncapped_weighting = 1;
+
+static const int DEBUG_trackingFileToArray = 0;
 static const int DEBUG_populateObjectsToTrack = 0;
-static const int DEBUG_trackingObjectFound = 1;
-static const int DEBUG_contextListToStruct = 0;
+static const int DEBUG_listenForTrackingObjects = 0;
+static const int DEBUG_captureTrackingObject = 0;
+static const int DEBUG_trackingObjectFound = 0;
+static const int DEBUG_contextListToStruct = 1;
 static const int DEBUG_calculateInfluenceWeight = 0;
 static const int DEBUG_listToContextInfo = 0;
 static const int DEBUG_addObjectToDictionary = 0;
@@ -28,7 +36,7 @@ static const int DEBUG_calculateObjectInstances = 0;
 static const int DEBUG_calculateObjectUniqueness = 0;
 static const int DEBUG_calculateContextScore = 0;
 static const int DEBUG_publishObjectContext = 0;
-static const int DEBUG_objectLocationsCallbackDictionary = 0;
+static const int DEBUG_objectLocationsCallbackDictionary = 1;
 static const int DEBUG_objectLocationsCallback = 0;
 static const int DEBUG_assignObjectsDetectedStruct = 0;
 static const int DEBUG_assignObjectsMissingStruct = 0;
@@ -40,6 +48,7 @@ static const int DEBUG_detectedObjectCallback = 0;
 static const int DEBUG_missingObjectCallback = 0;
 static const int DEBUG_contextInfoToList = 0;
 static const int DEBUG_contextStructToList = 0;
+static const int DEBUG_currentTime = 0;
 static const int DEBUG_main = 0;
 static const int DEBUG_fileLocations = 1;
 
@@ -104,10 +113,12 @@ struct TrainingInfo trainingInfo;
 //struct will store single object names and the instances inside the entire environment
 struct ObjectDictionary {
     std::string object_name; //object name
-    int instances; //instances of object in environment
+    int instances = 0; //instances of object in environment
 };
 struct ObjectDictionary objectDictionary[1000]; //struct for storing data needed to calc uniqueness of objects
 int totalObjectDictionaryStruct = 0; //total list of objects used to calc uniqueness
+struct ObjectDictionary objectDictionaryTmp[1000]; //struct for storing data needed to calc uniqueness of objects
+int totalObjectDictionaryStructTmp = 0; //total list of objects used to calc uniqueness
 
 //context data to save
 struct TrackingObjects {
@@ -115,7 +126,8 @@ struct TrackingObjects {
     string object_name;
     float object_confidence; //object confidence from dnn
 
-    ros::Time object_timestamp; //should be saved in seconds .toSec()
+    double object_timestamp; //should be saved in seconds .toSec()
+    double duration; //duration from start of node launch
 
     //context info
     int times_trained; //real times trained
@@ -129,16 +141,26 @@ struct TrackingObjects {
     double object_score; //calculation of object weighting and uniqueness
     int object_instances; //number of objects in env
 };
-static const int totalObjectsTracked = 100;
+static const int totalObjectsTracked = 1000;
 static const long totalObjectsTrackedCaptured = 10000;
+//[0] contains object id and name [1] instances detected
 struct TrackingObjects trackingObjects[totalObjectsTracked][totalObjectsTrackedCaptured];
-int totalTrackingObjects = 0;
-int totalTrackingObjectsCaptured = 0;
+
+//contains instances of object found, uses order from trackingObjects
+int totalTrackingObjectsCaptured[totalObjectsTracked];
 
 struct TrackingObjects trackingObjectsList[totalObjectsTracked];
 //std::map<string, string> trackingObjectsListRaw = {{"42", "refrigerator"}, {"53", "refrigerator"}};
-string trackingObjectsListRaw[] = {"42", "refrigerator", "53", "sink"};
+//string trackingObjectsListRaw[] = {"4", "backpack", "56", "refrigerator", "59", "oven"};
+string trackingObjectsListRaw[10000];
 int totalTrackingObjectsListRaw = 0;
+int totalTrackingObjectsList = 0;
+static const int TRACKING_ID_RANGE = 3;
+
+double currentTimeSecs = 0.0;
+double PARAM_add_to_duration = 0.0;
+
+int checkTimeOnStartup = 0;
 
 //list of file locations
 std::string wheelchair_dump_loc; //location of wheelchair_dump package
@@ -148,27 +170,92 @@ std::string context_info_name = "info.context"; //name of context training info 
 std::string context_list_loc; //full path to object context file
 std::string context_info_loc; //full path to context training info file
 
+std::string wheelchair_experiments_loc; //location of wheelchair_dump package
+std::string experiments_loc = "/docs/objects-to-track/"; //location of list of objects to tack
+std::string experiments_loc_file;
+
 ros::Publisher *ptr_object_context;
+ros::Publisher *ptr_tracking_context;
 
 TofToolBox *tofToolBox;
 
+int contextIsDetected = 1;
+int contextIsMissing = 0;
+
 static const int saveDataToList = 1;
 
+int objectsToTrack = 0;
+
+double beginTime = 0.0;
+
+
+void trackingFileToArray() {
+    int counter = 0;
+    std::ifstream file(experiments_loc_file);
+    if (file.is_open()) {
+        std::string line;
+        while (std::getline(file, line)) {
+            // using printf() in all tests for consistency
+            if (DEBUG_trackingFileToArray) {
+                cout << "complete line from file is " << line << endl;
+            }
+            size_t colon_pos = line.find(':');
+            string str1 = line.substr(0, colon_pos);
+            string str2 = line.substr(colon_pos+1);
+            trackingObjectsListRaw[counter] = str1;
+            counter++;
+            trackingObjectsListRaw[counter] = str2;
+            counter++;
+        }
+        file.close();
+    }
+    else {
+        cout << "something went wrong opening the file" << endl;
+    }
+    totalTrackingObjectsListRaw = counter;
+    if (DEBUG_trackingFileToArray) {
+        for (int i = 0; i < counter; i++) {
+            cout << trackingObjectsListRaw[i] << endl;
+        }
+    }
+}
+
 void populateObjectsToTrack() {
-    int totalTrackingObjectsListRaw = *(&trackingObjectsListRaw + 1) - trackingObjectsListRaw;
+    if (DEBUG_populateObjectsToTrack) {
+        cout << "total tracking objects list raw " << totalTrackingObjectsListRaw << endl;
+    }
     int pos = 0;
     int counter = 0;
+
+    int targetObjectID = -1;
+    std::string targetObjectName = "";
+
     for (int i = 0; i < totalTrackingObjectsListRaw; i++) {
         if (pos == 0) {
-            //trackingObjectsList[counter].object_id = std::stoi(trackingObjectsListRaw[i]);
-            trackingObjects[counter][0].object_id = std::stoi(trackingObjectsListRaw[i]);
+            targetObjectID = std::stoi(trackingObjectsListRaw[i]);
             pos++;
         }
         else if (pos == 1) {
-            //trackingObjectsList[counter].object_name = trackingObjectsListRaw[i];
-            trackingObjects[counter][0].object_name = trackingObjectsListRaw[i];
-            pos = 0;
-            counter++;
+            targetObjectName = trackingObjectsListRaw[i];
+            pos = 0; //next element in list will be id
+
+            //track object IDs within specified range
+            //run from min range of object ID
+            for (int iterateObjectID = (targetObjectID - TRACKING_ID_RANGE); iterateObjectID < targetObjectID; iterateObjectID++) {
+                //std::cout << "run less " << iterateObjectID << std::endl;
+                trackingObjects[counter][0].object_id = iterateObjectID;
+                trackingObjects[counter][0].object_name = targetObjectName;
+                totalTrackingObjectsCaptured[counter] = 0;
+                counter++;
+            }
+            //run from object id to max range
+            for (int iterateObjectID = targetObjectID; iterateObjectID <= (targetObjectID + TRACKING_ID_RANGE); iterateObjectID++) {
+                //std::cout << "run more " << iterateObjectID << std::endl;
+                trackingObjects[counter][0].object_id = iterateObjectID;
+                trackingObjects[counter][0].object_name = targetObjectName;
+                totalTrackingObjectsCaptured[counter] = 0;
+                counter++;
+            }
         }
         else {
             if (DEBUG_populateObjectsToTrack) {
@@ -176,32 +263,72 @@ void populateObjectsToTrack() {
             }
         }
     }
-    totalTrackingObjects = counter;
-    int totalObjectsToTrack = *(&trackingObjects + 1) - trackingObjects;
-    //int totalObjectsCaptured = *(&trackingObjects[0] + 1) - trackingObjects[0];
-    cout << "total objects to track is " << totalObjectsToTrack << endl;
-    //cout << "total finds in pos 0 is " << totalObjectsCaptured << endl;
+    totalTrackingObjectsList = counter;
+
     if (DEBUG_populateObjectsToTrack) {
-        for (int i = 0; i < totalTrackingObjectsListRaw/2; i++) {
-            cout << trackingObjectsList[i].object_id << ":" << trackingObjectsList[i].object_name << endl;
+        cout << "total objects to track is " << totalTrackingObjectsList << endl;
+        for (int i = 0; i < totalTrackingObjectsList; i++) {
+            cout << trackingObjects[i][0].object_id << ":" << trackingObjects[i][0].object_name << endl;
         }
     }
 }
 
-int listenForTrackingObjects(int currentObjectID, string currentObjectName) {
+std::pair<int , int> listenForTrackingObjects(int currentObjectID, string currentObjectName) {
     //loop through tracked list, return true if object
-    int foundTrackedObject = 0;
-    for (int isTrackingObject = 0; isTrackingObject < totalTrackingObjectsListRaw; isTrackingObject++) {
-        if ((currentObjectID == trackingObjectsList[isTrackingObject].object_id) &&
-            (currentObjectName == trackingObjectsList[isTrackingObject].object_name)) {
-            foundTrackedObject = 1;
+    int trackedObjectFound = 0;
+    int trackedObjectPos = 0;
+    for (int isTrackingObject = 0; isTrackingObject < totalTrackingObjectsList; isTrackingObject++) {
+        if ((currentObjectID == trackingObjects[isTrackingObject][0].object_id) &&
+            (currentObjectName.compare(trackingObjects[isTrackingObject][0].object_name) == 0)) {
+            trackedObjectFound = 1;
+            trackedObjectPos = isTrackingObject;
+            if (DEBUG_listenForTrackingObjects) {
+                cout << "found object in tracking " << currentObjectID << ":" << currentObjectName << " in pos " << isTrackingObject << endl;
+            }
         }
     }
-    return foundTrackedObject;
+    return std::make_pair(trackedObjectFound, trackedObjectPos);
 }
 
-void captureTrackingObject() {
+void captureTrackingObject(int isDetectedObject, int currentObjectID, string currentObjectName) {
     //get all information and apply to struct
+    //find position of object in context array
+    int objectContextPos = -1;
+    //cout << "total context struct is " << totalObjectContextStruct << endl;
+    for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
+        if ((currentObjectID == objectContext[isContext].object_id) &&
+            (currentObjectName.compare(objectContext[isContext].object_name) == 0)) {
+            //cout << "context match found at pos" << isContext << endl;
+            objectContextPos = isContext;
+        }
+    }
+    if (objectContext[objectContextPos].object_instances == 0) {
+        ROS_ERROR_STREAM(to_string(objectContext[objectContextPos].object_id) + objectContext[objectContextPos].object_name);
+        ROS_ERROR_STREAM("something has gone very wrong, detected 0 instances");
+    }
+    if (objectContextPos == -1) {
+        ROS_ERROR_STREAM("Something went very wrong trying to find matching object context");
+    }
+
+    wheelchair_msgs::trackingContext trackObj; //initialise ros message type
+    trackObj.header.stamp = ros::Time::now();
+    trackObj.object_id = objectContext[objectContextPos].object_id;
+    trackObj.object_name = objectContext[objectContextPos].object_name;
+    trackObj.object_confidence = objectContext[objectContextPos].object_confidence;
+    trackObj.object_detected = objectContext[objectContextPos].object_detected;
+
+    trackObj.object_weighting = objectContext[objectContextPos].object_weighting;
+    trackObj.object_uniqueness = objectContext[objectContextPos].object_uniqueness;
+    trackObj.object_score = objectContext[objectContextPos].object_score;
+    trackObj.object_instances = objectContext[objectContextPos].object_instances;
+
+    trackObj.object_timestamp = currentTimeSecs;
+
+    trackObj.duration = (currentTimeSecs - beginTime) + PARAM_add_to_duration;
+
+    trackObj.detected_or_missing = isDetectedObject;
+
+    ptr_tracking_context->publish(trackObj);
 }
 
 /**
@@ -248,7 +375,7 @@ void contextListToStruct(std::string fileName) {
                 }
                 lineSection++; //move to next element in line
             }
-            objectContext[objectNumber].object_instances = std::stod(line); //set object instances
+            objectContext[objectNumber].object_instances = std::stoi(line); //set object instances
             if (DEBUG_contextListToStruct) { //print off debug lines
                 cout << "sections in line " << lineSection << endl;
                 cout << objectContext[objectNumber].object_id << "," << objectContext[objectNumber].object_name << ", " << objectContext[objectNumber].object_confidence << endl;
@@ -269,27 +396,34 @@ void contextListToStruct(std::string fileName) {
  */
 double calculateInfluenceWeight() {
     double influenceWeight = 0.0;
-    if (trainingInfo.times_trained <= trainingInfo.times_trained_max) { //if times trained is less than or equal to max times trained
-        if (DEBUG_calculateInfluenceWeight) {
-            cout << "training times in range" << endl;
+    if (experiment3_uncapped_weighting == 0) {
+        if (trainingInfo.times_trained <= trainingInfo.times_trained_max) { //if times trained is less than or equal to max times trained
+            if (DEBUG_calculateInfluenceWeight) {
+                cout << "training times in range" << endl;
+            }
+            influenceWeight = 1.0 / trainingInfo.times_trained;
+            trainingInfo.times_trained_val = influenceWeight;
         }
-        influenceWeight = 1.0 / trainingInfo.times_trained;
-        trainingInfo.times_trained_val = influenceWeight;
+        else if (trainingInfo.times_trained > trainingInfo.times_trained_max) { //if actual times trained is greater than max times trained
+            if (DEBUG_calculateInfluenceWeight) {
+                cout << "training times out of range 5" << endl;
+            }
+            influenceWeight = 1.0 / trainingInfo.times_trained_max;
+            trainingInfo.times_trained_val = influenceWeight; //assign max times trained to calculation values
+        }
+        else { //throw error if input form context file is invalid
+            cout << "invalid times trained from context info file" << endl;
+        }
+        if (DEBUG_calculateInfluenceWeight) {
+            cout << "Influence (I) is " << influenceWeight << endl;
+        }
+        return influenceWeight;
     }
-    else if (trainingInfo.times_trained > trainingInfo.times_trained_max) { //if actual times trained is greater than max times trained
-        if (DEBUG_calculateInfluenceWeight) {
-            cout << "training times out of range 5" << endl;
-        }
+    else if (experiment3_uncapped_weighting == 1) {
         influenceWeight = 1.0 / trainingInfo.times_trained_max;
         trainingInfo.times_trained_val = influenceWeight; //assign max times trained to calculation values
+        return influenceWeight;
     }
-    else { //throw error if input form context file is invalid
-        cout << "invalid times trained from context info file" << endl;
-    }
-    if (DEBUG_calculateInfluenceWeight) {
-        cout << "Influence (I) is " << influenceWeight << endl;
-    }
-    return influenceWeight;
 }
 
 /**
@@ -340,10 +474,11 @@ void addObjectToDictionary() {
         }
         for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) { //iterate through dictionary struct
             std::string getObjDictName = objectDictionary[isDict].object_name; //get object name from objectDictionary
-            if (getObjName == getObjDictName) { //if name from objectsFileStruct and objectDictionary is the same
+            if (getObjName == getObjDictName) { //if name from objectsFileStruct and objectDictionary is the same   ##change to compare
                 objectMatched = 1; //set to true
             }
             objectDictionary[isDict].instances = 0; //set objects back to 0
+            //cout << "DEBUG: adding zero for " << getObjName << endl;
         }
         if (objectMatched) {
             //if object is already in struct, don't add anything
@@ -360,7 +495,7 @@ void addObjectToDictionary() {
     if (DEBUG_addObjectToDictionary) {
         tofToolBox->printSeparator(1);
         cout << "pre-instance calculations, total size of struct is " << totalObjectDictionaryStruct << endl;
-        for (int isDet = 0; isDet < totalObjectDictionaryStruct; isDet++) {
+        for (int isDet = 0; isDet < totalObjectDictionaryStruct; isDet++) {            
             cout << objectDictionary[isDet].object_name << ":" << objectDictionary[isDet].instances << endl;
         }
         tofToolBox->printSeparator(1);
@@ -386,7 +521,7 @@ void calculateObjectInstances() {
                 cout << "total objects in struct is " << totalObjectsFileStruct << endl;
                 cout << "object from context is " << getObjName << endl;
             }
-            if (getObjDictName == getObjName) { //if object name in dictionary and main struct are equal
+            if (getObjDictName == getObjName) { //if object name in dictionary and main struct are equal  ##change to compare
                 if (DEBUG_calculateObjectInstances) {
                     cout << "found instance" << endl;
                 }
@@ -400,8 +535,120 @@ void calculateObjectInstances() {
     //print out list and instances of objects
     if (DEBUG_objectLocationsCallbackDictionary) {
         for (int isDict = 0; isDict < totalObjectDictionaryStruct; isDict++) {
-            cout << objectDictionary[isDict].object_name << ":" << objectDictionary[isDict].instances << endl;
+            if (objectDictionary[isDict].instances == 0) {
+                ROS_ERROR("One of a number of many things has gone terribly wrong...");
+                cout << objectDictionary[isDict].object_name << ":" << objectDictionary[isDict].instances << endl;
+            }
         }
+    }
+}
+
+void calculateObjectInstances2() {
+    //check if tmp struct total is 0
+    if (totalObjectDictionaryStructTmp == 0) {
+        //add first object in context array to dictionary
+        std::string getObjName = objectsFileStruct[0].object_name;
+        //set instance to 1
+        objectDictionaryTmp[0].object_name = getObjName;
+        objectDictionaryTmp[0].instances = 0;
+        //set total objects in tmp dictionary to 1
+        totalObjectDictionaryStructTmp = 1;
+    }
+    //run through tmp dictionary and set instances to 0
+    for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
+        objectDictionaryTmp[isDict].instances = 0;
+    }
+    //run through all objects and find new objects that aren't in the dictionary
+    for (int isObject = 0; isObject < totalObjectContextStruct; isObject++) {
+        //flag variable sets to 1 if object is already in dictionary
+        int objectMatched = 0;
+        //get object name from objectsFileStruct
+        std::string getObjName = objectsFileStruct[isObject].object_name;
+        //iterate through dictionary struct
+        for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
+            //get object name from objectDictionary
+            std::string getObjDictName = objectDictionaryTmp[isDict].object_name;
+            //if name from objectsFileStruct and objectDictionary is the same   ##change to compare
+            if (getObjName.compare(getObjDictName) == 0) {
+                //set to true
+                objectMatched = 1;
+            }
+        }
+        if (objectMatched) {
+            //if object is already in struct, don't add anything
+            //instances calculated in calculateObjectInstances
+        }
+        else {
+            //add object name to struct
+            //assign name from objectsFileStruct
+            objectDictionaryTmp[totalObjectDictionaryStructTmp].object_name = getObjName;
+            //set instances to 0
+            objectDictionaryTmp[totalObjectDictionaryStructTmp].instances = 0;
+            //add for next element in array
+            totalObjectDictionaryStructTmp++;
+            //cout << "added object to dictionary" << endl;
+        }
+    }
+    //print out list of objects
+    if (DEBUG_addObjectToDictionary) {
+        tofToolBox->printSeparator(1);
+        cout << "pre-instance calculations, total size of struct is " << totalObjectDictionaryStructTmp << endl;
+        for (int isDet = 0; isDet < totalObjectDictionaryStructTmp; isDet++) {            
+            cout << objectDictionaryTmp[isDet].object_name << ":" << objectDictionaryTmp[isDet].instances << endl;
+        }
+        tofToolBox->printSeparator(1);
+    }
+    //second stage - calculate instances of all objects in dictionary
+    //iterate through object dictionary
+    for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
+        //get object name from dictionary
+        std::string getObjDictName = objectDictionaryTmp[isDict].object_name;
+        if (DEBUG_calculateObjectInstances) {
+            tofToolBox->printSeparator(1);
+            cout << "total objects in dictionary is " << totalObjectDictionaryStruct << endl;
+            cout << "object from dict is " << getObjDictName << endl;
+        }
+        //iterate through object struct
+        for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
+            //get object name from main struct
+            std::string getObjName = objectContext[isContext].object_name;
+            if (DEBUG_calculateObjectInstances) {
+                cout << "total objects in context is " << totalObjectContextStruct << endl;
+                cout << "total objects in struct is " << totalObjectsFileStruct << endl;
+                cout << "object from context is " << getObjName << endl;
+            }
+            //if object name in dictionary and main struct are equal  ##change to compare
+            if (getObjDictName.compare(getObjName) == 0) {
+                if (DEBUG_calculateObjectInstances) {
+                    cout << "found instance" << endl;
+                }
+                objectDictionaryTmp[isDict].instances++; //add 1 to object instances
+            }
+            else {
+                //don't do anything if match not found between dictionary and main object struct
+            }
+        }
+    }
+
+    //match arrays to overwrite instances
+    int foundNoZero = 0;
+    for (int isDict = 0; isDict < totalObjectDictionaryStructTmp; isDict++) {
+        objectDictionary[isDict].object_name = objectDictionaryTmp[isDict].object_name;
+        objectDictionary[isDict].instances = objectDictionaryTmp[isDict].instances;
+        if (objectDictionary[isDict].instances != 0) {
+            //cout << "everything is awesome!" << endl;
+        }
+        else {
+            foundNoZero++;
+            ROS_ERROR_STREAM("one of a number of many things has gone wrong...");
+        }
+    }
+    totalObjectDictionaryStruct = totalObjectDictionaryStructTmp;
+    if (foundNoZero > 0) {
+        ROS_ERROR_STREAM("No zeros should be found in instances, found " + std::to_string(foundNoZero));
+    }
+    else {
+        //cout << "everything is awesome!" << endl;
     }
 }
 
@@ -469,7 +716,7 @@ void getObjectContext() {
         double currentObjDictUniqueness = calculateObjectUniqueness(isDict); //main calculation for uniqueness
         for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //iterate through entire context struct
             std::string getObjName = objectContext[isContext].object_name;
-            if (getObjDictName == getObjName) {
+            if (getObjDictName.compare(getObjName) == 0) {
                 objectContext[isContext].object_uniqueness = currentObjDictUniqueness; //assign current object uniqueness
                 objectContext[isContext].object_instances = getObjDictInstances; //assign instances of objects
                 calculateContextScore(isContext); //calculate object context score
@@ -522,8 +769,19 @@ void publishObjectContext() {
  *        message belongs to wheelchair_msgs objectLocations.msg
  */
 void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
+    if (checkTimeOnStartup == 0) {
+        beginTime = ros::Time::now().toSec();
+        //n.setParam("/wheelchair_robot/context/tracking/begin_time", beginTime);
+        cout << "start time is " << beginTime << endl;
+        checkTimeOnStartup = 1;
+    }
+    
     int totalObjectsInMsg = obLoc.totalObjects; //total detected objects in ROS msg
     totalObjectsFileStruct = totalObjectsInMsg; //set message total objects to total objects in file struct
+
+    //on training session, full objects list publishes blank messages...
+    //filter these out until an object appears in the data
+
     if (DEBUG_objectLocationsCallback) {
         tofToolBox->printSeparator(0);
     }
@@ -549,18 +807,26 @@ void objectLocationsCallback(const wheelchair_msgs::objectLocations obLoc) {
             cout << objectsFileStruct[isObject].id << ":" << objectsFileStruct[isObject].object_name << endl;
         }
     }
+    totalObjectContextStruct = totalObjectsFileStruct; //set object context struct size to replicate size of object struct
 
     //create and add object names to object dictionary struct
-    addObjectToDictionary();
+    //addObjectToDictionary();
 
     //get object instances and assign to object dictionary struct
-    calculateObjectInstances();
+    //calculateObjectInstances();
+    calculateObjectInstances2();
 
     //get data to calculate context
     getObjectContext();
 
     //publish calculated context via ROS msg
     publishObjectContext(); //publish object context data as ROS msg
+
+    currentTimeSecs = ros::Time::now().toSec();
+    if (DEBUG_currentTime) {
+        cout.precision(12);
+        cout << "current time is " << fixed << currentTimeSecs << endl;
+    }
 }
 
 /**
@@ -630,22 +896,38 @@ void applyNewWeighting(int isContext, double isNewWeighting) {
     if (DEBUG_detectedObjectCallback) {
         cout << "new weighting is " << isNewWeighting << endl;
     }
-    if (isNewWeighting > trainingInfo.max_weighting) { //if outside of max weighting
-        objectContext[isContext].object_weighting = trainingInfo.max_weighting; //assign object weighting max weight
-        if (DEBUG_detectedObjectCallback) {
-            cout << "set weighting to max: " << trainingInfo.max_weighting << endl;
+    if (experiment3_uncapped_weighting == 0) { //if there's a max cap, max the weighting to 1
+        if (isNewWeighting > trainingInfo.max_weighting) { //if outside of max weighting
+            objectContext[isContext].object_weighting = trainingInfo.max_weighting; //assign object weighting max weight
+            if (DEBUG_detectedObjectCallback) {
+                cout << "set weighting to max: " << trainingInfo.max_weighting << endl;
+            }
+        }
+        else if (isNewWeighting < trainingInfo.min_weighting) { //if outside of min weighting
+            objectContext[isContext].object_weighting = trainingInfo.min_weighting; //assign object weighting min weight
+            if (DEBUG_detectedObjectCallback) {
+                cout << "set weighting to min: " << trainingInfo.min_weighting << endl;
+            }
+        }
+        else { //if inside bounding weight
+            objectContext[isContext].object_weighting = isNewWeighting; //assign object weighting caluclated weight
+            if (DEBUG_detectedObjectCallback) {
+                cout << "assigned to context struct pos " << isContext << " weighting " << objectContext[isContext].object_weighting << endl;
+            }
         }
     }
-    else if (isNewWeighting < trainingInfo.min_weighting) { //if outside of min weighting
-        objectContext[isContext].object_weighting = trainingInfo.min_weighting; //assign object weighting min weight
-        if (DEBUG_detectedObjectCallback) {
-            cout << "set weighting to min: " << trainingInfo.min_weighting << endl;
+    else if (experiment3_uncapped_weighting == 1) { //if there's no max capping increase weighting
+        if (isNewWeighting < trainingInfo.min_weighting) { //if outside of min weighting
+            objectContext[isContext].object_weighting = trainingInfo.min_weighting; //assign object weighting min weight
+            if (DEBUG_detectedObjectCallback) {
+                cout << "set weighting to min: " << trainingInfo.min_weighting << endl;
+            }
         }
-    }
-    else { //if inside bounding weight
-        objectContext[isContext].object_weighting = isNewWeighting; //assign object weighting caluclated weight
-        if (DEBUG_detectedObjectCallback) {
-            cout << "assigned to context struct pos " << isContext << " weighting " << objectContext[isContext].object_weighting << endl;
+        else { //if inside bounding weight
+            objectContext[isContext].object_weighting = isNewWeighting; //assign object weighting caluclated weight
+            if (DEBUG_detectedObjectCallback) {
+                cout << "assigned to context struct pos " << isContext << " weighting " << objectContext[isContext].object_weighting << endl;
+            }
         }
     }
 }
@@ -698,14 +980,14 @@ void shiftObjectsMissingStructPos(int from, int to) {
 void contextNoHistory(int detPos) {
     for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[detPos]; detectedObject++) { //run through struct of pos 0
         //run through each detected object
-        int getDetObjID = objectsDetectedStruct[detPos][detectedObject].id; //get id
+        int getDetObjID = objectsDetectedStruct[detPos][detectedObject].id; //get iobjectLocationsCallbackd
         std::string getDetObjName = objectsDetectedStruct[detPos][detectedObject].object_name; //get name
 
         for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) { //run through entire context struct
             int getContextID = objectContext[isContext].object_id; //get context ID
             std::string getContextName = objectContext[isContext].object_name; //get context name
 
-            if ((getDetObjID == getContextID) && (getDetObjName == getContextName)) { //if object ID and name are equal
+            if ((getDetObjID == getContextID) && (getDetObjName.compare(getContextName) == 0)) { //if object ID and name are equal
                 if (DEBUG_contextNoHistory) {
                     tofToolBox->printSeparator(0);
                     cout << "found object " << getDetObjID << " in det and context struct" << endl;
@@ -718,13 +1000,17 @@ void contextNoHistory(int detPos) {
                 applyNewWeighting(isContext, isNewWeighting);
                 //get data to calculate context
                 getObjectContext();
-                int trackingObjectFound = listenForTrackingObjects(getDetObjID, getDetObjName);
+                /*std::pair<int, int> listenForTrackingObjectsResult = listenForTrackingObjects(getDetObjID, getDetObjName);
+                int trackingObjectFound = listenForTrackingObjectsResult.first;
+                int trackingObjectPos = listenForTrackingObjectsResult.second;
                 if (trackingObjectFound == 1) {
                     if (DEBUG_trackingObjectFound) {
+                        cout << "contextNoHistory" << endl;
                         cout << "tracking object " << getDetObjID << ":" << getDetObjName << " found" << endl;
                     }
-                    captureTrackingObject();
-                }
+                    captureTrackingObject(contextIsDetected, trackingObjectPos, getDetObjID, getDetObjName);
+                }*/
+                captureTrackingObject(contextIsDetected, getDetObjID, getDetObjName);
             }
 
         }
@@ -746,7 +1032,7 @@ void contextMissingNoHistory(int detPos) {
             int getContextID = objectContext[isContext].object_id; //get context ID
             std::string getContextName = objectContext[isContext].object_name; //get context name
 
-            if ((getDetObjID == getContextID) && (getDetObjName == getContextName)) { //if object ID and name are equal
+            if ((getDetObjID == getContextID) && (getDetObjName.compare(getContextName) == 0)) { //if object ID and name are equal
                 if (DEBUG_contextNoHistory) {
                     tofToolBox->printSeparator(0);
                     cout << "missing object " << getDetObjID << " in det and context struct" << endl;
@@ -759,7 +1045,18 @@ void contextMissingNoHistory(int detPos) {
                 applyNewWeighting(isContext, isNewWeighting);
                 //get data to calculate context
                 getObjectContext();
-                cout << "object weighting has been reduced to " << objectContext[isContext].object_weighting << endl;
+                /*std::pair<int, int> listenForTrackingObjectsResult = listenForTrackingObjects(getDetObjID, getDetObjName);
+                int trackingObjectFound = listenForTrackingObjectsResult.first;
+                int trackingObjectPos = listenForTrackingObjectsResult.second;
+                if (trackingObjectFound == 1) {
+                    if (DEBUG_trackingObjectFound) {
+                        cout << "contextMissingNoHistory" << endl;
+                        cout << "tracking object " << getDetObjID << ":" << getDetObjName << " found" << endl;
+                    }
+                    captureTrackingObject(contextIsMissing, trackingObjectPos, getDetObjID, getDetObjName);
+                }*/
+                captureTrackingObject(contextIsMissing, getDetObjID, getDetObjName);
+                //cout << "object weighting has been reduced to " << objectContext[isContext].object_weighting << endl;
             }
 
         }
@@ -772,44 +1069,62 @@ void contextMissingNoHistory(int detPos) {
  *
  */
 void contextWithHistory() {
-    for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[0]; detectedObject++) { //run through struct of detected objects
+    //run through latest stuct of detected objects
+    for (int detectedObject = 0; detectedObject < totalObjectsDetectedStruct[0]; detectedObject++) {
         int getDetObjID = objectsDetectedStruct[0][detectedObject].id; //get id
         std::string getDetObjName = objectsDetectedStruct[0][detectedObject].object_name; //get name
 
-        for (int lastDetectedObject = 0; lastDetectedObject < totalObjectsDetectedStruct[1]; lastDetectedObject++) { //run through struct of last detected objects
+        int objectFoundInHistory = 0;
+        //run through previous struct of detected objects
+        for (int lastDetectedObject = 0; lastDetectedObject < totalObjectsDetectedStruct[1]; lastDetectedObject++) {
             int getLastObjID = objectsDetectedStruct[1][lastDetectedObject].id; //get id
             std::string getLastObjName = objectsDetectedStruct[1][lastDetectedObject].object_name; //get name
 
-            if ((getDetObjID == getLastObjID) && (getDetObjName == getLastObjName)) { //if object id and name match, it can still see the same object
-                //if match found, do not recalculate weighting - because it must be the same object in the frame
+            if ((getDetObjID == getLastObjID) && (getDetObjName.compare(getLastObjName) == 0)) {
+                objectFoundInHistory = 1; //object has been detected in previous history
             }
             else {
-                //run through entire context struct for returning correct object id position
-                for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
-                    int getContextID = objectContext[isContext].object_id; //get context ID
-                    std::string getContextName = objectContext[isContext].object_name; //get context name
+                //leave objectFoundInHistory as 0
+            }
+        }
+        //finished running through history, was a match found?
+        if (objectFoundInHistory) {
+            //a match was found, do not recalculate weighting - because it must be the same object in the frame
+        }
+        else {
+            //a match was not found
+            //run through entire context struct for returning correct object id position
+            for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
+                int getContextID = objectContext[isContext].object_id; //get context ID
+                std::string getContextName = objectContext[isContext].object_name; //get context name
 
-                    if ((getDetObjID == getContextID) && (getDetObjName == getContextName)) { //if object ID and name are equal
-                        if (DEBUG_contextWithHistory) {
-                            tofToolBox->printSeparator(0);
-                            cout << "found object " << getDetObjID << " in both history structs" << endl;
+                //if object ID and name are equal
+                if ((getDetObjID == getContextID) && (getDetObjName.compare(getContextName) == 0)) {
+                    if (DEBUG_contextWithHistory) {
+                        tofToolBox->printSeparator(0);
+                        cout << "found object " << getDetObjID << " in both history structs" << endl;
+                    }
+                    //if new object in detected struct pos 0 is equal to object in context
+                    //update object weighting and detected
+                    objectContext[isContext].object_detected++; //add one to times object was detected in env
+                    double isCurrentWeighting = objectContext[isContext].object_weighting;
+                    double isNewWeighting = isCurrentWeighting + trainingInfo.times_trained_val;
+                    applyNewWeighting(isContext, isNewWeighting);
+                    //get data to calculate context
+                    getObjectContext();
+                    /*std::pair<int, int> listenForTrackingObjectsResult = listenForTrackingObjects(getDetObjID, getDetObjName);
+                    int trackingObjectFound = listenForTrackingObjectsResult.first;
+                    int trackingObjectPos = listenForTrackingObjectsResult.second;
+                    if (trackingObjectFound == 1) {
+                        if (DEBUG_trackingObjectFound) {
+                            cout << "contextWithHistory" << endl;
+                            cout << "tracking object " << getDetObjID << ":" << getDetObjName << " found" << endl;
                         }
-                        //if new object in detected struct pos 0 is equal to object in context
-                        //update object weighting and detected
-                        objectContext[isContext].object_detected++; //add one to times object was detected in env
-                        //objectContext[isContext].objectDetectedFlag = 1; //object has been found, assign 1 to flag
-                        double isCurrentWeighting = objectContext[isContext].object_weighting;
-                        double isNewWeighting = isCurrentWeighting + trainingInfo.times_trained_val;
-                        applyNewWeighting(isContext, isNewWeighting);
-                        //get data to calculate context
-                        getObjectContext();
-                    }
-                    else {
-                        //skip over, don't assign anything if detected object and context don't match
-                    }
+                        captureTrackingObject(contextIsDetected, trackingObjectPos, getDetObjID, getDetObjName);
+                    }*/
+                    captureTrackingObject(contextIsDetected, getDetObjID, getDetObjName);
                 }
             }
-
         }
     }
     shiftObjectsDetectedStructPos(0,1); //shift detection data from struct pos 0 to 1
@@ -820,44 +1135,62 @@ void contextWithHistory() {
  *
  */
 void contextMissingWithHistory() {
+    //run through latest stuct of detected objects
     for (int missingObject = 0; missingObject < totalObjectsMissingStruct[0]; missingObject++) { //run through struct of detected objects
         int getMisObjID = objectsMissingStruct[0][missingObject].id; //get id
         std::string getMisObjName = objectsMissingStruct[0][missingObject].object_name; //get name
 
-        for (int lastMissingObject = 0; lastMissingObject < totalObjectsMissingStruct[1]; lastMissingObject++) { //run through struct of last detected objects
+        int objectFoundInHistory = 0;
+        //run through previous struct of detected objects
+        for (int lastMissingObject = 0; lastMissingObject < totalObjectsMissingStruct[1]; lastMissingObject++) {
             int getLastObjID = objectsMissingStruct[1][lastMissingObject].id; //get id
             std::string getLastObjName = objectsMissingStruct[1][lastMissingObject].object_name; //get name
 
-            if ((getMisObjID == getLastObjID) && (getMisObjName == getLastObjName)) { //if object id and name match, it's still missing the object
-                //if match found, do not recalculate weighting - because it must be the same object missing
+            if ((getMisObjID == getLastObjID) && (getMisObjName.compare(getLastObjName) == 0)) {
+                objectFoundInHistory = 1; //object has been detected in previous history
             }
             else {
-                //run through entire context struct for returning correct object id position
-                for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
-                    int getContextID = objectContext[isContext].object_id; //get context ID
-                    std::string getContextName = objectContext[isContext].object_name; //get context name
+                //leave objectFoundInHistory as 0
+            }
+        }
+        //finished running through history, was a match found?
+        if (objectFoundInHistory) {
+            //a match was found, do not recalculate weighting - because it must be the same object in the frame
+        }
+        else {
+            //a match was not found
+            //run through entire context struct for returning correct object id position
+            for (int isContext = 0; isContext < totalObjectContextStruct; isContext++) {
+                int getContextID = objectContext[isContext].object_id; //get context ID
+                std::string getContextName = objectContext[isContext].object_name; //get context name
 
-                    if ((getMisObjID == getContextID) && (getMisObjName == getContextName)) { //if object ID and name are equal
-                        if (DEBUG_contextMissingWithHistory) {
-                            tofToolBox->printSeparator(0);
-                            cout << "found missing object " << getMisObjID << " in both history structs" << endl;
+                //if object ID and name are equal
+                if ((getMisObjID == getContextID) && (getMisObjName.compare(getContextName) == 0)) {
+                    if (DEBUG_contextMissingWithHistory) {
+                        tofToolBox->printSeparator(0);
+                        cout << "found object " << getMisObjID << " in both history structs" << endl;
+                    }
+                    //if missing object struct pos 0 is equal to object in context
+                    //update object weighting and detected
+                    double isCurrentWeighting = objectContext[isContext].object_weighting;
+                    double isNewWeighting = isCurrentWeighting - trainingInfo.times_trained_val; //reduce weighting
+                    applyNewWeighting(isContext, isNewWeighting);
+                    //get data to calculate context
+                    getObjectContext();
+
+                    /*std::pair<int, int> listenForTrackingObjectsResult = listenForTrackingObjects(getMisObjID, getMisObjName);
+                    int trackingObjectFound = listenForTrackingObjectsResult.first;
+                    int trackingObjectPos = listenForTrackingObjectsResult.second;
+                    if (trackingObjectFound == 1) {
+                        if (DEBUG_trackingObjectFound) {
+                            cout << "contextMissingWithHistory" << endl;
+                            cout << "tracking object " << getMisObjID << ":" << getMisObjName << " found" << endl;
                         }
-                        //if new object in detected struct pos 0 is equal to object in context
-                        //update object weighting
-                        //objectContext[isContext].object_detected++; //do not increase detected when object is missing
-                        //objectContext[isContext].objectDetectedFlag = 1; //object has been found, assign 1 to flag
-                        double isCurrentWeighting = objectContext[isContext].object_weighting;
-                        double isNewWeighting = isCurrentWeighting - trainingInfo.times_trained_val; //reduce weighting
-                        applyNewWeighting(isContext, isNewWeighting);
-                        //get data to calculate context
-                        getObjectContext();
-                    }
-                    else {
-                        //skip over, don't assign anything if detected object and context don't match
-                    }
+                        captureTrackingObject(contextIsMissing, trackingObjectPos, getMisObjID, getMisObjName);
+                    }*/
+                    captureTrackingObject(contextIsMissing, getMisObjID, getMisObjName);
                 }
             }
-
         }
     }
     shiftObjectsMissingStructPos(0,1); //shift detection data from struct pos 0 to 1
@@ -1012,7 +1345,30 @@ int main (int argc, char **argv) {
     tofToolBox->createFile(context_info_loc); //check to see if file is present, if not create a new one
     listToContextInfo(context_info_loc); //set context training info to struct
 
-    populateObjectsToTrack();
+    wheelchair_experiments_loc = tofToolBox->doesPkgExist("wheelchair_experiments");//check to see if dump package exists
+    std::string PARAM_dataset_name;
+    if (n.getParam("/wheelchair_robot/context/track_name", PARAM_dataset_name)) {
+        ROS_INFO("Got param: %s", PARAM_dataset_name.c_str());
+        experiments_loc_file = wheelchair_experiments_loc + experiments_loc + PARAM_dataset_name + ".txt";
+        cout << "experiments file is located at " << experiments_loc_file << endl;
+        //trackingFileToArray();
+        //populateObjectsToTrack();
+        objectsToTrack = 1;
+    }
+    else {
+        ROS_ERROR("Failed to get param '/wheelchair_robot/context/track_name'");
+        objectsToTrack = 0;
+    }
+
+    //get param to add duration from previous run
+    if (n.getParam("/wheelchair_robot/context/add_to_duration", PARAM_add_to_duration)) {
+        ROS_INFO("Got param: %s", PARAM_dataset_name.c_str());
+        cout << "add_to_duration is " << PARAM_add_to_duration << endl;
+    }
+    else {
+        ROS_ERROR("Failed to get param, add_to_duration remains at 0.0");
+        PARAM_add_to_duration = 0.0;
+    }
 
     ros::Subscriber objects_sub = n.subscribe("wheelchair_robot/dacop/publish_object_locations/objects", 1000, objectLocationsCallback); //full list of objects
 
@@ -1027,19 +1383,27 @@ int main (int argc, char **argv) {
     });
 
     //delay object missing thread by a few milliseconds, to allow the full objects list to be processed
-    ros::NodeHandle n_missingObjectsThread;
-    ros::CallbackQueue callback_queue_missingObjectsThread;
-    n_missingObjectsThread.setCallbackQueue(&callback_queue_missingObjectsThread);
-    ros::Subscriber missing_objects_sub = n_missingObjectsThread.subscribe("wheelchair_robot/dacop/missing_objects/missing", 1000, missingObjectCallback); //detected objects in frame
-    std::thread spinner_thread_missingObjects([&callback_queue_missingObjectsThread]() {
-        ros::SingleThreadedSpinner spinner_missingObjects;
-        spinner_missingObjects.spin(&callback_queue_missingObjectsThread);
-    });
+    if (experiment1_missing_objects == 1) {
+        ros::NodeHandle n_missingObjectsThread;
+        ros::CallbackQueue callback_queue_missingObjectsThread;
+        n_missingObjectsThread.setCallbackQueue(&callback_queue_missingObjectsThread);
+        ros::Subscriber missing_objects_sub = n_missingObjectsThread.subscribe("wheelchair_robot/dacop/missing_objects/missing", 1000, missingObjectCallback); //detected objects in frame
+        std::thread spinner_thread_missingObjects([&callback_queue_missingObjectsThread]() {
+            ros::SingleThreadedSpinner spinner_missingObjects;
+            spinner_missingObjects.spin(&callback_queue_missingObjectsThread);
+        });
+    }
 
     ros::Publisher object_context_pub = n.advertise<wheelchair_msgs::objectContext>("/wheelchair_robot/context/objects", 1000); //publish object context info for decision making
     ptr_object_context = &object_context_pub; //pointer to publish object context
 
+    //publish tracked objects context info
+    ros::Publisher tracking_object_pub = n.advertise<wheelchair_msgs::trackingContext>("/wheelchair_robot/context/tracking", 1000);
+    ptr_tracking_context = &tracking_object_pub;
+
     ros::Rate rate(10.0);
+
+
     while(ros::ok()) {
         if (DEBUG_main) {
             cout << "spin \n";
